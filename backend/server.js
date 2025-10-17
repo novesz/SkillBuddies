@@ -118,7 +118,7 @@ app.put('/users/updateTokens/:id', (req, res) => {
         res.json({ message: 'User updated successfully' });
     });
 });
-app.put('/users/:id', (req, res) => {
+app.put('/users/change/:id', (req, res) => {
   const userId = req.params.id;
   const fields = req.body;
 
