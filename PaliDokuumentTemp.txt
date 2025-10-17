@@ -1,0 +1,1 @@
+2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
