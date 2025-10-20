@@ -1,0 +1,8 @@
+2025-09-11 adatbázis alapjának elkészítése (Users, changes, skills és kötő táblái)
+2025-09-12 Adatbázis fejlesztés 2. alkalom (messages, chatek és kötő táblái)
+2025-09-24 Site admin, és IsBanned tulajdonság A users táblába
+2025-10-01 Site admin és IsBanned tualjdonság helyett új táblába userrank, ahol a 0-a sima user, az 1- az admin és a 2-a banned személy.
+2025-10-08 msgs tábla "Kitol” és “ChatID” törölve, helyette a “uac” kötő táblába került egy “MsgID” ami külsőkölcs a msgs táblába a “MsgID”-re referálva
+2025-10-15 Tickets tábla hozzáadva, a rankokból a userid kivéve, áttéve a rankID a usersbe
+2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
+2025-10-18, 2025-10-20 backend megírása

@@ -217,6 +217,29 @@ app.put('/chats/edit/:id', (req, res) => {
         res.json({ message: 'Chat updated successfully' });
     });
   });
+// write message
+app.post('/messages/create', (req, res) => {
+    const sql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
+    const values = [req.body.ChatID, req.body.UserID, req.body.Content];
+    db.query(sql, values, (err, results) => {
+        if (err) {
+            console.error('Error creating message:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.status(201).json({ message: 'Message created successfully', MsgID: results.insertId });
+    });
+});
+//get messages by chat
+app.get('/messages/:chatId', (req, res) => {
+    const sql = "SELECT msgs.MsgID, msgs.Content, msgs.SentAt, users.Username FROM msgs JOIN users ON msgs.UserID = users.UserID WHERE msgs.ChatID = ? ORDER BY msgs.Timestamp ASC";
+    db.query(sql, [req.params.chatId], (err, results) => {
+        if (err) {
+            console.error('Error fetching messages:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json(results);
+    });
+});
 // Start server
 app.listen(3001, () => {
     console.log(`Server is running on port 3001`);
