@@ -1,0 +1,83 @@
+:root{
+  --bg1:#89a8d8; --bg2:#6286bf; --card:#82a3db;
+  --text:#0f172a; --chip:#efe6f8; --shadow:10px 10px 20px rgba(0,0,0,.25);
+}
+
+/* teljes képernyős háttér */
+html,body{height:100%;margin:0}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+
+.sb-page{
+  min-height:100vh; width:100%; color:var(--text);
+  background:
+    radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
+    linear-gradient(135deg, var(--bg1), #9bb6e9 60%, #a9bdea);
+  background-attachment:fixed;
+}
+
+/* tartalom: full width + kényelmes belső margó */
+.sb-content{
+  width:100%; max-width:none;
+  padding: clamp(16px,3vw,32px) clamp(20px,4vw,60px);
+  margin:0 auto;
+}
+
+/* kereső + chipek */
+.sb-search-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:18px}
+.sb-search{
+  position:relative; width:min(760px,100%);
+  background:#eadaf4;border-radius:12px; box-shadow:var(--shadow);
+}
+.sb-search input{
+  width:100%; padding:14px 44px 14px 16px;
+  border:none; background:transparent; font-size:16px; outline:none; color:var(--text);
+}
+.sb-icon{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  width:22px;height:22px;color:#667085;
+}
+
+.sb-chips{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+  list-style:none; padding:0; margin:10px 0 0;
+}
+.sb-chips li{
+  background:var(--chip); padding:8px 12px; border-radius:10px;
+  box-shadow:5px 5px 10px rgba(0,0,0,.15); font-weight:600; user-select:none;
+}
+
+/* kártyarács: auto-fit -> kitölti a szélességet */
+.sb-cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: clamp(16px,2vw,28px);
+  margin-top:32px;
+}
+
+.sb-card{
+  background:var(--card); border-radius:24px; padding:22px 20px 16px;
+  box-shadow:var(--shadow); min-height:280px;
+  display:flex; flex-direction:column; justify-content:space-between;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.sb-card:hover{ transform:translateY(-3px); box-shadow:12px 12px 24px rgba(0,0,0,.25) }
+
+.sb-card-badge{ width:64px;height:64px;border-radius:50%; background:#ffe57a; margin-bottom:8px }
+.sb-card h3{ margin:0 0 10px; letter-spacing:1px; font-weight:700 }
+.sb-list{ margin:8px 0 22px 17px; padding:0; line-height:1.6; font-weight:600 }
+
+.sb-card-footer{ display:flex; align-items:center; gap:10px }
+.sb-avatars{ display:flex; align-items:center }
+.sb-av{ width:24px;height:24px;border-radius:50%; background:#c1b9ae; border:2px solid rgba(255,255,255,.8); margin-left:-6px }
+.sb-av:first-child{ margin-left:0 }
+.sb-count{ margin-left:6px; color:#eaeef4; font-size:12px; opacity:.95 }
+.sb-join{ margin-left:auto; background:#e5e5e0; border:none; border-radius:16px; padding:8px 16px; font-weight:700; cursor:pointer; box-shadow:var(--shadow) }
+.sb-join:hover{ background:#f2f2ed }
+
+/* reszponzív finomítások */
+@media (max-width:960px){ .sb-card-badge{width:56px;height:56px} }
+@media (max-width:640px){
+  .sb-card{border-radius:18px; padding:18px 16px}
+  .sb-search-wrap{margin-top:10px}
+}
+@media (max-width:480px){ .sb-join{padding:6px 12px} }
