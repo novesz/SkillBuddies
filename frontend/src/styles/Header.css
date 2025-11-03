@@ -1,0 +1,127 @@
+:root{
+  --bg1:#89a8d8; 
+  --bg2:#6286bf;
+  --text:#0f172a; 
+  --shadow:10px 10px 20px rgba(0,0,0,.25);
+}
+
+/* ===== HEADER (sticky, full width, fix height) ===== */
+.sb-header{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  height: 90px;                 /* fejléc magasság */
+  padding: 0 24px;              /* felül/alul 0 → valós 90px */
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
+  background-color: rgba(255,255,255,.08);
+  box-sizing: border-box;
+}
+
+/* ===== HAMBURGER – a 3 csík középen, oszlopban ===== */
+.sb-hamburger{
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #f3b34e;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+
+  display: flex;                /* ← középre igazított oszlop */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.sb-hamburger span{
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+  transition: transform .2s ease, opacity .2s ease;
+}
+/* kis „X” animáció nyitáskor (opcionális) */
+.sb-hamburger.is-open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+.sb-hamburger.is-open span:nth-child(2){ opacity: 0; }
+.sb-hamburger.is-open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+/* ===== LOGÓ (csak kép) ===== */
+.sb-brand{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.sb-logo-only{
+  height: 150px;                 /* ha nagyobb kell, növeld a header height-ot is */
+  width: auto;
+  object-fit: contain;
+  display: block;               /* baseline-rés eltűnik */
+  margin-left: 12px;
+}
+
+/* ===== PROFIL KÖR (jobb felső) ===== */
+.sb-profile{
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ff8a8a;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0,0,0,.18);
+}
+
+/* ===== LENYÍLÓ MENÜ ===== */
+.sb-menu{
+  position: absolute;
+  top: 90px;                    /* header alatt */
+  left: 16px;                   /* hamburger alatt */
+  width: 240px;
+  background: #89a8d8;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+  transform-origin: top left;
+  transform: scaleY(0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .18s ease, opacity .18s ease;
+}
+.sb-menu.open{
+  transform: scaleY(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.sb-menu ul{
+  list-style: none;
+  margin: 14px;
+  padding: 10px 12px;
+}
+.sb-menu li + li{ margin-top: 12px; }
+.sb-menu a{
+  display: block;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+.sb-menu a:hover{ background: rgba(255,255,255,.25); }
+
+/* ===== Mobil finomítás ===== */
+@media (max-width: 600px){
+  .sb-header{ height: 64px; padding: 0 16px; }
+  .sb-logo-only{ height: 40px; margin-left: 8px; }
+  .sb-hamburger{ width: 36px; height: 36px; }
+  .sb-profile{ width: 42px; height: 42px; right: 16px; }
+  .sb-menu{ top: 64px; left: 12px; width: 220px; }
+}
