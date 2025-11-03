@@ -7,4 +7,15 @@
 2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
 
 
-2025-10-18, 2025-10-20 backend megírása
+2025-10-18, 2025-10-20 backend megírása:
+	-users táblából minden vagy ID alapján rekord lekérdezése
+	-user rekord létrehozása, adatai frissítése
+	-értékelések lekérdezése, új hozzáadása, meglévő változtatása, törlése
+	-kézségek felhasználónkét lekérése, az összes kézségek kiíratása, userhez készségeket hozzáadása
+	-ticket-ek írásának lehetősége 
+	-user rangok változtatása
+	-Tokenek változtatásának lehetősége
+	-új chatek létrehozása, lekérése (összes, userenként, random sorrendbe x mennyiségűt), chathez csatlakozni, távozni chatből, chatbe admin tenni, chat adatait változtatni, chatet törölni
+	-üzenetet írni, módosítani, törölni, chat alapján az összes üzenetet lekérni
+2025-11-03 backend tesztelése és javítása:
+	-review delete átírása hogy a kötőtáblából is megfelelően töröljön

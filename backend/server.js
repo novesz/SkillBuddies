@@ -44,8 +44,8 @@ app.get('/users/:id', (req, res) => {
     });
 });
 app.post('/users/create', (req, res) => {
-    const sql = "INSERT INTO users (Username, Email, Password) VALUES (?, ?, ?)";
-    const values = [req.body.name, req.body.email, req.body.password];
+    const sql = "INSERT INTO users (Username, Email, Password, rankID) VALUES (?, ?, ?, ?)";
+    const values = [req.body.name, req.body.email, req.body.password, req.body.rank || 1];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating user:', err);
@@ -120,13 +120,20 @@ app.put('/reviews/edit/:id', (req, res) => {
 });
 //delete review
 app.delete('/reviews/delete/:id', (req, res) => {
-    const sql = "DELETE FROM reviews WHERE ReviewID = ?";
-    db.query(sql, [req.params.id], (err, results) => {
-        if (err) {  
-            console.error('Error deleting review:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json({ message: 'Review deleted successfully' });
+    const ID = req.params.id;
+    const intID = parseInt(ID, 10);
+    const sql = "DELETE FROM reviews WHERE ReviewID = ?;";
+    db.query(sql, [intID], (err, results) => {
+        const sql2 = "DELETE FROM uar WHERE ReviewID = ?;";
+        db.query(sql2, [intID], (err, results) => 
+        {
+            if (err) {  
+                console.error('Error deleting review:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            } 
+            res.json({ message: 'Review deleted successfully' });
+        });          
+        
     });
 });
 //reviews end
@@ -175,10 +182,22 @@ app.get('/tickets', (req, res) => {
         res.json(results);
     });
 });
+//tickets create
+app.post('/tickets/create', (req, res) => {
+    const sql = "INSERT INTO Tickets (UserID, Descr, Text) VALUES (?, ?, ?)";
+    const values = [req.body.UserID, req.body.Descr, req.body.Text];
+    db.query(sql, values, (err, results) => {
+        if (err) {
+            console.error('Error creating ticket:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.status(201).json({ message: 'Ticket created successfully', TicketID: results.insertId });
+    });
+});
 
 //rank update
 app.put('/users/updateRank/:id', (req, res) => {
-    const sql = "UPDATE users SET userRank = ? WHERE UserID = ?";
+    const sql = "UPDATE users SET rankID = ? WHERE UserID = ?";
     const values = [req.body.userRank, req.params.id];
     db.query(sql, values, (err, results) => {
         if (err) {
@@ -224,7 +243,7 @@ app.get('/chats/all', (req, res) => {
     });
 });
 //get chats userenkent
-app.get('/chats/:userId', (req, res) => {
+app.get('/chats/users/:userId', (req, res) => {
     const sql = "SELECT chats.ChatID, chats.ChatName, chats.ChatPic FROM chats JOIN uac ON uac.ChatID = chats.ChatID WHERE uac.UserID = ?";
     db.query(sql, [req.params.userId], (err, results) => {
         if (err) {
@@ -234,7 +253,17 @@ app.get('/chats/:userId', (req, res) => {
         res.json(results);
     });
 });
-
+//chat by ID
+app.get('/chats/:chatId', (req, res) => {
+    const sql = "SELECT * FROM chats WHERE ChatID = ?";
+    db.query(sql, [req.params.chatId], (err, results) => {
+        if (err) {
+            console.error('Error fetching chat by ID:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json(results);
+    });  
+});
 
 //get x random chats
 app.get('/chats/random/:nr', (req, res) => {
