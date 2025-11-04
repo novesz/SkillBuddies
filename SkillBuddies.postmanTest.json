@@ -55,7 +55,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\" : \"Hubi\",\r\n    \"email\" : \"szahub608@hengersor.hu\",\r\n    \"password\" : \"Hubi\",\r\n    \"rank\" : 3\r\n}",
+							"raw": "{\r\n    \"name\" : \"random\",\r\n    \"email\" : \"random@example.com\",\r\n    \"password\" : \"random\",\r\n    \"rank\" : 1\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -248,6 +248,25 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "getReview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3001/reviews/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"reviews",
+								"1"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -419,9 +438,304 @@
 				},
 				{
 					"name": "chatsByID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ChatName\" : \"Cuncik\",\r\n    \"ChatPic\" : \"none\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3001/chats/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "joinChat",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserID\" : 4,\r\n    \"ChatID\" : 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/chats/join",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "leaveChat",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ChatID\" : 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/chats/leave/4",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"leave",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "rndChats",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ChatName\" : \"Cuncik\",\r\n    \"ChatPic\" : \"none\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3001/chats/random/2",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"random",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "makeadminChats",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserID\" : 4,\r\n    \"ChatID\" : 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/chats/makeAdmin",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"makeAdmin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteChats",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserID\" : 4,\r\n    \"ChatID\" : 1\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3001/chats/delete/3",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"delete",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "editChats",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ChatName\" : \"Cuncik\",\r\n    \"ChatPic\" : \"Cuncik.png\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/chats/edit/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"chats",
+								"edit",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "msgs",
+			"item": [
+				{
+					"name": "writeMsg",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserID\" : 4,\r\n    \"ChatID\" : 1,\r\n    \"Content\" : \"hihetetlenül\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/messages/create",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"messages",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "editMsg",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Content\" : \"Szeretem a tejet és a kakaót is\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3001/messages/edit/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"messages",
+								"edit",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteMsg",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Content\" : \"Szeretem a tejet és a kakaót is\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3001/messages/delete/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"messages",
+								"delete",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "msgsInChats",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Content\" : \"Szeretem a tejet és a kakaót is\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3001/messages/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"messages",
+								"1"
+							]
+						}
 					},
 					"response": []
 				}
