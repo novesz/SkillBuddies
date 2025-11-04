@@ -268,7 +268,7 @@ app.get('/chats/:chatId', (req, res) => {
 //get x random chats
 app.get('/chats/random/:nr', (req, res) => {
     const nr = parseInt(req.params.nr, 10);
-    const sql = "SELECT * FROM chats WHERE ChatID >= (SELECT FLOOR(RAND() * (SELECT MAX(ChatID) FROM chats))) LIMIT ?;";
+    const sql = "SELECT * FROM chats WHERE ChatID >= (SELECT FLOOR(RAND() * (SELECT MAX(ChatID) FROM chats))) ORDER BY RAND() LIMIT ?;";
     db.query(sql,[nr], (err, results) => {
         if (err) {
             console.error('Error fetching random chats:', err);
@@ -291,8 +291,8 @@ app.post('/chats/join', (req, res) => {
 });
 //leave chat
 app.delete('/chats/leave/:id', (req, res) => {
-    const sql = "DELETE FROM uac WHERE UserID = ?";
-    db.query(sql, [req.params.id], (err, results) => {
+    const sql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(sql, [req.params.UserID, req.body.ChatID], (err, results) => {
         if (err) {
             console.error('Error leaving chat:', err);
             return res.status(500).json({ error: 'Internal server error' });
@@ -302,7 +302,7 @@ app.delete('/chats/leave/:id', (req, res) => {
 });
 //make chat admin
 app.put('/chats/makeAdmin', (req, res) => {
-    const sql = "UPDATE uac SET IsAdmin = 1 WHERE UserID = ? AND ChatID = ?";
+    const sql = "UPDATE uac SET IsChatAdmin = 1 WHERE UserID = ? AND ChatID = ?";
     const values = [req.body.UserID, req.body.ChatID];
     db.query(sql, values, (err, results) => {
         if (err) {
