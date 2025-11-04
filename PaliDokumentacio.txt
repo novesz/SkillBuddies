@@ -5,7 +5,7 @@
 2025-10-08 msgs tábla "Kitol” és “ChatID” törölve, helyette a “uac” kötő táblába került egy “MsgID” ami külsőkölcs a msgs táblába a “MsgID”-re referálva
 2025-10-15 Tickets tábla hozzáadva, a rankokból a userid kivéve, áttéve a rankID a usersbe
 2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
-
+2025-11-04 reviews táblához tartozó "uar" tábla kitörlése, reviewer és reviewee mező hozzáadva
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
@@ -17,5 +17,5 @@
 	-Tokenek változtatásának lehetősége
 	-új chatek létrehozása, lekérése (összes, userenként, random sorrendbe x mennyiségűt), chathez csatlakozni, távozni chatből, chatbe admin tenni, chat adatait változtatni, chatet törölni
 	-üzenetet írni, módosítani, törölni, chat alapján az összes üzenetet lekérni
-2025-11-03 backend tesztelése és javítása:
+2025-11-03, 2025-11-04 backend tesztelése és javítása:
 	-review delete átírása hogy a kötőtáblából is megfelelően töröljön
