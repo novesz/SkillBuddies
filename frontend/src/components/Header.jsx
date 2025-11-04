@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import Navbar from "./Navbar";
 import "../styles/Header.css";
 
 export default function Header() {
@@ -19,7 +20,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sb-header">
+    <header className="sb-header" ref={menuRef}>
       <button
         className={`sb-hamburger ${open ? "is-open" : ""}`}
         aria-label="Menü"
@@ -36,19 +37,8 @@ export default function Header() {
 
       <button className="sb-profile" aria-label="Profil" />
 
-      {/* LENYÍLÓ MENÜ */}
-      <nav
-        ref={menuRef}
-        className={`sb-menu ${open ? "open" : ""}`}
-        aria-label="Főmenü"
-      >
-        <ul>
-          <li><a href="#">Group Finder</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Support</a></li>
-          <li><a href="#">Profile</a></li>
-        </ul>
-      </nav>
+      {/* csak ha nyitva van */}
+      {open && <Navbar />}
     </header>
   );
 }
