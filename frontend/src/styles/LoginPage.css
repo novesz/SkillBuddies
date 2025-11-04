@@ -1,0 +1,129 @@
+/* --- Alap beállítások --- */
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #2a3147, #8faeff);
+    font-family: "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  
+  .login-page {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* --- Felső navigáció --- */
+  .navbar {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 60px;
+    box-sizing: border-box;
+  }
+  
+  .menu-icon {
+    font-size: 26px;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .logo {
+    color: #f9a825;
+    font-weight: bold;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .circle {
+    width: 36px;
+    height: 36px;
+    background-color: #ff6f61;
+    border-radius: 50%;
+  }
+  
+  /* --- Középső bejelentkezési kártya --- */
+  .login-container {
+    margin-top: 80px;
+    width: 420px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    padding: 50px 40px;
+  }
+  
+  .login-title {
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #000;
+  }
+  
+  /* --- Űrlapmezők --- */
+  .login-form input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #e8eaf6;
+    font-size: 15px;
+    outline: none;
+  }
+  
+  .login-form input:focus {
+    background-color: #dce2ff;
+  }
+  
+  /* --- Gomb --- */
+  .login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #ffb300;
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.3s;
+  }
+  
+  .login-button:hover {
+    background-color: #ffa000;
+    transform: scale(1.03);
+  }
+  
+  /* --- Linkek --- */
+  .login-links {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .login-links a {
+    color: #1e88e5;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .login-links a:hover {
+    text-decoration: underline;
+  }
+  
+  /* --- Rögzített szélességű layout desktophoz --- */
+  @media (max-width: 1024px) {
+    .login-container {
+      width: 380px;
+      padding: 40px;
+    }
+  }
+  
