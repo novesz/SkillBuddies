@@ -36,7 +36,7 @@ app.get('/users/all', (req, res) => {
 //login
 app.get('/login/', (req, res) => {
     const sql = "SELECT * FROM users where Email = ? AND Password = ?";
-    const values = [req.body.email, req.body.password];
+    const values = [string(req.body.email), string(req.body.password)];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error during login:', err);
