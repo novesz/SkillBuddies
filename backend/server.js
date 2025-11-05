@@ -76,7 +76,7 @@ app.put('/users/change/:id', (req, res) => {
 //users end
 //reviews
 app.get('/reviews/:id', (req, res) => {
-    const sql = "SELECT reviews.ReviewID, reviews.Rating, reviews.Tartalom FROM reviews INNER JOIN users on users.UserID = reviews.Reviewee where users.reviewee = ?;";
+    const sql = "SELECT reviews.Reviewee, reviews.Reviewer, reviews.Rating, reviews.Tartalom FROM reviews INNER JOIN users on users.UserID = reviews.Reviewee where reviews.reviewee = ?;";
     db.query(sql, [req.params.id], (err, results) => {
         if (err) {
             console.error('Error fetching reviews:', err);
@@ -94,14 +94,14 @@ app.post('/reviews/create', (req, res) => {
             console.error('Error creating review:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
-        const reviewId = results.insertId;
-        res.status(201).json({ message: 'Review created and linked to user successfully', ReviewID: reviewId });
+        
+        res.status(201).json({ message: 'Review created and linked to user successfully'});
     });
 });
 //edit review
-app.put('/reviews/edit/:id', (req, res) => {
-    const sql = "UPDATE reviews SET Rating = ?, Tartalom = ? WHERE ReviewID = ?";
-    const values = [req.body.Rating, req.body.Tartalom, req.params.id];
+app.put('/reviews/edit/', (req, res) => {
+    const sql = "UPDATE reviews SET Rating = ?, Tartalom = ? WHERE Reviewer = ? AND Reviewee = ?";
+    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error updating review:', err);
@@ -111,22 +111,16 @@ app.put('/reviews/edit/:id', (req, res) => {
     });
 });
 //delete review
-app.delete('/reviews/delete/:id', (req, res) => {
-    const ID = req.params.id;
-    const intID = parseInt(ID, 10);
-    const sql = "DELETE FROM reviews WHERE ReviewID = ?;";
-    db.query(sql, [intID], (err, results) => {
-        const sql2 = "DELETE FROM uar WHERE ReviewID = ?;";
-        db.query(sql2, [intID], (err, results) => 
-        {
-            if (err) {  
-                console.error('Error deleting review:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            } 
-            res.json({ message: 'Review deleted successfully' });
-        });          
-        
+app.delete('/reviews/delete/', (req, res) => {
+    const sql = "DELETE FROM reviews WHERE Reviewee = ? AND Reviewer = ?;";
+    const values = [req.body.Reviewee, req.body.Reviewer];
+    db.query(sql, values, (err, results) => {
+        if(err){
+            console.error('Error deleting review:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
     });
+    res.json({ message: 'Review deleted successfully' });
 });
 //reviews end
 //skills

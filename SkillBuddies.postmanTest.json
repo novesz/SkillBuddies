@@ -175,7 +175,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Rating\" : 5,\r\n    \"Tartalom\" : \"Great experience\",\r\n    \"UserID\" : 8\r\n}",
+							"raw": "{\r\n    \"Rating\" : 4,\r\n    \"Tartalom\" : \"Good guy\",\r\n    \"Reviewee\" : 9,\r\n    \"Reviewer\": 4\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -203,7 +203,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Rating\" : 4,\r\n    \"Tartalom\" : \"Good worker, but in need of improvement\"\r\n}",
+							"raw": "{\r\n    \"Rating\" : 4,\r\n    \"Tartalom\" : \"Good worker, but in need of improvement\",\r\n    \"Reviewer\" : 4,\r\n    \"Reviewee\" : 8\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -211,7 +211,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3001/reviews/edit/1",
+							"raw": "localhost:3001/reviews/edit/",
 							"host": [
 								"localhost"
 							],
@@ -219,7 +219,7 @@
 							"path": [
 								"reviews",
 								"edit",
-								"1"
+								""
 							]
 						}
 					},
@@ -232,10 +232,15 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Rating\" : 4,\r\n    \"Tartalom\" : \"Good worker, but in need of improvement\"\r\n}"
+							"raw": "{\r\n    \"Reviewer\" : 4,\r\n    \"Reviewee\" : 8\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "localhost:3001/reviews/delete/1",
+							"raw": "localhost:3001/reviews/delete/",
 							"host": [
 								"localhost"
 							],
@@ -243,7 +248,7 @@
 							"path": [
 								"reviews",
 								"delete",
-								"1"
+								""
 							]
 						}
 					},
@@ -251,18 +256,30 @@
 				},
 				{
 					"name": "getReview",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "localhost:3001/reviews/1",
+							"raw": "localhost:3001/reviews/9",
 							"host": [
 								"localhost"
 							],
 							"port": "3001",
 							"path": [
 								"reviews",
-								"1"
+								"9"
 							]
 						}
 					},
