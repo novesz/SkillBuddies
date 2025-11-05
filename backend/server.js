@@ -76,7 +76,7 @@ app.put('/users/change/:id', (req, res) => {
 //users end
 //reviews
 app.get('/reviews/:id', (req, res) => {
-    const sql = "SELECT reviews.ReviewID, reviews.Rating, reviews.Tartalom FROM reviews INNER JOIN uar ON uar.ReviewID = reviews.ReviewID INNER JOIN users on users.UserID = uar.UserID where users.UserID = ?;";
+    const sql = "SELECT reviews.ReviewID, reviews.Rating, reviews.Tartalom FROM reviews INNER JOIN users on users.UserID = reviews.Reviewee where users.reviewee = ?;";
     db.query(sql, [req.params.id], (err, results) => {
         if (err) {
             console.error('Error fetching reviews:', err);
@@ -87,23 +87,15 @@ app.get('/reviews/:id', (req, res) => {
 });
 //write review
 app.post('/reviews/create', (req, res) => {
-    const sql = "INSERT INTO reviews (Rating, Tartalom) VALUES (?, ?)";
-    const values = [req.body.Rating, req.body.Tartalom];
+    const sql = "INSERT INTO reviews (Rating, Tartalom, Reviewer, Reviewee) VALUES (?, ?, ?, ?)";
+    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating review:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
         const reviewId = results.insertId;
-        const sqlUar = "INSERT INTO uar (UserID, ReviewID) VALUES (?, ?)";
-        const valuesUar = [req.body.UserID, reviewId];
-        db.query(sqlUar, valuesUar, (err, results) => {
-            if (err) {
-                console.error('Error linking review to user:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
-            res.status(201).json({ message: 'Review created and linked to user successfully', ReviewID: reviewId });
-        });
+        res.status(201).json({ message: 'Review created and linked to user successfully', ReviewID: reviewId });
     });
 });
 //edit review
