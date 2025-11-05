@@ -20,3 +20,5 @@
 2025-11-03, 2025-11-04 backend tesztelése és javítása:
 	-review delete átírása hogy a kötőtáblából is megfelelően töröljön
 2025-11-05 a legutóbbi adatbázis változás (2025-11-04) alapján backend megjavítása és tesztelése és login api
+
+2026-11-05 Support page elkezdve

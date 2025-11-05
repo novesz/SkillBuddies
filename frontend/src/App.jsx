@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import RegistPage from './pages/RegistPage'
 import Profile from './pages/Profile'
 import AboutPage from './pages/AboutPage'
+import SupportPage from './pages/SupportPage'
 function App() {
 
 
@@ -17,7 +18,7 @@ function App() {
         <Route path="/register" element={<RegistPage />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/about" element={<AboutPage />} />
-
+        <Route path="/support" element={<SupportPage />} />
       </Routes>
     </>
   )
