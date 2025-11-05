@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Navbar from "./Navbar";
 import "../../styles/Header.css";
+import { Link } from "react-router-dom";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -32,7 +33,9 @@ export default function Header() {
       </button>
 
       <div className="sb-brand">
-        <img src="/SBLogo.png" alt="SkillBuddies" className="sb-logo-only" />
+        <Link to="/">
+          <img src="/SBLogo.png" alt="SkillBuddies" className="sb-logo-only" />
+        </Link>
       </div>
 
       <button className="sb-profile" aria-label="Profil" />

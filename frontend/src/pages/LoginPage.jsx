@@ -12,7 +12,7 @@ export default function LoginPage() {
       <div className="login-container">
         <h2 className="login-title">LOGIN</h2>
         <form className="login-form">
-          <input type="text" placeholder="Username/Email" required />
+          <input type="text" placeholder="Email" required />
           <input type="password" placeholder="Password" required />
           <button type="submit" className="login-button">LOGIN</button>
           
