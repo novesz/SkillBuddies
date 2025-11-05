@@ -10,16 +10,17 @@
   --shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
+/* ===== Layout ===== */
 .profile-wrap{
-  min-height: calc(100dvh - 90px); /* header alatt */
-  display: grid;
-  place-items: start center;
+  min-height: 100vh;
+  display: block;
   padding: 32px 16px 64px;
   background: radial-gradient(1200px 600px at 20% -10%, #cfdaf5 0, #e9eef9 40%, #f4f6fb 100%);
 }
 
 .profile-card{
   width: min(980px, 100%);
+  margin: 0 auto;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 8px);
@@ -27,6 +28,7 @@
   padding: 28px;
 }
 
+/* ===== Header ===== */
 .profile-header{
   margin-bottom: 16px;
 }
@@ -37,7 +39,7 @@
 }
 .muted{ color: var(--muted); }
 
-/* main grid */
+/* ===== Grid ===== */
 .profile-grid{
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -47,7 +49,7 @@
   .profile-grid{ grid-template-columns: 1fr; }
 }
 
-/* --- reusable --- */
+/* ===== Reusable ===== */
 .card{
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -83,37 +85,66 @@
 }
 .row-right{ display:flex; justify-content:flex-end; gap:12px; }
 
-/* --- Avatar --- */
-.avatar-section .avatar-title{ font-weight: 600; margin-bottom: 10px; }
-.avatar-row{ display:flex; gap:16px; align-items: flex-start; }
-
-.avatar-circle{
-  width: 92px; height: 92px;
-  border-radius: 50%;
-  border: 3px solid #fff;
-  outline: 2px solid rgba(0,0,0,.06);
-  background: radial-gradient(circle at 30% 20%, #ff6961, #e11d48);
-  background-size: cover;
-  background-position: center;
-  display:grid; place-items:center;
-  box-shadow: var(--shadow);
+/* ===== Avatar Section ===== */
+.avatar-section .avatar-title{
+  font-weight: 600;
+  margin-bottom: 10px;
 }
-.avatar-circle:hover{ transform: translateY(-1px); transition: .2s; }
-.avatar-plus{ font-size: 36px; color: #fff; line-height: 1; }
 
-.avatar-grid{
-  display:grid;
-  grid-template-columns: repeat(2, 72px);
+/* Lapozós változat */
+.avatar-strip-wrap{
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
   gap: 10px;
 }
-.preset{
-  width: 72px; height: 72px; border-radius: 50%;
-  background-size: cover; background-position: center;
-  border: 2px solid transparent; outline:1px solid var(--border);
+
+.avatar-strip{
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 6px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
 }
+.avatar-strip::-webkit-scrollbar{ height: 8px; }
+.avatar-strip::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.15);
+  border-radius: 8px;
+}
+
+.preset{
+  flex: 0 0 84px;
+  height: 84px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid transparent;
+  outline: 1px solid var(--border);
+  scroll-snap-align: start;
+  transition: transform .2s;
+}
+.preset:hover{ transform: translateY(-2px); }
 .preset.active{ border-color: var(--brand); }
 
-/* --- Skills --- */
+.nav-btn{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+.nav-btn:hover{
+  background: var(--bg1);
+}
+
+/* ===== Skills ===== */
 .skills-section .skills-title{ font-weight:600; margin-bottom:10px; }
 .tag-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
 .tag{
@@ -129,7 +160,7 @@
 }
 .add-row{ display:flex; gap:10px; }
 
-/* --- Password (animated) --- */
+/* ===== Password panel ===== */
 .password-section{
   margin-top: 22px;
   border-top: 1px dashed var(--border);
@@ -147,20 +178,20 @@
   cursor:pointer;
   transition: transform .35s cubic-bezier(.2,.8,.2,1);
   position: relative;
-  z-index: 2; /* FELOIRAT elől */
+  z-index: 2;
 }
-.password-section.open .pw-heading{
-  transform: translateY(-10px); /* „felirat alrébbcsúszik” */
-}
+.password-section.open .pw-heading{ transform: translateY(-10px); }
 .pw-heading .chev{
-  width: 10px; height: 10px; border-right: 2px solid #6b7280; border-bottom: 2px solid #6b7280;
-  transform: rotate(45deg); transition: transform .35s;
+  width: 10px; height: 10px;
+  border-right: 2px solid #6b7280;
+  border-bottom: 2px solid #6b7280;
+  transform: rotate(45deg);
+  transition: transform .35s;
 }
 .password-section.open .chev{ transform: rotate(-135deg); }
 
-/* a panel „mögüle” csúszik elő */
 .pw-panel{
-  margin-top: -8px;  /* kicsit feljebb tolva, hogy tényleg mögüle jöjjön */
+  margin-top: -8px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -180,7 +211,7 @@
 .password-section.open .pw-panel{
   opacity: 1;
   transform: translateY(0) scaleY(1);
-  max-height: 500px; /* elég nagy, hogy kiférjen */
+  max-height: 500px;
 }
 
 .field{ display:grid; gap:6px; }

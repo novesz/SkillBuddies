@@ -1,33 +1,40 @@
 import { useRef } from "react";
 
 const PRESETS = [
-  "/avatars/cat.png",
-  "/avatars/dog.png",
-  "/avatars/bunny.png",
-  "/avatars/snake.png",
+  "/avatars/BB.png",
+  "/avatars/BC.png",
+  "/avatars/BD.png",
+  "/avatars/GS.png",
+  "/avatars/OD.png",
+  "/avatars/PB.png",
+  "/avatars/PC.png",
+  "/avatars/RB.png",
+  "/avatars/RD.png",
+  "/avatars/YC.png",
+  "/avatars/YS.png",
 ];
 
 export default function AvatarPicker({ value, onChange }) {
-  const fileRef = useRef(null);
+  const stripRef = useRef(null);
+
+  const scrollBy = (dx) => {
+    stripRef.current?.scrollBy({ left: dx, behavior: "smooth" });
+  };
 
   return (
     <section className="avatar-section card">
       <div className="avatar-title">Profile picture</div>
 
-      <div className="avatar-row">
+      <div className="avatar-strip-wrap">
         <button
-          className="avatar-circle"
-          aria-label="Change profile picture"
-          onClick={() => fileRef.current?.click()}
-          title="Click to upload"
-          style={{
-            backgroundImage: value ? `url(${value})` : "none",
-          }}
+          className="nav-btn"
+          onClick={() => scrollBy(-280)}
+          aria-label="Previous"
         >
-          {!value && <span className="avatar-plus">+</span>}
+          ‹
         </button>
 
-        <div className="avatar-grid">
+        <div className="avatar-strip" ref={stripRef}>
           {PRESETS.map((src) => (
             <button
               key={src}
@@ -35,25 +42,19 @@ export default function AvatarPicker({ value, onChange }) {
               className={`preset ${value === src ? "active" : ""}`}
               style={{ backgroundImage: `url(${src})` }}
               onClick={() => onChange(src)}
-              aria-label="Choose preset"
+              aria-label="Choose avatar"
             />
           ))}
         </div>
-      </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          const url = URL.createObjectURL(file); // előnézethez
-          onChange(url);
-          // TODO: feltöltés a backendre, majd kapott URL-t onChange(url)-lal menteni
-        }}
-      />
+        <button
+          className="nav-btn"
+          onClick={() => scrollBy(280)}
+          aria-label="Next"
+        >
+          ›
+        </button>
+      </div>
     </section>
   );
 }
