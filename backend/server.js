@@ -33,6 +33,19 @@ app.get('/users/all', (req, res) => {
         res.json(results);
     });
 });
+//login
+app.get('/login/', (req, res) => {
+    const sql = "SELECT * FROM users where Email = ? AND Password = ?";
+    const values = [req.body.email, req.body.password];
+    db.query(sql, values, (err, results) => {
+        if (err) {
+            console.error('Error during login:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json(results);
+    });
+});
+//get user by ID
 app.get('/users/:id', (req, res) => {
     const sql = "SELECT * FROM users where UserID = ?";
     db.query(sql, [req.params.id], (err, results) => {
