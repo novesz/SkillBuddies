@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Navbar from "./Navbar";
-import "../styles/Header.css";
+import "../../styles/Header.css";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
