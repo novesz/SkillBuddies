@@ -1,5 +1,6 @@
 import React from "react";
 import "../../styles/Navbar.css";
+import AboutPage from "../../pages/AboutPage";
 
 export default function Navbar() {
   return (
@@ -9,7 +10,7 @@ export default function Navbar() {
           <li><a href="#">Profile</a></li>
           <li><a href="#">Group Finder</a></li>
           <li><a href="#">Support</a></li>
-          <li><a href="#">About</a></li>
+          <li><a href="/about">About</a></li>
         </ul>
       </div>
     </nav>
