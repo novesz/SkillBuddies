@@ -1,3 +1,4 @@
+/* Fő oldal háttér és elrendezés */
 .login-page {
   height: 100vh;
   width: 100%;
@@ -8,7 +9,7 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-/* --- Form container --- */
+/* Bejelentkezés doboz */
 .login-container {
   margin-top: 80px;
   width: 420px;
@@ -19,7 +20,7 @@
   padding: 50px 40px;
 }
 
-/* --- Title --- */
+/* Cím */
 .login-title {
   margin-bottom: 25px;
   font-size: 24px;
@@ -27,7 +28,7 @@
   color: #000;
 }
 
-/* --- Input mezők --- */
+/* Input mezők */
 .login-form input {
   width: 390px;
   padding: 14px;
@@ -39,7 +40,7 @@
   outline: none;
 }
 
-/* --- Két névmező egy sorban --- */
+/* Két input egy sorban */
 .name-row {
   display: flex;
   justify-content: space-between;
@@ -51,7 +52,7 @@
   flex: 1;
 }
 
-/* --- Gomb --- */
+/* Gomb */
 .login-button {
   width: 100%;
   padding: 12px;
@@ -65,12 +66,13 @@
   transition: background-color 0.3s, transform 0.2s;
 }
 
+/* Gomb hover effekt */
 .login-button:hover {
   background-color: #ffa000;
   transform: scale(1.03);
 }
 
-/* --- Linkek alul --- */
+/* Alsó linkek (pl. regisztráció, jelszó) */
 .login-links {
   margin-top: 20px;
   display: flex;
