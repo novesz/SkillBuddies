@@ -2,6 +2,7 @@ import React from "react";
 import "../styles/LoginPage.css";
 import Header from "../components/header/Header";
 
+
 export default function LoginPage() {
   return (
     <div className="login-page">
@@ -23,7 +24,7 @@ export default function LoginPage() {
         </form>
 
         <div className="login-links">
-          <a href="#">Forgot password?</a>
+          <a href="/resetpass">Forgot password?</a>
           <a href="/login">Already have an account? Log in</a>
         </div>
       </div>
