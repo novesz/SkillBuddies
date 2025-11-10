@@ -3,7 +3,17 @@ import Header from "../components/header/Header";
 import "../styles/Home.css";
 
 export default function Home() {
-  const chips = ["Matek","Töri","Horgolás","Zene","Magyar","Rajz","Falmászás","Fotózás"];
+  const chips = [
+  "Math",
+  "History",
+  "Crocheting",
+  "Music",
+  "Hungarian",
+  "Drawing",
+  "Rock Climbing",
+  "Photography"
+                ];
+
 
   return (
     <div className="sb-page">
@@ -28,20 +38,28 @@ export default function Home() {
         {/* Kártyák */}
         <section className="sb-cards">
           <Card
-            title="HUMÁN TÁRGYAK"
-            items={["Magyar (Köz)","Töri (Ált–Köz)","Idegen nyelv – Angol (A2–B2)","Idegen nyelv – Német (A1–B1)"]}
+            title="HUMANITIES"
+            items={[
+              "Hungarian (Intermediate)",
+              "History (Basic–Intermediate)",
+              "Foreign Language – English (A2–B2)",
+              "Foreign Language – German (A1–B1)"
+            ]}
             users={69}
           />
+
           <Card
-            title="SZABADTÉRI HOBBIK"
-            items={["Kertészkedés","Túra","Kerékpár"]}
+            title="OUTDOOR HOBBIES"
+            items={["Gardening", "Hiking", "Cycling"]}
             users={120}
           />
+
           <Card
-            title="MŰVÉSZET"
-            items={["Festészet","Szobrászat","Zene","Irodalom","Fotózás"]}
+            title="ARTS"
+            items={["Painting", "Sculpture", "Music", "Literature", "Photography"]}
             users={42}
           />
+
         </section>
       </main>
     </div>
@@ -63,7 +81,7 @@ function Card({ title, items, users }) {
           <span className="sb-av"></span>
           <span className="sb-av"></span>
         </div>
-        <span className="sb-count">{users} felhasználó</span>
+        <span className="sb-count">{users} users</span>
         <button className="sb-join">Join</button>
       </div>
     </article>

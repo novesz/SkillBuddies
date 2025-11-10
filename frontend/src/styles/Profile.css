@@ -1,3 +1,6 @@
+/* ==========================================================================
+   0) DESIGN TOKENS / VARIABLES
+   ========================================================================== */
 :root{
   --bg1:#e9eef9;
   --card:#ffffff;
@@ -5,19 +8,20 @@
   --text:#0f172a;
   --muted:#6b7280;
   --brand:#287df5;
-  --danger:#e11d48;
+  --danger:#ff0000;
   --radius:16px;
   --shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
-/* ===== Layout ===== */
+/* ==========================================================================
+   1) ALAPLAP / LAYOUT
+   ========================================================================== */
 .profile-wrap{
   min-height: 100vh;
   display: block;
   padding: 32px 16px 64px;
   background: radial-gradient(1200px 600px at 20% -10%, #cfdaf5 0, #e9eef9 40%, #f4f6fb 100%);
 }
-
 .profile-card{
   width: min(980px, 100%);
   margin: 0 auto;
@@ -28,10 +32,10 @@
   padding: 28px;
 }
 
-/* ===== Header ===== */
-.profile-header{
-  margin-bottom: 16px;
-}
+/* ==========================================================================
+   2) FEJLÉC BLOKK (oldalcím, alcím)
+   ========================================================================== */
+.profile-header{ margin-bottom: 16px; }
 .profile-header h1{
   font-size: clamp(22px, 2.2vw, 28px);
   margin: 0 0 4px;
@@ -39,7 +43,9 @@
 }
 .muted{ color: var(--muted); }
 
-/* ===== Grid ===== */
+/* ==========================================================================
+   3) GRID ELRENDEZÉS
+   ========================================================================== */
 .profile-grid{
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -49,7 +55,9 @@
   .profile-grid{ grid-template-columns: 1fr; }
 }
 
-/* ===== Reusable ===== */
+/* ==========================================================================
+   4) ÚJRAFELHASZNÁLHATÓ ALAPELEMEK (kártya, input, gombok)
+   ========================================================================== */
 .card{
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -64,41 +72,75 @@
   border-radius: 12px;
   background: #fafafa;
 }
+
+/* -- Gombok, alapstílus -- */
 .btn{
   height: 44px;
   padding: 0 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: #fff;
+  color: var(--text);
   cursor: pointer;
+  transition: filter .2s, transform .05s, box-shadow .2s, background-color .2s, color .2s, border-color .2s;
 }
 .btn:hover{ filter: brightness(0.98); }
+.btn:active{ transform: translateY(1px); }
+.btn:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(241, 41, 41, 0.25);
+}
+
+/* -- Elsődleges (kék) gomb -- */
 .btn-primary{
   border-color: transparent;
   background: var(--brand);
   color: #fff;
 }
+
+/* -- Danger VÁLTOZATOK --
+   Ha PIROS HÁTTÉR kell: .btn.btn-danger
+   Ha "ghost" (átlátszó) kell piros szöveggel/kerettel: .btn-ghost-danger
+*/
+.btn-danger{
+  background: var(--danger);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-danger:hover{ filter: brightness(0.96); }
+.btn-danger:focus-visible{
+  box-shadow: 0 0 0 3px rgb(30, 230, 30);
+}
+
+/* Ghost verzió (átlátszó háttér, piros szöveg/keret) */
 .btn-ghost-danger{
   background: transparent;
-  border-color: rgba(225,29,72,.25);
   color: var(--danger);
+  border-color: var(--danger);
 }
+.btn-ghost-danger:hover{
+  background: rgba(225,29,72,.06);
+}
+
+/* Közös segédosztályok */
 .row-right{ display:flex; justify-content:flex-end; gap:12px; }
 
-/* ===== Avatar Section ===== */
+/* ==========================================================================
+   5) AVATÁR SZEKCIÓ
+   ========================================================================== */
+/* -- Címsor -- */
 .avatar-section .avatar-title{
   font-weight: 600;
   margin-bottom: 10px;
 }
 
-/* Lapozós változat */
+/* -- Lapozható avatar-sor -- */
 .avatar-strip-wrap{
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
 }
-
 .avatar-strip{
   display: flex;
   gap: 12px;
@@ -113,20 +155,21 @@
   border-radius: 8px;
 }
 
+/* -- Egyes „preset” avatarok -- */
+/* Avatar pill – résmentes perem */
 .preset{
-  flex: 0 0 84px;
-  height: 84px;
-  border-radius: 50%;
-  background-size: cover;
-  background-position: center;
-  border: 2px solid transparent;
-  outline: 1px solid var(--border);
-  scroll-snap-align: start;
-  transition: transform .2s;
+  flex:0 0 84px; height:84px; border-radius:50%;
+  background:#fff center / cover no-repeat;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--border);
+  scroll-snap-align:start;
+  transition:transform .2s, box-shadow .2s;
 }
 .preset:hover{ transform: translateY(-2px); }
-.preset.active{ border-color: var(--brand); }
+.preset.active{ box-shadow:0 0 0 2px var(--brand); }
 
+
+/* -- Navigációs gombok az avatar-sávhoz -- */
 .nav-btn{
   width: 36px;
   height: 36px;
@@ -140,27 +183,48 @@
   justify-content: center;
   color: var(--text);
 }
-.nav-btn:hover{
-  background: var(--bg1);
+.nav-btn:hover{ background: var(--bg1); }
+
+/* ==========================================================================
+   6) SKILLEK / CÍMKÉK (tag-ek)
+   ========================================================================== */
+  /* Tag (pill) – maradhat inline-flex, középre igazít */
+.tag{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;       /* baseline bugfix (Firefox/iOS) */
 }
 
-/* ===== Skills ===== */
+/* A kis X gomb pontos középre igazítva */
 .skills-section .skills-title{ font-weight:600; margin-bottom:10px; }
 .tag-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
 .tag{
-  background:#f3f4f6; color:#111827;
+  background:#ddd6d6b1; color:#111827;
   border:1px solid var(--border);
   padding:6px 10px; border-radius:999px;
   display:inline-flex; align-items:center; gap:6px;
 }
 .tag-x{
-  width:20px; height:20px; border-radius:50%;
-  border: none; background:#fff; line-height:1;
-  cursor:pointer; color:#6b7280;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;         /* <<< EZ a lényeg */
+  align-items: center;
+  justify-content: center;
+  padding: 0;                   /* ne növelje a magasságot */
+  line-height: 1;               /* ne nyúljon meg */
+  font-size: 12px;              /* optikai közép */
+  font-weight: 600;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #ddd6d6b1;
+  cursor: pointer;
 }
 .add-row{ display:flex; gap:10px; }
-
-/* ===== Password panel ===== */
+/* ==========================================================================
+   7) JELSZÓ PANEL (összecsukható)
+   ========================================================================== */
 .password-section{
   margin-top: 22px;
   border-top: 1px dashed var(--border);
@@ -215,4 +279,24 @@
 }
 
 .field{ display:grid; gap:6px; }
-.logout-row{ margin-top: 14px; display:flex; justify-content:flex-end; }
+
+/* ==========================================================================
+   8) LOGOUT SOR + GOMB
+   ========================================================================== */
+.logout-row{
+  margin-top: 14px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+/* Biztos, ami biztos: ami a logout sorban van és "danger", az legyen piros háttérrel */
+.logout-row .btn-danger {
+  background: var(--danger) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.logout-row .btn-danger:hover{ filter: brightness(0.96); }
+.logout-row .btn-danger:focus-visible{
+  box-shadow: 0 0 0 3px rgb(245, 35, 35);
+}

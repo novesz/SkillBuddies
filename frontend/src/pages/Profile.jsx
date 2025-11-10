@@ -51,7 +51,7 @@ export default function Profile() {
 
             <div className="logout-row">
             <button
-                className="btn btn-ghost-danger"
+                className="btn btn-danger"
                 type="button"
                 onClick={() => {
                 // TODO: töröld a tokent / cookie-t és navigate("/")
@@ -61,6 +61,7 @@ export default function Profile() {
                 Log out
             </button>
             </div>
+
         </section>
         </main>
     </>
