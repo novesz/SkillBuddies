@@ -183,8 +183,8 @@ app.get('/tickets', (req, res) => {
 });
 //tickets create
 app.post('/tickets/create', (req, res) => {
-    const sql = "INSERT INTO Tickets (Email, Descr, Text) VALUES (?, ?, ?)";
-    const values = [req.body.Email, req.body.Descr, req.body.Text];
+    const sql = "INSERT INTO Tickets (Email, Text) VALUES (?, ?)";
+    const values = [req.body.Email, req.body.Text];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating ticket:', err);
