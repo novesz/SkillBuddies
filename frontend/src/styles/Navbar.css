@@ -1,8 +1,8 @@
 .navbar {
   position: absolute;
-  top: 90px; /* header alatt */
-  left: 16px;
-  z-index: 100;
+  top: calc(100% + 10px); /* a hamburger gomb alatt */
+  left: 0;
+  z-index: 1000;
 }
 
 .navbar-box {
@@ -12,7 +12,6 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
   width: 200px;
 }
-
 
 .navbar-box ul {
   list-style: none;
@@ -25,7 +24,7 @@
 }
 
 .navbar-box a {
-  color: rgb(0, 0, 0);
+  color: #000;
   text-decoration: underline;
   font-size: 18px;
   font-weight: 500;
@@ -34,5 +33,3 @@
 .navbar-box a:hover {
   text-decoration: none;
 }
-
-
