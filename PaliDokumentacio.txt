@@ -6,6 +6,7 @@
 2025-10-15 Tickets tábla hozzáadva, a rankokból a userid kivéve, áttéve a rankID a usersbe
 2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
 2025-11-04 reviews táblához tartozó "uar" tábla kitörlése, reviewer és reviewee mező hozzáadva
+2025-11-10 support tábla elkülönítése, hogy ne kelljen bejelentkezve lenni a ticket készítéséhez, IsResolved és SentAt oszlop 
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
@@ -20,5 +21,6 @@
 2025-11-03, 2025-11-04 backend tesztelése és javítása:
 	-review delete átírása hogy a kötőtáblából is megfelelően töröljön
 2025-11-05 a legutóbbi adatbázis változás (2025-11-04) alapján backend megjavítása és tesztelése és login api
+2025-11-10 Adatbázis változás utáni korrigálás a backendbe
 
-2026-11-05, 2026-11-06 Support page elkészítése
+2026-11-05, 2026-11-06, 2026-11-10 Support page elkészítése

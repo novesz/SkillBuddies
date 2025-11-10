@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1:3307
--- Létrehozás ideje: 2025. Nov 05. 11:30
+-- Létrehozás ideje: 2025. Nov 10. 09:24
 -- Kiszolgáló verziója: 10.4.28-MariaDB
 -- PHP verzió: 8.2.4
 
@@ -31,11 +31,13 @@ USE `skillmegoszt`;
 --
 
 DROP TABLE IF EXISTS `changes`;
-CREATE TABLE `changes` (
-  `ChangeID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `changes` (
+  `ChangeID` int(11) NOT NULL AUTO_INCREMENT,
   `Mit` varchar(45) NOT NULL,
   `Mikor` datetime NOT NULL,
-  `UserID` int(11) NOT NULL
+  `UserID` int(11) NOT NULL,
+  PRIMARY KEY (`ChangeID`),
+  KEY `chfk1_idx` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -45,12 +47,13 @@ CREATE TABLE `changes` (
 --
 
 DROP TABLE IF EXISTS `chats`;
-CREATE TABLE `chats` (
-  `ChatID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `chats` (
+  `ChatID` int(11) NOT NULL AUTO_INCREMENT,
   `ChatName` varchar(45) NOT NULL,
   `ChatPic` varchar(45) DEFAULT NULL,
-  `CreatedAt` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `CreatedAt` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`ChatID`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `chats`
@@ -67,13 +70,16 @@ INSERT INTO `chats` (`ChatID`, `ChatName`, `ChatPic`, `CreatedAt`) VALUES
 --
 
 DROP TABLE IF EXISTS `msgs`;
-CREATE TABLE `msgs` (
-  `MsgID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `msgs` (
+  `MsgID` int(11) NOT NULL AUTO_INCREMENT,
   `UserID` int(11) NOT NULL,
   `ChatID` int(11) NOT NULL,
   `Content` text NOT NULL,
-  `SentAt` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `SentAt` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`MsgID`),
+  KEY `fkUsers_idx` (`UserID`),
+  KEY `fkChats_idx` (`ChatID`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `msgs`
@@ -91,11 +97,13 @@ INSERT INTO `msgs` (`MsgID`, `UserID`, `ChatID`, `Content`, `SentAt`) VALUES
 --
 
 DROP TABLE IF EXISTS `reviews`;
-CREATE TABLE `reviews` (
+CREATE TABLE IF NOT EXISTS `reviews` (
   `Reviewer` int(11) NOT NULL,
   `Reviewee` int(11) NOT NULL,
   `Rating` int(1) DEFAULT NULL,
-  `Tartalom` varchar(200) DEFAULT NULL
+  `Tartalom` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`Reviewer`,`Reviewee`),
+  KEY `Reviewee` (`Reviewee`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -112,10 +120,12 @@ INSERT INTO `reviews` (`Reviewer`, `Reviewee`, `Rating`, `Tartalom`) VALUES
 --
 
 DROP TABLE IF EXISTS `skills`;
-CREATE TABLE `skills` (
-  `SkillID` int(11) NOT NULL,
-  `Skill` varchar(45) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS `skills` (
+  `SkillID` int(11) NOT NULL AUTO_INCREMENT,
+  `Skill` varchar(45) NOT NULL,
+  PRIMARY KEY (`SkillID`),
+  UNIQUE KEY `Skill_UNIQUE` (`Skill`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `skills`
@@ -134,12 +144,14 @@ INSERT INTO `skills` (`SkillID`, `Skill`) VALUES
 --
 
 DROP TABLE IF EXISTS `tickets`;
-CREATE TABLE `tickets` (
-  `TicketID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `tickets` (
+  `TicketID` int(11) NOT NULL AUTO_INCREMENT,
   `UserID` int(11) NOT NULL,
   `Descr` varchar(45) NOT NULL,
-  `Text` varchar(45) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `Text` varchar(45) NOT NULL,
+  PRIMARY KEY (`TicketID`),
+  KEY `Ufk_idx` (`UserID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `tickets`
@@ -155,11 +167,13 @@ INSERT INTO `tickets` (`TicketID`, `UserID`, `Descr`, `Text`) VALUES
 --
 
 DROP TABLE IF EXISTS `uac`;
-CREATE TABLE `uac` (
+CREATE TABLE IF NOT EXISTS `uac` (
   `UserID` int(11) NOT NULL,
   `ChatID` int(11) NOT NULL,
   `IsChatAdmin` tinyint(4) NOT NULL DEFAULT 0,
-  `JoinedAt` datetime NOT NULL
+  `JoinedAt` datetime NOT NULL,
+  PRIMARY KEY (`UserID`,`ChatID`),
+  KEY `cfk2_idx` (`ChatID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -176,9 +190,11 @@ INSERT INTO `uac` (`UserID`, `ChatID`, `IsChatAdmin`, `JoinedAt`) VALUES
 --
 
 DROP TABLE IF EXISTS `uas`;
-CREATE TABLE `uas` (
+CREATE TABLE IF NOT EXISTS `uas` (
   `UserID` int(11) NOT NULL,
-  `SkillID` int(11) NOT NULL
+  `SkillID` int(11) NOT NULL,
+  PRIMARY KEY (`UserID`,`SkillID`),
+  KEY `fk1_idx` (`SkillID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -200,14 +216,18 @@ INSERT INTO `uas` (`UserID`, `SkillID`) VALUES
 --
 
 DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-  `UserID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `users` (
+  `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `Username` varchar(45) NOT NULL,
   `Password` varchar(45) NOT NULL,
   `Email` varchar(45) NOT NULL,
   `Tokens` int(11) NOT NULL DEFAULT 0,
-  `rankID` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `rankID` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`UserID`),
+  UNIQUE KEY `Username_UNIQUE` (`Username`),
+  UNIQUE KEY `Email_UNIQUE` (`Email`),
+  KEY `fkRank_idx` (`rankID`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `users`
@@ -226,10 +246,11 @@ INSERT INTO `users` (`UserID`, `Username`, `Password`, `Email`, `Tokens`, `rankI
 --
 
 DROP TABLE IF EXISTS `user_rank`;
-CREATE TABLE `user_rank` (
-  `rankID` int(11) NOT NULL,
-  `which` varchar(45) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS `user_rank` (
+  `rankID` int(11) NOT NULL AUTO_INCREMENT,
+  `which` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`rankID`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- A tábla adatainak kiíratása `user_rank`
@@ -240,127 +261,6 @@ INSERT INTO `user_rank` (`rankID`, `which`) VALUES
 (1, 'user'),
 (2, 'admin'),
 (3, 'owner');
-
---
--- Indexek a kiírt táblákhoz
---
-
---
--- A tábla indexei `changes`
---
-ALTER TABLE `changes`
-  ADD PRIMARY KEY (`ChangeID`),
-  ADD KEY `chfk1_idx` (`UserID`);
-
---
--- A tábla indexei `chats`
---
-ALTER TABLE `chats`
-  ADD PRIMARY KEY (`ChatID`);
-
---
--- A tábla indexei `msgs`
---
-ALTER TABLE `msgs`
-  ADD PRIMARY KEY (`MsgID`),
-  ADD KEY `fkUsers_idx` (`UserID`),
-  ADD KEY `fkChats_idx` (`ChatID`);
-
---
--- A tábla indexei `reviews`
---
-ALTER TABLE `reviews`
-  ADD PRIMARY KEY (`Reviewer`,`Reviewee`),
-  ADD KEY `Reviewee` (`Reviewee`);
-
---
--- A tábla indexei `skills`
---
-ALTER TABLE `skills`
-  ADD PRIMARY KEY (`SkillID`),
-  ADD UNIQUE KEY `Skill_UNIQUE` (`Skill`);
-
---
--- A tábla indexei `tickets`
---
-ALTER TABLE `tickets`
-  ADD PRIMARY KEY (`TicketID`),
-  ADD KEY `Ufk_idx` (`UserID`);
-
---
--- A tábla indexei `uac`
---
-ALTER TABLE `uac`
-  ADD PRIMARY KEY (`UserID`,`ChatID`),
-  ADD KEY `cfk2_idx` (`ChatID`);
-
---
--- A tábla indexei `uas`
---
-ALTER TABLE `uas`
-  ADD PRIMARY KEY (`UserID`,`SkillID`),
-  ADD KEY `fk1_idx` (`SkillID`);
-
---
--- A tábla indexei `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`UserID`),
-  ADD UNIQUE KEY `Username_UNIQUE` (`Username`),
-  ADD UNIQUE KEY `Email_UNIQUE` (`Email`),
-  ADD KEY `fkRank_idx` (`rankID`);
-
---
--- A tábla indexei `user_rank`
---
-ALTER TABLE `user_rank`
-  ADD PRIMARY KEY (`rankID`);
-
---
--- A kiírt táblák AUTO_INCREMENT értéke
---
-
---
--- AUTO_INCREMENT a táblához `changes`
---
-ALTER TABLE `changes`
-  MODIFY `ChangeID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT a táblához `chats`
---
-ALTER TABLE `chats`
-  MODIFY `ChatID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT a táblához `msgs`
---
-ALTER TABLE `msgs`
-  MODIFY `MsgID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT a táblához `skills`
---
-ALTER TABLE `skills`
-  MODIFY `SkillID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT a táblához `tickets`
---
-ALTER TABLE `tickets`
-  MODIFY `TicketID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT a táblához `users`
---
-ALTER TABLE `users`
-  MODIFY `UserID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT a táblához `user_rank`
---
-ALTER TABLE `user_rank`
-  MODIFY `rankID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Megkötések a kiírt táblákhoz
@@ -376,35 +276,35 @@ ALTER TABLE `changes`
 -- Megkötések a táblához `msgs`
 --
 ALTER TABLE `msgs`
-  ADD CONSTRAINT `fkChats` FOREIGN KEY (`ChatID`) REFERENCES `chats` (`ChatID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fkUsers` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `msgs_fk_chat` FOREIGN KEY (`ChatID`) REFERENCES `chats` (`ChatID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `msgs_fk_user` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `reviews`
 --
 ALTER TABLE `reviews`
-  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`Reviewer`) REFERENCES `users` (`UserID`),
-  ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`Reviewee`) REFERENCES `users` (`UserID`);
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`Reviewer`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`Reviewee`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `tickets`
 --
 ALTER TABLE `tickets`
-  ADD CONSTRAINT `Ufk` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `tickets_fk_user` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `uac`
 --
 ALTER TABLE `uac`
-  ADD CONSTRAINT `cfk1` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `cfk2` FOREIGN KEY (`ChatID`) REFERENCES `chats` (`ChatID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `uac_fk_chat` FOREIGN KEY (`ChatID`) REFERENCES `chats` (`ChatID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `uac_fk_user` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `uas`
 --
 ALTER TABLE `uas`
-  ADD CONSTRAINT `fk1` FOREIGN KEY (`SkillID`) REFERENCES `skills` (`SkillID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk2` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `uas_fk_skill` FOREIGN KEY (`SkillID`) REFERENCES `skills` (`SkillID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `uas_fk_user` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `users`

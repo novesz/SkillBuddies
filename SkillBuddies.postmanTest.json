@@ -348,7 +348,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"UserID\" : 8,\r\n    \"Descr\" : \"cannot log in\",\r\n    \"Text\" : \"I simply cannot log in\"\r\n}",
+							"raw": "{\r\n    \"Email\" : \"palpal828@hengersor.hu\",\r\n    \"Descr\" : \"cannot log in\",\r\n    \"Text\" : \"I simply cannot log in\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -389,6 +389,30 @@
 							"port": "3001",
 							"path": [
 								"tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ticketResolve",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:3001/tickets/resolve/2",
+							"host": [
+								"localhost"
+							],
+							"port": "3001",
+							"path": [
+								"tickets",
+								"resolve",
+								"2"
 							]
 						}
 					},

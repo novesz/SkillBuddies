@@ -183,14 +183,25 @@ app.get('/tickets', (req, res) => {
 });
 //tickets create
 app.post('/tickets/create', (req, res) => {
-    const sql = "INSERT INTO Tickets (UserID, Descr, Text) VALUES (?, ?, ?)";
-    const values = [req.body.UserID, req.body.Descr, req.body.Text];
+    const sql = "INSERT INTO Tickets (Email, Descr, Text) VALUES (?, ?, ?)";
+    const values = [req.body.Email, req.body.Descr, req.body.Text];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating ticket:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
         res.status(201).json({ message: 'Ticket created successfully', TicketID: results.insertId });
+    });
+});
+//tickets Resolve
+app.put('/tickets/resolve/:id', (req, res) => {
+    const sql = "UPDATE tickets SET IsResolved = 1 WHERE TicketID = ?";
+    db.query(sql, [req.params.id], (err, results) => {
+        if (err) {
+            console.error('Error resolving ticket:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json({ message: 'Ticket resolved successfully' });
     });
 });
 
