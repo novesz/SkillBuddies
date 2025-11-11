@@ -107,3 +107,26 @@ button:focus {
   outline: none;
   box-shadow: none;
 }
+
+/* ===== HARDEN: PFP a jobb felső sarokban, fix méret ===== */
+.sb-header { display:flex; align-items:center; overflow:visible; }
+.sb-profile {
+  margin-left: auto;
+  flex: 0 0 60px;             /* fix “slot” a gombnak */
+  width: 60px; height: 60px;
+  padding: 0; border: none;
+  background: transparent !important;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;         /* ne legyen absolute a világban */
+}
+.sb-profile-img {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  transform: none !important;
+}
