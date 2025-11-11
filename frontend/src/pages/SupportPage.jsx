@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "../styles/SupportPage.css";
 import Navbar from "../components/header/Header";
+import axios from "axios";
 
 function SupportPage() {
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessages, setSuccessMessages] = useState([]);
@@ -24,25 +24,15 @@ function SupportPage() {
     e.preventDefault(); // Prevent page reload
     setLoading(true);
     setError(null);
-
+  
     const Email = e.target.email.value;
     const Text = e.target.desc.value;
-
+  
     try {
-      const response = await fetch("http://localhost:3001/tickets/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ Email, Text}),
+      const response = await axios.post("http://localhost:3001/tickets/create", {
+        Email,
+        Text,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const jsonData = await response.json();
-      setData((prev) => [...prev, jsonData]); // Store new ticket in state
       e.target.reset(); // Clear the form
     } catch (err) {
       console.error("Error:", err);
