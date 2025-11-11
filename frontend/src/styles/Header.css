@@ -1,30 +1,37 @@
-/* Csak a headerhez szükséges változó */
+/* ==========================================================================
+   VARIABLES
+   ========================================================================== */
 :root{
   --shadow: 10px 10px 20px rgba(0,0,0,.25);
 }
- 
-/* ===== HEADER (sticky, full width, fix height) =====*/
- 
+
+/* ==========================================================================
+   HEADER (sticky, fixed height)
+   ========================================================================== */
 .sb-header{
   position: sticky;
   top: 0;
   z-index: 50;
   width: 100%;
-  height: 90px;
+  height: 90px;                 /* fix header magasság */
   padding: 0 24px;
+  box-sizing: border-box;
+
   display: flex;
   align-items: center;
   gap: 16px;
+
   border-bottom: 1px solid rgba(0,0,0,.1);
-  backdrop-filter: blur(10px);               /* kicsit erősebb blur */
-  background-color: rgba(180, 200, 255, 0.2); /* light blue tint */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);    /* nagyon lágy árnyék */
-  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  background-color: rgba(180,200,255,0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   transition: background-color .3s ease;
+  overflow: visible;            /* hogy a lebegő elemek kilóghassanak */
 }
- 
- 
-/* ===== HAMBURGER ===== */
+
+/* ==========================================================================
+   HAMBURGER
+   ========================================================================== */
 .sb-hamburger{
   width: 44px;
   height: 44px;
@@ -33,95 +40,55 @@
   background: #f3b34e;
   box-shadow: var(--shadow);
   cursor: pointer;
-  position: relative;           /* <- FONTOS */
+  position: relative;
 }
- 
 .sb-hamburger span{
-  position: absolute;           /* <- fix pozíció */
+  position: absolute;
   left: 50%;
-  transform: translateX(-50%);  /* vízszintesen középre */
-  width: 24px;                  /* mindhárom azonos */
-  height: 3px;                  /* 3px vastag: kevésbé aliasingol */
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
   background: #222;
   border-radius: 2px;
   transition: transform .2s ease, opacity .2s ease, top .2s ease;
-  transform-origin: center;     /* X animációhoz */
+  transform-origin: center;
 }
- 
-/* 3 fix Y-pozíció */
 .sb-hamburger span:nth-child(1){ top: 11px; }
 .sb-hamburger span:nth-child(2){ top: 20px; }
 .sb-hamburger span:nth-child(3){ top: 29px; }
- 
-/* ===== X animáció ===== */
-.sb-hamburger.is-open span:nth-child(1){
-  top: 20px; transform: translateX(-50%) rotate(45deg);
-}
-.sb-hamburger.is-open span:nth-child(2){ opacity: 0; }
-.sb-hamburger.is-open span:nth-child(3){
-  top: 20px; transform: translateX(-50%) rotate(-45deg);
-}
- 
-/* ===== LOGÓ ===== */
-.sb-brand{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-}
+.sb-hamburger.is-open span:nth-child(1){ top:20px; transform: translateX(-50%) rotate(45deg); }
+.sb-hamburger.is-open span:nth-child(2){ opacity:0; }
+.sb-hamburger.is-open span:nth-child(3){ top:20px; transform: translateX(-50%) rotate(-45deg); }
+
+/* ==========================================================================
+   LOGO
+   ========================================================================== */
+.sb-brand{ display:flex; align-items:center; justify-content:flex-start; }
 .sb-logo-only{
-  height: 150px;    /* ha nagyobb kell, növeld a header height-ot is */
+  height: 125px;                 /* nem lóg túl a 90px headeren */
   width: auto;
   object-fit: contain;
   display: block;
   margin-left: 12px;
 }
- 
-/* ===== PROFIL KÖR ===== */
-.sb-profile{
-  position: absolute;
-  right: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #ff8a8a;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(0,0,0,.18);
-}
- 
-/* ===== Mobil finomítás ===== */
-@media (max-width: 600px){
-  .sb-header{ height: 64px; padding: 0 16px; }
-  .sb-logo-only{ height: 40px; margin-left: 8px; }
-  .sb-hamburger{ width: 36px; height: 36px; }
-  .sb-profile{ width: 42px; height: 42px; right: 16px; }
-}
- 
-/* ===== Gombok ===== */
-button {
-  outline: none;
-}
-button:focus {
-  outline: none;
-  box-shadow: none;
-}
 
-/* ===== HARDEN: PFP a jobb felső sarokban, fix méret ===== */
-.sb-header { display:flex; align-items:center; overflow:visible; }
-.sb-profile {
-  margin-left: auto;
-  flex: 0 0 60px;             /* fix “slot” a gombnak */
-  width: 60px; height: 60px;
-  padding: 0; border: none;
+/* ==========================================================================
+   PFP (JOBB SZÉL) – HARDENED
+   ========================================================================== */
+.sb-profile{
+  margin-left: auto;            /* jobb szélre tolja */
+  flex: 0 0 60px;               /* fix hely a gombnak */
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: none;
   background: transparent !important;
   border-radius: 50%;
   overflow: hidden;
-  position: relative;         /* ne legyen absolute a világban */
+  cursor: pointer;
+  position: relative;           /* sosem absolute a világban */
 }
-.sb-profile-img {
-  position: static !important;
+.sb-profile-img{
   display: block !important;
   width: 100% !important;
   height: 100% !important;
@@ -129,4 +96,20 @@ button:focus {
   object-fit: cover !important;
   object-position: center !important;
   transform: none !important;
+}
+
+/* ==========================================================================
+   BUTTON FOCUS RESET (opcionális)
+   ========================================================================== */
+button{ outline: none; }
+button:focus{ outline: none; box-shadow: none; }
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+@media (max-width: 600px){
+  .sb-header{ height: 64px; padding: 0 16px; }
+  .sb-logo-only{ height: 40px; margin-left: 8px; }
+  .sb-hamburger{ width: 36px; height: 36px; }
+  .sb-profile{ width: 42px; height: 42px; flex-basis: 42px; }
 }
