@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';   // <= DOM!
 import App from './App.jsx';
 import './index.css';
 import { UserProvider } from './context/UserContext.jsx';
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
