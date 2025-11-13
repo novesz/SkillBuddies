@@ -23,4 +23,5 @@
 2025-11-05 a legutóbbi adatbázis változás (2025-11-04) alapján backend megjavítása és tesztelése és login api
 2025-11-10 Adatbázis változás utáni korrigálás a backendbe
 
-2026-11-05, 2026-11-06, 2026-11-10 Support page elkészítése
+2025-11-05, 2025-11-06, 2025-11-10 Support page elkészítése
+2025-11-13 about page háttérszín javítása

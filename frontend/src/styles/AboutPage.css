@@ -16,7 +16,11 @@ html,body,#root{
   display:flex;
   flex-direction:column;
   align-items:center;
-  background: linear-gradient(135deg, #4f5566 0%, #a9c7ff 100%);
+  min-height:100vh; width:100%; color:var(--text);
+  background:
+    radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
+    linear-gradient(135deg, var(--bg1), #9bb6e9 60%, #a9bdea);
+  background-attachment:fixed;
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
   color:var(--muted);
 }
