@@ -11,7 +11,6 @@
   box-shadow: 10px 10px 20px rgba(0, 0, 0, .25);
 }
 
-
 /* Bejelentkezés doboz */
 .login-container {
   margin-top: 80px;
@@ -92,3 +91,13 @@
 .login-links a:hover {
   text-decoration: underline;
 }
+
+ /* Reszponzív stílusok */
+/* Tabletek és kisebb kijelzők */
+@media (max-width: 900px) {
+  .login-container {
+    width: 70%;
+    padding: 40px 30px;
+  }
+}
+
