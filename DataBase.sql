@@ -133,7 +133,6 @@ CREATE TABLE `reviews` (
   `Reviewee` int(11) NOT NULL,
   `Rating` int(1) DEFAULT NULL,
   `Tartalom` varchar(200) DEFAULT NULL,
-  `IsResolved` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`Reviewer`,`Reviewee`),
   KEY `Reviewee` (`Reviewee`),
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`Reviewer`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -147,7 +146,7 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (4,9,4,'Good guy',NULL);
+INSERT INTO `reviews` VALUES (4,9,4,'Good guy'),(4,10,1,'troll'),(8,4,1,'Pali...'),(9,8,5,'Great teamwork');
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -227,7 +226,7 @@ CREATE TABLE `uac` (
 
 LOCK TABLES `uac` WRITE;
 /*!40000 ALTER TABLE `uac` DISABLE KEYS */;
-INSERT INTO `uac` VALUES (4,1,1,'2025-01-01 00:00:00');
+INSERT INTO `uac` VALUES (4,1,1,'2025-01-01 00:00:00'),(8,1,1,'2025-11-17 10:28:01'),(9,1,1,'2025-11-17 10:28:01'),(10,1,0,'2025-11-17 10:28:01'),(10,2,1,'2025-11-17 10:28:01');
 /*!40000 ALTER TABLE `uac` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -349,4 +348,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-11 12:00:12
+-- Dump completed on 2025-11-17 10:33:49
