@@ -30,13 +30,12 @@ CREATE TABLE `changes` (
   `Username` varchar(45) NOT NULL,
   `Password` varchar(45) NOT NULL,
   `Email` varchar(45) NOT NULL,
-  `Tokens` int(11) NOT NULL,
   `rankID` int(11) NOT NULL,
-  `ChangedAt` datetime NOT NULL,
+  `ChangedAt` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`ChangeID`),
   KEY `fkUser` (`UserID`),
   CONSTRAINT `fkUser` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -45,24 +44,9 @@ CREATE TABLE `changes` (
 
 LOCK TABLES `changes` WRITE;
 /*!40000 ALTER TABLE `changes` DISABLE KEYS */;
-INSERT INTO `changes` VALUES (5,4,'Pali','Pali','palpal828@hengersor.hu',10000,3,'2025-11-11 11:23:55'),(6,4,'Pali','PaliPali','palpal828@hengersor.hu',10000,3,'2025-11-11 11:57:32');
+INSERT INTO `changes` VALUES (9,10,'random','random1','random@example.com',0,'2025-11-19 10:31:32'),(11,10,'random','random1','random@example.com',0,'2025-11-19 10:34:07'),(12,10,'random','random1','random@example.com',1,'2025-11-19 10:34:22');
 /*!40000 ALTER TABLE `changes` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER ChangeTorol BEFORE DELETE ON changes FOR EACH ROW BEGIN DELETE FROM changes where UserID = OLD.UserID; END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `chats`
@@ -309,7 +293,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (4,'Pali','PaliPaliPali','palpal828@hengersor.hu',10000,3),(8,'Eszter','Eszter','novesz831@hengersor.hu',0,3),(9,'Hubi','Hubertusz','szahub608@hengersor.hu',0,3),(10,'random','random','random@example.com',0,0);
+INSERT INTO `users` VALUES (4,'Pali','PaliPaliPali','palpal828@hengersor.hu',10000,3),(8,'Eszter','Eszter','novesz831@hengersor.hu',0,3),(9,'Hubi','Hubertusz','szahub608@hengersor.hu',0,3),(10,'random','random1','random@example.com',0,0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -321,9 +305,46 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER ChangeMade BEFORE UPDATE ON users FOR EACH ROW
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER ChangeMade
+BEFORE UPDATE ON users
+FOR EACH ROW
 BEGIN
- INSERT INTO changes (UserID, Username, Password, Email, Tokens, rankID, ChangedAt) VALUES (OLD.UserID, OLD.Username, OLD.Password, OLD.Email, OLD.Tokens, OLD.rankID, NOW());
+    DECLARE last_nonrank_change DATETIME;
+
+    
+
+    IF OLD.rankID <> NEW.rankID THEN
+        INSERT INTO changes (UserID, Username, Password, Email, rankID)
+        VALUES (OLD.UserID, OLD.Username, OLD.Password, OLD.Email, OLD.rankID);
+    END IF;
+
+
+
+    IF OLD.Username <> NEW.Username
+       OR OLD.Password <> NEW.Password
+       OR OLD.Email <> NEW.Email THEN
+
+        -- Load last non-rank change timestamp
+        SELECT MAX(ChangedAt)
+        INTO last_nonrank_change
+        FROM changes
+        WHERE UserID = OLD.UserID
+          AND rankID = OLD.rankID;  
+        
+        IF last_nonrank_change IS NOT NULL
+           AND TIMESTAMPDIFF(HOUR, last_nonrank_change, NOW()) < 24 THEN
+
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'You must wait 24 hours before changing your profile information again.';
+
+        END IF;
+
+       
+        INSERT INTO changes (UserID, Username, Password, Email, rankID)
+        VALUES (OLD.UserID, OLD.Username, OLD.Password, OLD.Email, OLD.rankID);
+
+    END IF;
+
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -348,4 +369,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-17 10:33:49
+-- Dump completed on 2025-11-19 10:35:41
