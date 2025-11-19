@@ -1,5 +1,5 @@
 .navbar {
-  position: absolute;
+  position: block;
   top: calc(100% + 10px); /* a hamburger gomb alatt */
   left: 0;
   z-index: 1000;

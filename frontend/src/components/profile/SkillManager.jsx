@@ -1,18 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SkillManager({ skills, onAdd, onRemove }) {
   const [value, setValue] = useState("");
+  const [allSkills, setAllSkills] = useState([]);       // minden skill a DB-ből
+  const [suggestions, setSuggestions] = useState([]);   // autocomplete lista
 
+  // 1) Összes skill betöltése az adatbázisból
+  useEffect(() => {
+    fetch("http://localhost:3001/skills")
+      .then((res) => res.json())
+      .then((data) => {
+        // data: pl. [{SkillID: 1, Skill: "C#"}, ...]
+        setAllSkills(data.map((s) => s.Skill)); // csak a nevek kellenek ide
+      })
+      .catch((err) => console.error("Error loading skills", err));
+  }, []);
+
+  // 2) Javaslatok frissítése, ha változik az input
+  useEffect(() => {
+    const text = value.trim().toLowerCase();
+
+    if (!text) {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = allSkills
+      .filter(
+        (skill) =>
+          skill.toLowerCase().startsWith(text) && !skills.includes(skill)
+      )
+      .slice(0, 5); // max 5 javaslat
+
+    setSuggestions(filtered);
+  }, [value, allSkills, skills]);
+
+  // 3) Megnézzük, hogy az input pontosan egyezik-e egy létező skill névvel
+  const trimmed = value.trim();
+  const exactMatch =
+    trimmed &&
+    allSkills.find(
+      (s) => s.toLowerCase() === trimmed.toLowerCase()
+    );
+
+  // Csak akkor engedünk hozzáadni, ha létezik ilyen skill ÉS még nincs a listában
+  const canAdd = !!exactMatch && !skills.includes(exactMatch);
+
+  // 4) Hozzáadás (Enter vagy Add gomb)
   const tryAdd = () => {
-    const s = value.trim();
-    if (s) onAdd(s);
+    if (!canAdd || !exactMatch) return;
+
+    onAdd(exactMatch);          // szülő komponensnek továbbadjuk
+    setValue("");              // input ürítés
+    setSuggestions([]);        // javaslatlista eltüntetése
+  };
+
+  // 5) Ha a javaslatra kattint, azt adjuk hozzá
+  const handleSuggestionClick = (skill) => {
+    if (skills.includes(skill)) return;
+
+    onAdd(skill);
     setValue("");
+    setSuggestions([]);
   };
 
   return (
     <section className="skills-section card">
       <div className="skills-title">Skills</div>
 
+      {/* már meglévő skillek */}
       <div className="tag-list">
         {skills.map((s) => (
           <span className="tag" key={s}>
@@ -29,7 +85,8 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
         ))}
       </div>
 
-      <div className="add-row">
+      {/* input + Add + javaslat lista */}
+      <div className="add-row" style={{ position: "relative" }}>
         <input
           className="input"
           placeholder="Add a skill…"
@@ -37,9 +94,27 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => (e.key === "Enter" ? tryAdd() : null)}
         />
-        <button className="btn" type="button" onClick={tryAdd}>
+        <button
+          className="btn"
+          type="button"
+          onClick={tryAdd}
+          disabled={!canAdd}        // ha nem létező skill, a gomb inaktív
+        >
           Add
         </button>
+
+        {suggestions.length > 0 && (
+          <ul className="skills-suggestions">
+            {suggestions.map((skill) => (
+              <li
+                key={skill}
+                onClick={() => handleSuggestionClick(skill)}
+              >
+                {skill}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
