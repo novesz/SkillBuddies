@@ -33,7 +33,7 @@
 }
 
 /* ==========================================================================
-   2) FEJLÉC BLOKK (oldalcím, alcím)
+   2) FEJLÉC BLOKK
    ========================================================================== */
 .profile-header{ margin-bottom: 16px; }
 .profile-header h1{
@@ -44,7 +44,7 @@
 .muted{ color: var(--muted); }
 
 /* ==========================================================================
-   3) GRID ELRENDEZÉS
+   3) GRID
    ========================================================================== */
 .profile-grid{
   display: grid;
@@ -56,7 +56,7 @@
 }
 
 /* ==========================================================================
-   4) ALAPELEMEK (kártya, input, gombok)
+   4) ALAPELEMEK
    ========================================================================== */
 .card{
   border: 1px solid var(--border);
@@ -73,7 +73,6 @@
   background: #fafafa;
 }
 
-/* -- Gombok: alap + állapotok -- */
 .btn{
   height: 44px;
   padding: 0 16px;
@@ -91,14 +90,12 @@
   box-shadow: 0 0 0 3px rgba(40,125,245,.25);
 }
 
-/* Elsődleges (kék) */
 .btn-primary{
   border-color: transparent;
   background: var(--brand);
   color: #fff;
 }
 
-/* Danger (piros háttér) */
 .btn-danger{
   background: var(--danger);
   color: #fff;
@@ -107,7 +104,6 @@
 .btn-danger:hover{ filter: brightness(0.96); }
 .btn-danger:focus-visible{ box-shadow: 0 0 0 3px rgba(255,0,0,.25); }
 
-/* Ghost danger (átlátszó háttér, piros szöveg/keret) */
 .btn-ghost-danger{
   background: transparent;
   color: var(--danger);
@@ -115,19 +111,16 @@
 }
 .btn-ghost-danger:hover{ background: rgba(225,29,72,.06); }
 
-/* Közös segéd */
 .row-right{ display:flex; justify-content:flex-end; gap:12px; }
 
 /* ==========================================================================
-   5) AVATÁR SZEKCIÓ (lapozós)
+   5) AVATAR
    ========================================================================== */
-/* Címsor */
 .avatar-section .avatar-title{
   font-weight: 600;
   margin-bottom: 10px;
 }
 
-/* Lapozható avatar-sor keret + gombok */
 .avatar-strip-wrap{
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -135,7 +128,6 @@
   gap: 10px;
 }
 
-/* Görgethető sáv */
 .avatar-strip{
   display: flex;
   gap: 12px;
@@ -150,21 +142,19 @@
   border-radius: 8px;
 }
 
-/* Avatar pill – résmentes perem, aktív gyűrű */
 .preset{
   flex: 0 0 84px;
   height: 84px;
   border-radius: 50%;
   background: #fff center / cover no-repeat;
-  border: 2px solid #fff;              /* belső perem */
-  box-shadow: 0 0 0 1px var(--border); /* külső hajszál */
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
   scroll-snap-align: start;
   transition: transform .2s, box-shadow .2s;
 }
 .preset:hover{ transform: translateY(-2px); }
 .preset.active{ box-shadow: 0 0 0 2px var(--brand); }
 
-/* Bal/jobb nav gombok */
 .nav-btn{
   width: 36px;
   height: 36px;
@@ -174,25 +164,23 @@
   cursor: pointer;
   font-size: 20px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content:center;
   color: var(--text);
 }
 .nav-btn:hover{ background: var(--bg1); }
 .nav-btn:disabled{ opacity: .35; cursor: default; }
 
 /* ==========================================================================
-   6) SKILLEK / CÍMKÉK (tags)
+   6) SKILLEK (TAG LISTA)
    ========================================================================== */
 .skills-section .skills-title{ font-weight:600; margin-bottom:10px; }
 .tag-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
 
-/* Tag „pill” – egységes, duplikáció nélkül */
 .tag{
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  vertical-align: middle;               /* baseline bugfix */
+  vertical-align: middle;
   background: #f3f4f6;
   color: #111827;
   border: 1px solid var(--border);
@@ -211,11 +199,55 @@
 }
 .tag-x:hover{ background:#eef2f7; }
 
-/* Új skill sor */
-.add-row{ display:flex; gap:10px; }
+.add-row{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
 
 /* ==========================================================================
-   7) JELSZÓ PANEL (összecsukható)
+   6/B) AUTOCOMPLETE DROPDOWN (ÚJ)
+   ========================================================================== */
+
+/* wrapper az input + dropdown körül */
+.skills-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+/* a legördülő lista */
+.skills-suggestions {
+  position: absolute;
+  top: 48px; /* input méret + kis eltolás */
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.skills-suggestions li {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  transition: background-color .15s, padding-left .15s;
+}
+
+.skills-suggestions li:hover {
+  background: #f3f4f6;
+  padding-left: 18px;
+}
+
+/* ==========================================================================
+   7) PASSWORD PANEL
    ========================================================================== */
 .password-section{
   margin-top: 22px;
@@ -267,10 +299,9 @@
   transform: translateY(0) scaleY(1);
   max-height: 500px;
 }
-.field{ display:grid; gap:6px; }
 
 /* ==========================================================================
-   8) LOGOUT SOR + GOMB
+   8) LOGOUT
    ========================================================================== */
 .logout-row{
   margin-top: 14px;

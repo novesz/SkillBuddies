@@ -85,8 +85,8 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
         ))}
       </div>
 
-      {/* input + Add + javaslat lista */}
-      <div className="add-row" style={{ position: "relative" }}>
+      <div className="add-row">
+      <div className="skills-input-wrapper">
         <input
           className="input"
           placeholder="Add a skill…"
@@ -94,15 +94,8 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => (e.key === "Enter" ? tryAdd() : null)}
         />
-        <button
-          className="btn"
-          type="button"
-          onClick={tryAdd}
-          disabled={!canAdd}        // ha nem létező skill, a gomb inaktív
-        >
-          Add
-        </button>
 
+        {/* DROPDOWN – az input ALATT */}
         {suggestions.length > 0 && (
           <ul className="skills-suggestions">
             {suggestions.map((skill) => (
@@ -116,6 +109,16 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
           </ul>
         )}
       </div>
-    </section>
-  );
+
+      <button
+        className="btn"
+        type="button"
+        onClick={tryAdd}
+        disabled={!canAdd}
+      >
+        Add
+      </button>
+    </div>
+  </section>
+);
 }
