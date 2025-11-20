@@ -34,17 +34,27 @@ app.get('/users/all', (req, res) => {
     });
 });
 //login
-app.get('/login/', (req, res) => {
-    const sql = "SELECT * FROM users where Email = ? AND Password = ?";
-    const values = [string(req.body.email), string(req.body.password)];
+app.post('/login', (req, res) => {
+    const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
+    const values = [req.body.Email, req.body.Password];
+
     db.query(sql, values, (err, results) => {
         if (err) {
-            console.error('Error during login:', err);
-            return res.status(500).json({ error: 'Internal server error' });
+            console.error("Error:", err);
+            return res.status(500).json({ message: "Internal server error" });
         }
-        res.json(results);
+
+        if (results.length === 0) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        res.json({
+            message: "Login successful",
+            user: results[0],
+        });
     });
 });
+
 //get user by ID
 app.get('/users/:id', (req, res) => {
     const sql = "SELECT * FROM users where UserID = ?";

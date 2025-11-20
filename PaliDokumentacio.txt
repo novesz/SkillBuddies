@@ -26,3 +26,4 @@
 
 2025-11-05, 2025-11-06, 2025-11-10 Support page elkészítése
 2025-11-13 about page háttérszín javítása
+2025-11-20 register és login page kontrollerjeinek megírása
