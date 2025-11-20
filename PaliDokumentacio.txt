@@ -7,6 +7,7 @@
 2025-10-17 chats, msgs, uac táblák régebbi jellegűre visszaállítása, mivel az újjabb verzió lekérési gondokat okozott volna
 2025-11-04 reviews táblához tartozó "uar" tábla kitörlése, reviewer és reviewee mező hozzáadva
 2025-11-10 support tábla elkülönítése, hogy ne kelljen bejelentkezve lenni a ticket készítéséhez, IsResolved és SentAt oszlop 
+2025-11-19 ChangeMade trigger megírása logolás érdekébe
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
