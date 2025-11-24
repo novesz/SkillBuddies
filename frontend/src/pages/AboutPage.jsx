@@ -1,12 +1,12 @@
 import React from "react";
 import "../styles/AboutPage.css";
 import Header from "../components/header/Header";
+import instaLogo from "../../public/insta-logo.png";
 
 export default function AboutPage() {
   return (
-    
     <div className="about-page">
-        <Header />
+      <Header className="sticky-header" />
       <div className="about-card">
         <h1 className="about-title">About Page</h1>
         <p className="about-text">
@@ -28,14 +28,11 @@ export default function AboutPage() {
         <div className="social-card">
           <div className="badge">Social</div>
           <div className="social-inner">
-            <span className="insta-icon" aria-hidden>
-            </span>
+            <img src={instaLogo} alt="Instagram Logo" className="insta-icon" />
             <span className="social-handle">@SkillBuddies</span>
           </div>
         </div>
       </div>
-
-      
     </div>
   );
 }
