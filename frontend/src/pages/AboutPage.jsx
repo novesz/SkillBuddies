@@ -1,7 +1,6 @@
 import React from "react";
 import "../styles/AboutPage.css";
 import Header from "../components/header/Header";
-import instaLogo from "../../public/insta-logo.png";
 
 export default function AboutPage() {
   return (
@@ -28,7 +27,7 @@ export default function AboutPage() {
         <div className="social-card">
           <div className="badge">Social</div>
           <div className="social-inner">
-            <img src={instaLogo} alt="Instagram Logo" className="insta-icon" />
+            <img src="/insta-logo.png" alt="Instagram Logo" className="insta-icon" />
             <span className="social-handle">@SkillBuddies</span>
           </div>
         </div>
