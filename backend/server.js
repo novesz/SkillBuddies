@@ -410,3 +410,72 @@ app.get('/messages/:chatId', (req, res) => {
 app.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });
+
+// Eszti szuro
+
+app.get('/cards', (req, res) => {
+    const sql = `
+        SELECT 
+            s.SkillID,
+            s.Skill,
+            COUNT(uas.UserID) AS UserCount
+        FROM skills s
+        LEFT JOIN uas ON uas.SkillID = s.SkillID
+        GROUP BY s.SkillID, s.Skill
+        ORDER BY s.Skill;
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching cards:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        
+        const cards = results.map(row => ({
+            id: row.SkillID,
+            title: row.Skill,          
+            items: [row.Skill],        
+            users: row.UserCount || 0 
+        }));
+
+        res.json(cards);
+    });
+});
+
+app.get('/groups', (req, res) => {
+  const sql = `
+    SELECT 
+      g.GroupID,
+      g.Name,
+      g.Description,
+      u.Username AS CreatorName,
+      COUNT(DISTINCT gs.SkillID) AS SkillCount,
+      GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills
+    FROM groups g
+    JOIN users u ON u.UserID = g.CreatedBy
+    LEFT JOIN group_skills gs ON gs.GroupID = g.GroupID
+    LEFT JOIN skills s ON s.SkillID = gs.SkillID
+    GROUP BY g.GroupID, g.Name, g.Description, u.Username
+    ORDER BY g.CreatedAt DESC;
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      console.error('Error fetching groups:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    const groups = rows.map(r => ({
+      id: r.GroupID,
+      title: r.Name,
+      description: r.Description,
+      creator: r.CreatorName,
+      items: r.Skills ? r.Skills.split(', ') : [],
+      users: 0 // később: ide jöhet member count
+    }));
+
+    res.json(groups);
+  });
+});
+

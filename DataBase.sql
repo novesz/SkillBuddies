@@ -136,28 +136,89 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `skills`
---
 
 DROP TABLE IF EXISTS `skills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `skills` (
   `SkillID` int(11) NOT NULL AUTO_INCREMENT,
   `Skill` varchar(45) NOT NULL,
   PRIMARY KEY (`SkillID`),
   UNIQUE KEY `Skill` (`Skill`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
 -- Dumping data for table `skills`
---
 
 LOCK TABLES `skills` WRITE;
 /*!40000 ALTER TABLE `skills` DISABLE KEYS */;
-INSERT INTO `skills` VALUES (2,'gitár'),(4,'magyar'),(3,'matek'),(1,'zongora');
+
+INSERT INTO `skills` (`SkillID`, `Skill`) VALUES
+  (1,  'English (A1-A2)'),
+  (2,  'English (B1-B2)'),
+  (3,  'English (C1-C2)'),
+  (4,  'German (A1-A2)'),
+  (5,  'German (B1-B2)'),
+  (6,  'German (C1-C2)'),
+  (7,  'Hungarian grammar'),
+  (8,  'Hungarian literature'),
+  (9,  'Hungarian history'),
+  (10, 'Writing'),
+  (11, 'C#'),
+  (12, 'JavaScript'),
+  (13, 'HTML'),
+  (14, 'CSS'),
+  (15, 'Python'),
+  (16, 'Java'),
+  (17, 'C++'),
+  (18, 'Piano'),
+  (19, 'Guitar'),
+  (20, 'Drums'),
+  (21, 'Violin'),
+  (22, 'Singing / Vocal coach'),
+  (23, 'Crocheting'),
+  (24, 'Gardening'),
+  (25, 'MySQL'),
+  (26, 'React'),
+  (27, 'Bootstrap');
+
 /*!40000 ALTER TABLE `skills` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `groups/group_skills`
+--
+
+DROP TABLE IF EXISTS `groups`;
+CREATE TABLE `groups` (
+  `GroupID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(100) NOT NULL,
+  `Description` text,
+  `CreatedBy` int(11) NOT NULL,
+  `CreatedAt` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`GroupID`),
+  KEY `groups_fk_user` (`CreatedBy`),
+  CONSTRAINT `groups_fk_user` FOREIGN KEY (`CreatedBy`)
+    REFERENCES `users` (`UserID`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `group_skills`;
+CREATE TABLE `group_skills` (
+  `GroupID` int(11) NOT NULL,
+  `SkillID` int(11) NOT NULL,
+  PRIMARY KEY (`GroupID`, `SkillID`),
+  KEY `gs_fk_skill` (`SkillID`),
+  CONSTRAINT `gs_fk_group` FOREIGN KEY (`GroupID`)
+    REFERENCES `groups` (`GroupID`)
+    ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `gs_fk_skill` FOREIGN KEY (`SkillID`)
+    REFERENCES `skills` (`SkillID`)
+    ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 --
 -- Table structure for table `tickets`
