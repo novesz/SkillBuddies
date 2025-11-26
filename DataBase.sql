@@ -2,7 +2,7 @@ CREATE DATABASE  IF NOT EXISTS `skillmegoszt` /*!40100 DEFAULT CHARACTER SET utf
 USE `skillmegoszt`;
 -- MySQL dump 10.13  Distrib 8.0.38, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: skillmegoszt
+-- Host: localhost    Database: skillmegoszt
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.4.28-MariaDB
 
@@ -106,6 +106,32 @@ INSERT INTO `msgs` VALUES (2,4,1,'Szeretem a tejet','2025-11-04 12:06:30'),(3,4,
 UNLOCK TABLES;
 
 --
+-- Table structure for table `neededskills`
+--
+
+DROP TABLE IF EXISTS `neededskills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `neededskills` (
+  `ChatID` int(11) NOT NULL,
+  `SkillID` int(11) NOT NULL,
+  PRIMARY KEY (`ChatID`,`SkillID`),
+  KEY `SkillID` (`SkillID`),
+  CONSTRAINT `neededskills_ibfk_1` FOREIGN KEY (`ChatID`) REFERENCES `chats` (`ChatID`),
+  CONSTRAINT `neededskills_ibfk_2` FOREIGN KEY (`SkillID`) REFERENCES `skills` (`SkillID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `neededskills`
+--
+
+LOCK TABLES `neededskills` WRITE;
+/*!40000 ALTER TABLE `neededskills` DISABLE KEYS */;
+/*!40000 ALTER TABLE `neededskills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `reviews`
 --
 
@@ -136,61 +162,28 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `skills`
+--
 
 DROP TABLE IF EXISTS `skills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-
 CREATE TABLE `skills` (
   `SkillID` int(11) NOT NULL AUTO_INCREMENT,
   `Skill` varchar(45) NOT NULL,
   PRIMARY KEY (`SkillID`),
   UNIQUE KEY `Skill` (`Skill`)
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
 -- Dumping data for table `skills`
+--
 
 LOCK TABLES `skills` WRITE;
 /*!40000 ALTER TABLE `skills` DISABLE KEYS */;
-
-INSERT INTO `skills` (`SkillID`, `Skill`) VALUES
-  (1,  'English (A1-A2)'),
-  (2,  'English (B1-B2)'),
-  (3,  'English (C1-C2)'),
-  (4,  'German (A1-A2)'),
-  (5,  'German (B1-B2)'),
-  (6,  'German (C1-C2)'),
-  (7,  'Hungarian grammar'),
-  (8,  'Hungarian literature'),
-  (9,  'Hungarian history'),
-  (10, 'Writing'),
-  (11, 'C#'),
-  (12, 'JavaScript'),
-  (13, 'HTML'),
-  (14, 'CSS'),
-  (15, 'Python'),
-  (16, 'Java'),
-  (17, 'C++'),
-  (18, 'Piano'),
-  (19, 'Guitar'),
-  (20, 'Drums'),
-  (21, 'Violin'),
-  (22, 'Singing / Vocal coach'),
-  (23, 'Crocheting'),
-  (24, 'Gardening'),
-  (25, 'MySQL'),
-  (26, 'React'),
-  (27, 'Bootstrap');
-
+INSERT INTO `skills` VALUES (27,'Bootstrap'),(11,'C#'),(17,'C++'),(23,'Crocheting'),(14,'CSS'),(20,'Drums'),(1,'English (A1-A2)'),(2,'English (B1-B2)'),(3,'English (C1-C2)'),(24,'Gardening'),(4,'German (A1-A2)'),(5,'German (B1-B2)'),(6,'German (C1-C2)'),(19,'Guitar'),(13,'HTML'),(7,'Hungarian grammar'),(9,'Hungarian history'),(8,'Hungarian literature'),(16,'Java'),(12,'JavaScript'),(25,'MySQL'),(18,'Piano'),(15,'Python'),(26,'React'),(22,'Singing / Vocal coach'),(21,'Violin'),(10,'Writing');
 /*!40000 ALTER TABLE `skills` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `groups/group_skills`
---
-
 
 --
 -- Table structure for table `tickets`
@@ -402,4 +395,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-19 14:47:58
+-- Dump completed on 2025-11-26  9:36:29
