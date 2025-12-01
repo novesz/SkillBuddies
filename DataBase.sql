@@ -2,7 +2,7 @@ CREATE DATABASE  IF NOT EXISTS `skillmegoszt` /*!40100 DEFAULT CHARACTER SET utf
 USE `skillmegoszt`;
 -- MySQL dump 10.13  Distrib 8.0.38, for Win64 (x86_64)
 --
--- Host: localhost    Database: skillmegoszt
+-- Host: 127.0.0.1    Database: skillmegoszt
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.4.28-MariaDB
 
@@ -128,6 +128,7 @@ CREATE TABLE `neededskills` (
 
 LOCK TABLES `neededskills` WRITE;
 /*!40000 ALTER TABLE `neededskills` DISABLE KEYS */;
+INSERT INTO `neededskills` VALUES (1,4),(1,6),(1,7),(1,9),(2,4),(2,5),(2,8);
 /*!40000 ALTER TABLE `neededskills` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -395,4 +396,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-26  9:36:29
+-- Dump completed on 2025-12-01  9:14:38
