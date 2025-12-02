@@ -84,7 +84,7 @@
   border: none;
   background: transparent !important;
   border-radius: 50%;
-  overflow: hidden;
+  
   cursor: pointer;
   position: relative;           /* sosem absolute a világban */
 }

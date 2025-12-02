@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import "../../styles/Header.css";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import PfDropdown from "./PfDropdown";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -54,9 +55,10 @@ export default function Header() {
       </div>
 
       {/* PROFIL – jobbra tolva */}
-      <button className="sb-profile" aria-label="Profile">
-        <img src={avatarUrl} alt="Profile" className="sb-profile-img" />
-      </button>
+      <div className="sb-profile">
+        <PfDropdown avatarUrl={avatarUrl} />
+      </div>
+      
     </header>
   );
 }
