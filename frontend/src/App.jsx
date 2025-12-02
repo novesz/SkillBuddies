@@ -8,6 +8,7 @@ import Profile from './pages/Profile'
 import AboutPage from './pages/AboutPage'
 import SupportPage from './pages/SupportPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import GroupEditor from './pages/GroupEditor'
 function App() {
 
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/resetpass" element={<ResetPasswordPage />} />
+        <Route path="/groupeditor" element={<GroupEditor />} />
       </Routes>
     </>
   )

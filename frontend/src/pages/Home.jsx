@@ -4,23 +4,25 @@ import axios from "axios";
 import "../styles/Home.css";
 
 export default function Home() {
-  const [chips, setChips] = useState([]);
-  const [allCards, setAllCards] = useState([]);
-  const [selectedChips, setSelectedChips] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  
+  const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
+  const [allCards, setAllCards] = useState([]);    // összes csoport
+  const [selectedChips, setSelectedChips] = useState([]); // kiválasztott skillek
+  const [searchText, setSearchText] = useState("");        // csoportnév kereső
+  const [error, setError] = useState("");
 
   // 🔹 Skillek (chipek) betöltése az adatbázisból
   useEffect(() => {
     const loadSkills = async () => {
       try {
         const resp = await fetch("http://localhost:3001/skills");
+        if (!resp.ok) throw new Error("Nem sikerült a skillek lekérése.");
         const data = await resp.json();
-        // backend: SELECT * FROM skills => { SkillID, Skill }
-        setChips(data.map((s) => s.Skill));
+        // backend: SELECT SkillID, Skill FROM skills
+        setChips(data.map((s) => s.Skill)); // csak a nevek kellenek chipnek
       } catch (err) {
         console.error("Hiba a skillek lekérésekor:", err);
+        setError("Nem sikerült betölteni a skilleket.");
       }
     };
     
@@ -39,17 +41,28 @@ export default function Home() {
   }, []);
   // 🔹 Kártyák betöltése az új /cards endpointból
   useEffect(() => {
-    const loadCards = async () => {
+    const loadGroups = async () => {
       try {
-        const resp = await fetch("http://localhost:3001/cards");
+        const resp = await fetch("http://localhost:3001/groups");
+        if (!resp.ok) throw new Error("Nem sikerült a csoportok lekérése.");
         const data = await resp.json();
-        // data már ilyen formában jön: { id, title, items, users }
-        setAllCards(data);
+
+        // Normalizáljuk a backend adatot a kártyához
+        const normalized = data.map((g) => ({
+          id: g.ChatID,
+          title: g.ChatName,
+          skills: g.Skills ? g.Skills.split(", ").filter(Boolean) : [],
+          users: g.MemberCount || 0,
+          pic: g.ChatPic || null,
+        }));
+
+        setAllCards(normalized);
       } catch (err) {
-        console.error("Hiba a kártyák lekérésekor:", err);
+        console.error("Hiba a csoportok lekérésekor:", err);
+        setError("Nem sikerült betölteni a csoportokat.");
       }
     };
-    loadCards();
+    loadGroups();
   }, []);
 
   // 🔹 Több chip kijelölése (toggle)
@@ -64,16 +77,27 @@ export default function Home() {
     });
   };
 
-  // 🔹 Szűrés több chip alapján – OR logika
-  const filteredCards =
-    selectedChips.length === 0
-      ? allCards
-      : allCards.filter((card) => {
-          const text = (card.title + " " + card.items.join(" ")).toLowerCase();
-          return selectedChips.some((chip) =>
-            text.includes(chip.toLowerCase())
+  // 🔹 Szűrés: csoportnév + skill chipek
+  const filteredCards = allCards.filter((card) => {
+    const titleText = card.title.toLowerCase();
+    const search = searchText.toLowerCase();
+
+    // név szerinti szűrés
+    const matchesSearch =
+      search === "" ? true : titleText.includes(search);
+
+    // skill chipek szerinti szűrés
+    const matchesChips =
+      selectedChips.length === 0
+        ? true
+        : selectedChips.some((chip) =>
+            card.skills.some((skill) =>
+              skill.toLowerCase().includes(chip.toLowerCase())
+            )
           );
-        });
+
+    return matchesSearch && matchesChips;
+  });
 
   return (
     <div className="sb-page">
@@ -83,7 +107,13 @@ export default function Home() {
         {/* Kereső + chipek */}
         <section className="sb-search-wrap">
           <div className="sb-search">
-            <input type="text" placeholder="Search here" aria-label="Keresés" />
+            <input
+              type="text"
+              placeholder="Search groups by name"
+              aria-label="Csoport név szerinti keresés"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
             <svg className="sb-icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle
                 cx="11"
@@ -118,29 +148,48 @@ export default function Home() {
           </ul>
         </section>
 
-        {/* SZŰRT KÁRTYÁK */}
+        {error && <p className="sb-error">{error}</p>}
+
+        {/* SZŰRT CSOPORTKÁRTYÁK */}
         <section className="sb-cards">
           {filteredCards.map((card) => (
             <Card
               key={card.id}
               title={card.title}
-              items={card.items}
+              skills={card.skills}
               users={card.users}
+              pic={card.pic}
             />
           ))}
+
+          {filteredCards.length === 0 && !error && (
+            <p className="sb-empty">No groups match your filters.</p>
+          )}
         </section>
       </main>
     </div>
   );
 }
 
-function Card({ title, items, users }) {
+function Card({ title, skills, users, pic }) {
   return (
     <article className="sb-card">
       <div className="sb-card-badge" />
-      <h3>{title}</h3>
+
+      <div className="sb-card-header">
+        <div className="sb-card-avatar">
+          {pic ? (
+            <img src={pic} alt={title} />
+          ) : (
+            <span>{title.charAt(0).toUpperCase()}</span>
+          )}
+        </div>
+        <h3>{title}</h3>
+      </div>
+
       <ol className="sb-list">
-        {items.map((it, i) => (
+        {skills.length === 0 && <li>No skills specified yet.</li>}
+        {skills.map((it, i) => (
           <li key={i}>{it}</li>
         ))}
       </ol>

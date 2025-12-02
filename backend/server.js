@@ -461,39 +461,102 @@ app.get('/cards', (req, res) => {
     });
 });
 
-app.get('/groups', (req, res) => {
+app.post("/groups", (req, res) => {
+  const { chatName, chatPic, skillIds, userId } = req.body;
+
+  if (!chatName || !userId || !Array.isArray(skillIds) || skillIds.length === 0) {
+    return res.status(400).json({ error: "Hiányzó adatok (chatName, userId, skillIds)." });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Tranzakció indítási hiba." });
+    }
+
+    // 1. chats insert
+    const insertChatSql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
+    db.query(insertChatSql, [chatName, chatPic || null], (err, chatResult) => {
+      if (err) {
+        console.error("Chat insert hiba:", err);
+        return db.rollback(() => {
+          res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
+        });
+      }
+
+      const newChatId = chatResult.insertId;
+
+      // 2. neededskills insert (több sor egyszerre)
+      const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
+      const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
+
+      db.query(insertNeededSql, [neededValues], (err) => {
+        if (err) {
+          console.error("neededskills insert hiba:", err);
+          return db.rollback(() => {
+            res.status(500).json({ error: "Hiba a skillek mentésekor." });
+          });
+        }
+
+        // 3. uac – a létrehozó legyen admin
+        const insertUacSql = `
+          INSERT INTO uac (UserID, ChatID, IsChatAdmin)
+          VALUES (?, ?, 1)
+        `;
+
+        db.query(insertUacSql, [userId, newChatId], (err) => {
+          if (err) {
+            console.error("uac insert hiba:", err);
+            return db.rollback(() => {
+              res.status(500).json({ error: "Hiba a tag mentésekor." });
+            });
+          }
+
+          db.commit((err) => {
+            if (err) {
+              console.error("Commit hiba:", err);
+              return db.rollback(() => {
+                res.status(500).json({ error: "Commit hiba." });
+              });
+            }
+
+            res.status(201).json({
+              message: "Csoport sikeresen létrehozva!",
+              chatId: newChatId,
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+// Összes csoport lekérése a főoldalhoz
+app.get("/groups", (req, res) => {
   const sql = `
     SELECT 
-      g.GroupID,
-      g.Name,
-      g.Description,
-      u.Username AS CreatorName,
-      COUNT(DISTINCT gs.SkillID) AS SkillCount,
-      GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills
-    FROM groups g
-    JOIN users u ON u.UserID = g.CreatedBy
-    LEFT JOIN group_skills gs ON gs.GroupID = g.GroupID
-    LEFT JOIN skills s ON s.SkillID = gs.SkillID
-    GROUP BY g.GroupID, g.Name, g.Description, u.Username
-    ORDER BY g.CreatedAt DESC;
+      c.ChatID,
+      c.ChatName,
+      c.ChatPic,
+      c.CreatedAt,
+      GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills,
+      COUNT(DISTINCT u.UserID) AS MemberCount
+    FROM chats c
+    LEFT JOIN neededskills ns ON ns.ChatID = c.ChatID
+    LEFT JOIN skills s ON ns.SkillID = s.SkillID
+    LEFT JOIN uac u ON u.ChatID = c.ChatID
+    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
+    ORDER BY c.CreatedAt DESC;
   `;
 
   db.query(sql, (err, rows) => {
     if (err) {
-      console.error('Error fetching groups:', err);
-      return res.status(500).json({ error: 'Internal server error' });
+      console.error("Groups list hiba:", err);
+      return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
     }
-
-    const groups = rows.map(r => ({
-      id: r.GroupID,
-      title: r.Name,
-      description: r.Description,
-      creator: r.CreatorName,
-      items: r.Skills ? r.Skills.split(', ') : [],
-      users: 0 // később: ide jöhet member count
-    }));
-
-    res.json(groups);
+    res.json(rows);
   });
 });
+
+
 

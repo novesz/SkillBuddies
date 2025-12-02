@@ -15,6 +15,17 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   background-attachment:fixed;
 }
 
+.sb-error {
+  color: #f97373;
+  margin-top: 8px;
+}
+
+.sb-empty {
+  color: #4b5563;
+  margin-top: 8px;
+}
+
+
 /* tartalom: full width + kényelmes belső margó */
 .sb-content{
   width:100%; max-width:none;
@@ -73,6 +84,60 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
 .sb-count{ margin-left:6px; color:#eaeef4; font-size:12px; opacity:.95 }
 .sb-join{ margin-left:auto; background:#e5e5e0; border:none; border-radius:16px; padding:8px 16px; font-weight:700; cursor:pointer; box-shadow:var(--shadow) }
 .sb-join:hover{ background:#f2f2ed }
+
+/* ================================
+   Kártya fejléc + avatar beállítás
+   ================================ */
+
+.sb-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Avatar kör: fix méret + kerek + középre igazítás */
+.sb-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  background: #e5e7eb;                 /* ha nincs kép, szürke háttér */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text);
+
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Maga a kép: kitölti a kört arányosan */
+.sb-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* ne torzuljon, csak szépen belevág */
+  display: block;
+}
+
+/* Ha nincs kép, az első betű megjelenítése */
+.sb-card-avatar span {
+  line-height: 1;
+}
+
+/* (Opcionális) a sárga badge legyen kisebb / kevésbé zavaró */
+.sb-card-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffe57a;
+  margin-bottom: 8px;
+}
+
 
 /* reszponzív finomítások */
 @media (max-width:960px){ .sb-card-badge{width:56px;height:56px} }
