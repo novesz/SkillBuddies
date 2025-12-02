@@ -1,4 +1,9 @@
 /* az egész oldal legyen "kék" háttérrel */
+.page-blue {
+  min-height: 100vh;
+  background: var(--bg1, #e7eefc); /* kék */
+}
+
 .profile-page {
   display: flex;
   justify-content: center;
@@ -70,7 +75,7 @@
 
 .text-area {
   border-radius: 16px;
-  resize: vertical;
+  resize: none;           /* ⬅ ne lehessen átméretezni */
   min-height: 72px;
 }
 
@@ -100,13 +105,7 @@
   color: var(--text, #213153);
 }
 
-.avatar-list {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 6px 0;
-}
-
+/* csak egy avatar látszik középen */
 .avatar-circle {
   width: 72px;
   height: 72px;

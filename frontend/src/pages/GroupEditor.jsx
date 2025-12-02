@@ -6,30 +6,27 @@ export default function GroupEditor() {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);
+  const MAX_WORDS = 250;
+  const MAX_CHARS = 10000000; // ezt bármikor átírhatod másra
+
 
   const avatars = [
-    "/avatars/BB.png","/avatars/BC.png","/avatars/BD.png",
-    
+    "/groupavatars/Ant.png",
   ];
 
-  // 🔹 DB-ből jövő összes skill
-  const [allSkills, setAllSkills] = useState([]); // [{ SkillID, Skill }, ...]
-  // 🔹 Ehhez a csoporthoz kiválasztott skillek ID-i
+  const [allSkills, setAllSkills] = useState([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState([]);
-  // 🔹 Keresőmező tartalma
   const [searchTerm, setSearchTerm] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Popup (modal) a sikeres mentéshez
   const [showModal, setShowModal] = useState(false);
   const [createdChatId, setCreatedChatId] = useState(null);
 
-  // TODO: bejelentkezett user ID (később context / JWT)
-  const currentUserId = 8; // csak példa
+  const currentUserId = 8;
 
-  // 🔹 Skillek lekérése az adatbázisból
+  // 🔹 skillek betöltése
   useEffect(() => {
     const fetchSkills = async () => {
       try {
@@ -42,48 +39,68 @@ export default function GroupEditor() {
         setError("Nem sikerült betölteni a skilleket.");
       }
     };
-
     fetchSkills();
   }, []);
 
-  const handlePrevAvatar = () => {
+  // 🔹 leírás változás – max. 250 szó
+  const handleDescriptionChange = (e) => {
+  let value = e.target.value || "";
+
+  // 1) KARAKTER LIMIT – ne lehessen végtelenül spamelni
+  if (value.length > MAX_CHARS) {
+    value = value.slice(0, MAX_CHARS);
+  }
+
+  // ha üres, töröljük
+  if (value.trim() === "") {
+    setDescription("");
+    return;
+  }
+
+  // 2) SZÓ LIMIT – max. 250 szó
+  const words = value.trim().split(/\s+/);
+
+  if (words.length <= MAX_WORDS) {
+    // ha még belefér 250-be, mehet teljesen (már levágva MAX_CHARS-re)
+    setDescription(value);
+  } else {
+    // ha több lenne, akkor csak az első 250 szót tartjuk meg
+    const limited = words.slice(0, MAX_WORDS).join(" ");
+    setDescription(limited);
+  }
+};
+
+
+  // 🔹 avatar lapozás
+  const handlePrevAvatar = () =>
     setAvatarIndex((prev) => (prev === 0 ? avatars.length - 1 : prev - 1));
-  };
 
-  const handleNextAvatar = () => {
+  const handleNextAvatar = () =>
     setAvatarIndex((prev) => (prev === avatars.length - 1 ? 0 : prev + 1));
-  };
 
-  // 🔹 A kiválasztott skillek objektumai
+  // 🔹 kiválasztott skillek objektumai
   const selectedSkills = allSkills.filter((s) =>
     selectedSkillIds.includes(s.SkillID)
   );
 
-  // 🔹 Keresési találatok (ami még nincs kiválasztva)
+  // 🔹 keresési találatok
   const filteredSkills = allSkills
-    .filter((s) =>
-      s.Skill.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((s) => s.Skill.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((s) => !selectedSkillIds.includes(s.SkillID))
-    .slice(0, 6); // max 6 javaslat
+    .slice(0, 6);
 
-  const handleAddSkill = (skillId) => {
-    setSelectedSkillIds((prev) =>
-      prev.includes(skillId) ? prev : [...prev, skillId]
-    );
+  const handleAddSkill = (id) => {
+    setSelectedSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setSearchTerm("");
   };
 
-  const handleRemoveSkill = (idToRemove) => {
-    setSelectedSkillIds((prev) => prev.filter((id) => id !== idToRemove));
-  };
+  const handleRemoveSkill = (id) =>
+    setSelectedSkillIds((prev) => prev.filter((x) => x !== id));
 
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (filteredSkills.length > 0) {
-        handleAddSkill(filteredSkills[0].SkillID);
-      }
+      if (filteredSkills.length > 0) handleAddSkill(filteredSkills[0].SkillID);
     }
   };
 
@@ -105,15 +122,15 @@ export default function GroupEditor() {
       setError("Adj meg egy csoportnevet!");
       return;
     }
+
     if (selectedSkillIds.length === 0) {
-      setError("Válassz legalább egy skillt a csoporthoz!");
+      setError("Válassz legalább egy skillt!");
       return;
     }
 
     const payload = {
       chatName: groupName,
       chatPic: avatars[avatarIndex],
-      // description: jelenlegi adatbázisban nincs mező rá, ezért nem küldjük
       skillIds: selectedSkillIds,
       userId: currentUserId,
     };
@@ -121,197 +138,190 @@ export default function GroupEditor() {
     try {
       const resp = await fetch("http://localhost:3001/groups", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await resp.json();
 
       if (!resp.ok) {
-        throw new Error(data.error || "Ismeretlen hiba a csoport létrehozásakor.");
+        throw new Error(data.error || "Ismeretlen hiba történt.");
       }
 
       setCreatedChatId(data.chatId);
       setSuccess("Csoport sikeresen létrehozva! 🎉");
       setShowModal(true);
     } catch (err) {
-      console.error(err);
       setError(err.message);
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    // ha akarod, itt át is navigálhatsz a csoport oldalára:
-    // navigate(`/group/${createdChatId}`);
-  };
+  const closeModal = () => setShowModal(false);
 
   return (
     <>
-      <Header />
-      <div className="profile-page">
-        <div className="profile-card">
-          <div className="profile-header">
-            <h2>Create group</h2>
-            <p>Set up a new group and add the skills you want to share or learn.</p>
-          </div>
+      {/* 🔵 TELJES OLDAL KÉK HÁTTÉRREL */}
+      <div className="page-blue">
+        <Header />
 
-          <div className="profile-grid">
-            {/* BAL OLDAL – csoport adatok */}
-            <section className="profile-section">
-              <h3 className="section-title">Group details</h3>
+        {/* kártya a header alatt */}
+        <div className="profile-page">
+          <div className="profile-card">
+            <div className="profile-header">
+              <h2>Create group</h2>
+              <p>
+                Set up a new group and add the skills you want to share or learn.
+              </p>
+            </div>
 
-              <div className="group-avatar-block">
-                <p className="field-label">Group avatar</p>
-                <div className="avatar-carousel">
-                  <button
-                    type="button"
-                    className="avatar-nav-btn"
-                    onClick={handlePrevAvatar}
-                  >
-                    ‹
-                  </button>
+            <div className="profile-grid">
+              {/* BAL OLDAL */}
+              <section className="profile-section">
+                <h3 className="section-title">Group details</h3>
 
-                  <div className="avatar-list">
-                    {avatars.map((src, index) => (
+                <div className="group-avatar-block">
+                  <p className="field-label">Group avatar</p>
+
+                  <div className="avatar-carousel">
+                    <button
+                      type="button"
+                      className="avatar-nav-btn"
+                      onClick={handlePrevAvatar}
+                    >
+                      ‹
+                    </button>
+
+                    {/* csak az aktuális avatar látszik */}
+                    <button
+                      type="button"
+                      className="avatar-circle avatar-circle--active"
+                    >
+                      <img
+                        src={avatars[avatarIndex]}
+                        alt="Group avatar"
+                      />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="avatar-nav-btn"
+                      onClick={handleNextAvatar}
+                    >
+                      ›
+                    </button>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label className="field-label">Group name</label>
+                  <input
+                    className="text-input"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="e.g. Frontend study buddies"
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="field-label">
+                    Description (max. 250 words)
+                  </label>
+                  <textarea
+                    className="text-area"
+                    rows={3}
+                    placeholder="Short description of your group..."
+                    value={description}
+                    onChange={handleDescriptionChange}
+                  />
+                </div>
+              </section>
+
+              {/* JOBB OLDAL - SKILLEK */}
+              <section className="profile-section">
+                <h3 className="section-title">Group skills</h3>
+
+                <div className="skills-chips">
+                  {selectedSkills.map((skill) => (
+                    <span key={skill.SkillID} className="skill-chip">
+                      {skill.Skill}
                       <button
-                        key={src}
                         type="button"
-                        className={
-                          "avatar-circle" +
-                          (index === avatarIndex ? " avatar-circle--active" : "")
-                        }
-                        onClick={() => setAvatarIndex(index)}
+                        className="skill-chip-remove"
+                        onClick={() => handleRemoveSkill(skill.SkillID)}
                       >
-                        <img src={src} alt="Group avatar" />
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {selectedSkills.length === 0 && (
+                    <p className="skills-empty">No skills yet. Start typing…</p>
+                  )}
+                </div>
+
+                <div className="skills-input-row">
+                  <input
+                    className="text-input"
+                    placeholder="Search skills…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                  />
+                </div>
+
+                {searchTerm && filteredSkills.length > 0 && (
+                  <div className="skills-suggestions">
+                    {filteredSkills.map((skill) => (
+                      <button
+                        key={skill.SkillID}
+                        type="button"
+                        className="skills-suggestion-item"
+                        onClick={() => handleAddSkill(skill.SkillID)}
+                      >
+                        {skill.Skill}
                       </button>
                     ))}
                   </div>
+                )}
 
-                  <button
-                    type="button"
-                    className="avatar-nav-btn"
-                    onClick={handleNextAvatar}
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-
-              <div className="field">
-                <label className="field-label">Group name</label>
-                <input
-                  className="text-input"
-                  placeholder="e.g. Frontend study buddies"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field-label">Description</label>
-                <textarea
-                  className="text-area"
-                  rows={3}
-                  placeholder="Short description of your group..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-            </section>
-
-            {/* JOBB OLDAL – skillek kereséssel */}
-            <section className="profile-section">
-              <h3 className="section-title">Group skills</h3>
-
-              {/* Kiválasztott skillek chipként */}
-              <div className="skills-chips">
-                {selectedSkills.map((skill) => (
-                  <span key={skill.SkillID} className="skill-chip">
-                    {skill.Skill}
-                    <button
-                      type="button"
-                      className="skill-chip-remove"
-                      onClick={() => handleRemoveSkill(skill.SkillID)}
-                      aria-label={`Remove ${skill.Skill}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-
-                {selectedSkills.length === 0 && (
+                {searchTerm && filteredSkills.length === 0 && (
                   <p className="skills-empty">
-                    No skills yet. Start typing to search…
+                    No results for “{searchTerm}”.
                   </p>
                 )}
-              </div>
+              </section>
+            </div>
 
-              {/* Kereső input */}
-              <div className="skills-input-row">
-                <input
-                  className="text-input"
-                  placeholder="Search skills…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                />
-              </div>
+            {error && <p className="form-error">{error}</p>}
+            {success && !showModal && (
+              <p className="form-success">{success}</p>
+            )}
 
-              {/* Javaslatok a keresés alapján */}
-              {searchTerm && filteredSkills.length > 0 && (
-                <div className="skills-suggestions">
-                  {filteredSkills.map((skill) => (
-                    <button
-                      key={skill.SkillID}
-                      type="button"
-                      className="skills-suggestion-item"
-                      onClick={() => handleAddSkill(skill.SkillID)}
-                    >
-                      {skill.Skill}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {searchTerm && filteredSkills.length === 0 && (
-                <p className="skills-empty">
-                  No results for “{searchTerm}”.
-                </p>
-              )}
-            </section>
-          </div>
-
-          {error && <p className="form-error">{error}</p>}
-          {success && !showModal && <p className="form-success">{success}</p>}
-
-          <div className="profile-footer">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleCancel}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={handleSave}
-            >
-              Create group
-            </button>
+            <div className="profile-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleSave}
+              >
+                Create group
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Popup modal a sikeres mentéshez */}
+      {/* MODAL */}
       {showModal && (
         <div className="modal-backdrop">
           <div className="modal-card">
             <h3>Group created</h3>
-            <p>Your group has been created successfully. 🎉</p>
+            <p>Your group has been created successfully 🎉</p>
             <button className="btn-primary" onClick={closeModal}>
               OK
             </button>
