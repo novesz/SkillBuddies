@@ -2,13 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
 require('dotenv').config();
-
+const cookieParser = require('cookie-parser');
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use(express.json());
 
+app.use(express.json());
+app.use(cookieParser());
+app.use(cors(
+    {
+        origin: 'http://localhost:5173',
+        credentials: true
+    }
+));
 // MySQL connection
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -34,6 +40,14 @@ app.get('/users/all', (req, res) => {
     });
 });
 //login
+app.get("/auth/status", (req, res) => {
+    const sessionToken = req.cookies.session_token;
+    if (sessionToken === process.env.SESSION_TOKEN) {
+        return res.json({ loggedIn: true });
+    }
+    return res.json({ loggedIn: false });
+   
+});
 app.post('/login', (req, res) => {
     const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
     const values = [req.body.Email, req.body.Password];
@@ -47,14 +61,18 @@ app.post('/login', (req, res) => {
         if (results.length === 0) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
-
+        res.cookie('session_token', process.env.SESSION_TOKEN, { httpOnly: true, secure: false, sameSite: 'Lax', maxAge: 76*60*60*1000}); 
         res.json({
             message: "Login successful",
             user: results[0],
         });
+        
     });
 });
-
+app.post('/logout', (req, res) => {
+    res.clearCookie('session_token');
+    return res.json({ message: "Logged out" });
+});
 //get user by ID
 app.get('/users/:id', (req, res) => {
     const sql = "SELECT * FROM users where UserID = ?";

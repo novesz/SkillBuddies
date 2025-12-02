@@ -17,7 +17,7 @@ export default function LoginPage() {
             const email = e.target[0].value;
             const password = e.target[1].value;
             console.log(email, password);
-            axios.post("http://localhost:3001/login", { Email: email, Password: password })
+            axios.post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
               .then((response) => {
                   alert("Login successful!");
                   window.location.href = "/";

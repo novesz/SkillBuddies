@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header/Header";
+import axios from "axios";
 import "../styles/Home.css";
 
 export default function Home() {
   const [chips, setChips] = useState([]);
   const [allCards, setAllCards] = useState([]);
   const [selectedChips, setSelectedChips] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  
 
   // 🔹 Skillek (chipek) betöltése az adatbázisból
   useEffect(() => {
@@ -19,9 +23,20 @@ export default function Home() {
         console.error("Hiba a skillek lekérésekor:", err);
       }
     };
+    
     loadSkills();
   }, []);
-
+  useEffect(() => {
+    axios.get("http://localhost:3001/auth/status", { withCredentials: true })
+      .then((response) => {
+        setIsLoggedIn(response.data.loggedIn);
+        console.log("Bejelentkezve:", response.data.loggedIn);
+      })
+      .catch((error) => {
+        console.error("Hiba a bejelentkezési állapot lekérésekor:", error);
+      });
+    
+  }, []);
   // 🔹 Kártyák betöltése az új /cards endpointból
   useEffect(() => {
     const loadCards = async () => {
@@ -62,7 +77,7 @@ export default function Home() {
 
   return (
     <div className="sb-page">
-      <Header />
+      <Header/>
 
       <main className="sb-content">
         {/* Kereső + chipek */}
