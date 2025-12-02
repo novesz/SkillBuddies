@@ -164,7 +164,8 @@
   cursor: pointer;
   font-size: 20px;
   display: inline-flex;
-  align-items: center; justify-content:center;
+  align-items: center; 
+  justify-content:center;
   color: var(--text);
 }
 .nav-btn:hover{ background: var(--bg1); }

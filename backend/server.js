@@ -410,3 +410,135 @@ app.get('/messages/:chatId', (req, res) => {
 app.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });
+
+// Eszti szuro
+
+app.get('/cards', (req, res) => {
+    const sql = `
+        SELECT 
+            s.SkillID,
+            s.Skill,
+            COUNT(uas.UserID) AS UserCount
+        FROM skills s
+        LEFT JOIN uas ON uas.SkillID = s.SkillID
+        GROUP BY s.SkillID, s.Skill
+        ORDER BY s.Skill;
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching cards:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        
+        const cards = results.map(row => ({
+            id: row.SkillID,
+            title: row.Skill,          
+            items: [row.Skill],        
+            users: row.UserCount || 0 
+        }));
+
+        res.json(cards);
+    });
+});
+
+app.post("/groups", (req, res) => {
+  const { chatName, chatPic, skillIds, userId } = req.body;
+
+  if (!chatName || !userId || !Array.isArray(skillIds) || skillIds.length === 0) {
+    return res.status(400).json({ error: "Hiányzó adatok (chatName, userId, skillIds)." });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Tranzakció indítási hiba." });
+    }
+
+    // 1. chats insert
+    const insertChatSql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
+    db.query(insertChatSql, [chatName, chatPic || null], (err, chatResult) => {
+      if (err) {
+        console.error("Chat insert hiba:", err);
+        return db.rollback(() => {
+          res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
+        });
+      }
+
+      const newChatId = chatResult.insertId;
+
+      // 2. neededskills insert (több sor egyszerre)
+      const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
+      const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
+
+      db.query(insertNeededSql, [neededValues], (err) => {
+        if (err) {
+          console.error("neededskills insert hiba:", err);
+          return db.rollback(() => {
+            res.status(500).json({ error: "Hiba a skillek mentésekor." });
+          });
+        }
+
+        // 3. uac – a létrehozó legyen admin
+        const insertUacSql = `
+          INSERT INTO uac (UserID, ChatID, IsChatAdmin)
+          VALUES (?, ?, 1)
+        `;
+
+        db.query(insertUacSql, [userId, newChatId], (err) => {
+          if (err) {
+            console.error("uac insert hiba:", err);
+            return db.rollback(() => {
+              res.status(500).json({ error: "Hiba a tag mentésekor." });
+            });
+          }
+
+          db.commit((err) => {
+            if (err) {
+              console.error("Commit hiba:", err);
+              return db.rollback(() => {
+                res.status(500).json({ error: "Commit hiba." });
+              });
+            }
+
+            res.status(201).json({
+              message: "Csoport sikeresen létrehozva!",
+              chatId: newChatId,
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+// Összes csoport lekérése a főoldalhoz
+app.get("/groups", (req, res) => {
+  const sql = `
+    SELECT 
+      c.ChatID,
+      c.ChatName,
+      c.ChatPic,
+      c.CreatedAt,
+      GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills,
+      COUNT(DISTINCT u.UserID) AS MemberCount
+    FROM chats c
+    LEFT JOIN neededskills ns ON ns.ChatID = c.ChatID
+    LEFT JOIN skills s ON ns.SkillID = s.SkillID
+    LEFT JOIN uac u ON u.ChatID = c.ChatID
+    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
+    ORDER BY c.CreatedAt DESC;
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      console.error("Groups list hiba:", err);
+      return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
+    }
+    res.json(rows);
+  });
+});
+
+
+

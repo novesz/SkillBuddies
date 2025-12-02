@@ -15,6 +15,17 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   background-attachment:fixed;
 }
 
+.sb-error {
+  color: #f97373;
+  margin-top: 8px;
+}
+
+.sb-empty {
+  color: #4b5563;
+  margin-top: 8px;
+}
+
+
 /* tartalom: full width + kényelmes belső margó */
 .sb-content{
   width:100%; max-width:none;
@@ -82,3 +93,15 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
 }
 @media (max-width:480px){ .sb-join{padding:6px 12px} }
 
+/* ==========================================================================
+   Szuro aktiv gomb kinezet
+   ========================================================================== */
+
+.sb-chips li {
+  cursor: pointer;
+}
+
+.sb-chip.active {
+  outline: 2px solid rgb(50, 78, 168); 
+  background-color: #7fa2da;
+}
