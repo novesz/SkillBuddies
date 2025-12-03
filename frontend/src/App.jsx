@@ -9,6 +9,7 @@ import AboutPage from './pages/AboutPage'
 import SupportPage from './pages/SupportPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import GroupEditor from './pages/GroupEditor'
+import ChatPage from './pages/ChatPage'
 function App() {
 
 
@@ -23,6 +24,7 @@ function App() {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/resetpass" element={<ResetPasswordPage />} />
         <Route path="/groupeditor" element={<GroupEditor />} />
+        <Route path="/chat" element={<ChatPage />} />
       </Routes>
     </>
   )
