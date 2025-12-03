@@ -1,0 +1,194 @@
+:root {
+    --bg1:#89a8d8; 
+    --bg2:#6286bf; 
+    --card:#82a3db;
+    --text:#0f172a; 
+    --chip:#efe6f8; 
+    --shadow:10px 10px 20px rgba(0,0,0,.25);
+  }
+  
+  /* PAGE */
+  .chat-page {
+    height: 100vh;
+    background:
+      radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
+      linear-gradient(135deg, var(--bg1), #9bb6e9 60%, #a9bdea);
+    color: var(--text);
+    display:flex;
+    flex-direction:column;
+  }
+  
+  /* HEADER */
+  .header {
+    height: 60px;
+    backdrop-filter: blur(6px);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+    border-bottom:1px solid rgba(0,0,0,0.3);
+  }
+  
+  .left {
+    display:flex;
+    align-items:center;
+    gap:15px;
+  }
+  
+  .menu-btn, .profile-btn {
+    font-size:22px;
+    background:none;
+    border:none;
+    cursor:pointer;
+  }
+  
+  /* Ensure the button is aligned to the right */
+  .right {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: flex-end; /* Align items to the right */
+    position: relative;
+  }
+
+  
+  
+  /* DROPDOWN */
+  .dropdown {
+    position: absolute;
+    top: 100%; /* Position the dropdown below the button */
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.2s ease;
+  }
+  
+  .dropdown button {
+    width:100%;
+    padding:10px 20px;
+    border:none;
+    background:white;
+    text-align:left;
+    cursor:pointer;
+    border-bottom:1px solid #ccc;
+  }
+  
+  .dropdown button:hover {
+    background:#e6efff;
+  }
+  
+  /* LAYOUT */
+  .content {
+    display:flex;
+    flex:1;
+  }
+  
+  /* USER LIST */
+  .user-list {
+    width:180px;
+    backdrop-filter:blur(8px);
+    border-right:1px solid rgba(0,0,0,0.3);
+    padding-top:20px;
+  }
+  
+  .user-row {
+    display:flex;
+    align-items:center;
+    padding:10px 15px;
+    gap:10px;
+    cursor:pointer;
+  }
+  
+  .user-row:hover {
+    background:rgba(255,255,255,0.2);
+  }
+  
+  .dot {
+    width:20px;
+    height:20px;
+    background:#ffb300;
+    border-radius:50%;
+  }
+  
+  /* CHAT BOX */
+  /* Bejövő és kimenő üzenetek színei */
+  .message.outgoing {
+    align-self: flex-start;   /* saját üzeneted balra */
+    background: #4caf50;
+    color: white;
+  }
+  
+  .message.incoming {
+    align-self: flex-end;     /* más üzenete jobbra */
+    background: #ffb300;      /* sárga */
+    color: black;
+  }
+  
+  
+  
+  /* Scrollozható chat box */
+  .chat-box {
+    flex: 1;
+    padding: 25px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+  }
+  
+  /* Dropdown már eleve benne volt a CSS-edben, működik */
+  
+  
+  .message {
+    max-width: 220px;
+    padding: 15px;
+    border-radius: 10px;
+    background: #ffb300;
+    color: white;
+  }
+  
+  .incoming {
+    align-self: flex-start;
+  }
+  
+  .outgoing {
+    align-self: flex-end;
+    background: #4caf50;
+  }
+  
+  /* INPUT */
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding: 10px;
+  }
+  
+  .input-row input {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background: #efe6f8;
+  }
+  
+  .input-row .send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #4caf50;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  
+  /* ANIMATION */
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(-5px); }
+    to { opacity:1; transform:translateY(0); }
+  }

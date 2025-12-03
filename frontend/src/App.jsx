@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import GroupEditor from './pages/GroupEditor'
 import { useEffect } from 'react'
 import axios from 'axios'
+import ChatPage from './pages/ChatPage'
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/support" element={<SupportPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
         <Route path="/resetpass" element={<ResetPasswordPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
         <Route path="/groupeditor" element={<GroupEditor isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/chat" element={<ChatPage />} />
       </Routes>
     </>
   )
