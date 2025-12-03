@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/GroupEditor.css";
 import Header from "../components/header/Header";
 
-export default function GroupEditor(isLoggedIn, setIsLoggedIn) {
+export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);

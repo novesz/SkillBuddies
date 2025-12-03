@@ -4,7 +4,7 @@ import Header from "../components/header/Header";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function LoginPage(isLoggedIn, setIsLoggedIn) {
+export default function LoginPage({isLoggedIn, setIsLoggedIn}) {
   return (
     <div className="login-page">
       <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>

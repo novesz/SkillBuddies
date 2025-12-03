@@ -3,7 +3,7 @@ import "../styles/SupportPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
 
-function SupportPage(isLoggedIn, setIsLoggedIn) {
+function SupportPage({isLoggedIn, setIsLoggedIn}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessages, setSuccessMessages] = useState([]);
