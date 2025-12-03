@@ -5,7 +5,7 @@ import PasswordPanel from "../components/profile/PasswordPanel.jsx";
 import Header from "../components/header/Header.jsx";
 import "../styles/Profile.css";
 
-export default function Profile() {
+export default function Profile(isLoggedIn, setIsLoggedIn) {
   const [user, setUser] = useState({
     name: "Eszter",
     email: "eszter@example.com",
@@ -15,7 +15,7 @@ export default function Profile() {
 
   return (
     <>
-        <Header/>
+        <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
         <main className="profile-wrap">
         <section className="profile-card">
             <header className="profile-header">

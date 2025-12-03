@@ -4,10 +4,10 @@ import Header from "../components/header/Header";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function LoginPage() {
+export default function LoginPage(isLoggedIn, setIsLoggedIn) {
   return (
     <div className="login-page">
-      <Header />
+      <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
       <div className="login-container">
         <h2 className="login-title">REGISTER</h2>
         <form className="login-form" onSubmit={(e) => {

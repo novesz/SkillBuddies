@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/GroupEditor.css";
 import Header from "../components/header/Header";
 
-export default function GroupEditor() {
+export default function GroupEditor(isLoggedIn, setIsLoggedIn) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);
@@ -162,7 +162,7 @@ export default function GroupEditor() {
     <>
       {/* 🔵 TELJES OLDAL KÉK HÁTTÉRREL */}
       <div className="page-blue">
-        <Header />
+        <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
 
         {/* kártya a header alatt */}
         <div className="profile-page">

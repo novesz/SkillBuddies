@@ -61,10 +61,13 @@ app.post('/login', (req, res) => {
         if (results.length === 0) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
-        res.cookie('session_token', process.env.SESSION_TOKEN, { httpOnly: true, secure: false, sameSite: 'Lax', maxAge: 76*60*60*1000}); 
+        res.cookie('session_token', process.env.SESSION_TOKEN, { 
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 76*60*60*1000}); 
         res.json({
-            message: "Login successful",
-            user: results[0],
+            loggedIn: true
         });
         
     });

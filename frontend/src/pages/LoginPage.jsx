@@ -3,13 +3,13 @@ import "../styles/LoginPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
 
-export default function LoginPage() {
-  const [loginData, setLoginData] = useState({Email: "", Password: ""});
+export default function LoginPage(isLoggedIn, setIsLoggedIn) {
+  
     
   return (
     
     <div className="login-page">
-         <Header />
+        <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
       <div className="login-container">
         <h2 className="login-title">LOGIN</h2>
         <form className="login-form" onSubmit={(e) => {
@@ -19,8 +19,11 @@ export default function LoginPage() {
             console.log(email, password);
             axios.post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
               .then((response) => {
-                  alert("Login successful!");
-                  window.location.href = "/";
+                isLoggedIn(response.data.loggedIn);
+                alert("Login successful!");
+                console.log(response.data.loggedIn);
+                window.location.href = "/";
+                  
               })
               .catch((error) => {
                   alert(error.response?.data?.message || "Login failed");

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import PfDropdown from "./PfDropdown";
 
-export default function Header(isLoggedIn) {
+export default function Header(isLoggedIn, setIsLoggedIn) {
   const [open, setOpen] = useState(false);
   const hambRef = useRef(null);            // <-- külön ref a hamburger+panelhez
   const { avatarUrl } = useUser();
@@ -56,7 +56,7 @@ export default function Header(isLoggedIn) {
 
       {/* PROFIL – jobbra tolva */}
       <div className="sb-profile">
-        <PfDropdown avatarUrl={avatarUrl} isLoggedIn={isLoggedIn}/>
+        <PfDropdown avatarUrl={avatarUrl} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>
       </div>
       
     </header>

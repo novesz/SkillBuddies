@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "../styles/SupportPage.css";
-import Navbar from "../components/header/Header";
+import Header from "../components/header/Header";
 import axios from "axios";
 
-function SupportPage() {
+function SupportPage(isLoggedIn, setIsLoggedIn) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessages, setSuccessMessages] = useState([]);
@@ -45,7 +45,7 @@ function SupportPage() {
 
   return (
     <div className="sb-page support-page">
-      <Navbar />
+      <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
       <main className="support-main">
         <h2 className="support-title">Support Page</h2>
         <p className="support-subtitle">
