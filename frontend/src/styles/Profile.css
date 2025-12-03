@@ -250,6 +250,12 @@
 /* ==========================================================================
    7) PASSWORD PANEL
    ========================================================================== */
+
+.text{
+  font-size: 14px;
+  color: black;
+}
+
 .password-section{
   margin-top: 22px;
   border-top: 1px dashed var(--border);

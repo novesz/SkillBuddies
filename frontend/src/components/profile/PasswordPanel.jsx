@@ -33,7 +33,7 @@ export default function PasswordPanel({ onSubmit }) {
         aria-hidden={!open}
       >
         <label className="field">
-          <span>Current password</span>
+          <span className="text">Current password</span>
           <input
             className="input"
             type="password"
@@ -44,7 +44,7 @@ export default function PasswordPanel({ onSubmit }) {
         </label>
 
         <label className="field">
-          <span>New password</span>
+          <span className="text">New password</span>
           <input
             className="input"
             type="password"
@@ -55,7 +55,7 @@ export default function PasswordPanel({ onSubmit }) {
         </label>
 
         <label className="field">
-          <span>Confirm new password</span>
+          <span className="text">Confirm new password</span>
           <input
             className="input"
             type="password"
