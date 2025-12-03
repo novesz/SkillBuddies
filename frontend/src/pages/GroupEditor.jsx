@@ -6,13 +6,24 @@ export default function GroupEditor() {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);
-  const MAX_WORDS = 250;
-  const MAX_CHARS = 10000000; // ezt bármikor átírhatod másra
 
+  // ÚJ: carousel pozíció
+  const [avatarOffset, setAvatarOffset] = useState(0);
+
+  const MAX_WORDS = 250;
+  const MAX_CHARS = 10000000;
+
+  // egyszerre ennyi avatar látszik
+  const VISIBLE_AVATARS = 3;
 
   const avatars = [
     "/groupavatars/Ant.png",
+    "/groupavatars/Szarvi.png",
+    "/groupavatars/Bodi.png",
+    
   ];
+
+  const maxOffset = Math.max(0, avatars.length - VISIBLE_AVATARS);
 
   const [allSkills, setAllSkills] = useState([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState([]);
@@ -42,48 +53,37 @@ export default function GroupEditor() {
     fetchSkills();
   }, []);
 
-  // 🔹 leírás változás – max. 250 szó
+  // 🔹 leírás — max 250 szó
   const handleDescriptionChange = (e) => {
-  let value = e.target.value || "";
+    let value = e.target.value || "";
+    if (value.length > MAX_CHARS) value = value.slice(0, MAX_CHARS);
+    if (value.trim() === "") {
+      setDescription("");
+      return;
+    }
+    const words = value.trim().split(/\s+/);
+    if (words.length <= MAX_WORDS) {
+      setDescription(value);
+    } else {
+      setDescription(words.slice(0, MAX_WORDS).join(" "));
+    }
+  };
 
-  // 1) KARAKTER LIMIT – ne lehessen végtelenül spamelni
-  if (value.length > MAX_CHARS) {
-    value = value.slice(0, MAX_CHARS);
-  }
+  // 🔹 avatar carousel lapozás
+  const handlePrevAvatar = () => {
+    setAvatarOffset((prev) => (prev === 0 ? maxOffset : prev - 1));
+  };
 
-  // ha üres, töröljük
-  if (value.trim() === "") {
-    setDescription("");
-    return;
-  }
+  const handleNextAvatar = () => {
+    setAvatarOffset((prev) => (prev === maxOffset ? 0 : prev + 1));
+  };
 
-  // 2) SZÓ LIMIT – max. 250 szó
-  const words = value.trim().split(/\s+/);
-
-  if (words.length <= MAX_WORDS) {
-    // ha még belefér 250-be, mehet teljesen (már levágva MAX_CHARS-re)
-    setDescription(value);
-  } else {
-    // ha több lenne, akkor csak az első 250 szót tartjuk meg
-    const limited = words.slice(0, MAX_WORDS).join(" ");
-    setDescription(limited);
-  }
-};
-
-
-  // 🔹 avatar lapozás
-  const handlePrevAvatar = () =>
-    setAvatarIndex((prev) => (prev === 0 ? avatars.length - 1 : prev - 1));
-
-  const handleNextAvatar = () =>
-    setAvatarIndex((prev) => (prev === avatars.length - 1 ? 0 : prev + 1));
-
-  // 🔹 kiválasztott skillek objektumai
+  // skill objektumok
   const selectedSkills = allSkills.filter((s) =>
     selectedSkillIds.includes(s.SkillID)
   );
 
-  // 🔹 keresési találatok
+  // keresési találatok
   const filteredSkills = allSkills
     .filter((s) => s.Skill.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((s) => !selectedSkillIds.includes(s.SkillID))
@@ -109,6 +109,7 @@ export default function GroupEditor() {
     setDescription("");
     setSelectedSkillIds([]);
     setAvatarIndex(0);
+    setAvatarOffset(0);
     setError("");
     setSuccess("");
     setSearchTerm("");
@@ -130,7 +131,7 @@ export default function GroupEditor() {
 
     const payload = {
       chatName: groupName,
-      chatPic: avatars[avatarIndex],
+      chatPic: avatars[avatarIndex], // kiválasztott avatar
       skillIds: selectedSkillIds,
       userId: currentUserId,
     };
@@ -144,9 +145,7 @@ export default function GroupEditor() {
 
       const data = await resp.json();
 
-      if (!resp.ok) {
-        throw new Error(data.error || "Ismeretlen hiba történt.");
-      }
+      if (!resp.ok) throw new Error(data.error || "Ismeretlen hiba történt.");
 
       setCreatedChatId(data.chatId);
       setSuccess("Csoport sikeresen létrehozva! 🎉");
@@ -160,11 +159,9 @@ export default function GroupEditor() {
 
   return (
     <>
-      {/* 🔵 TELJES OLDAL KÉK HÁTTÉRREL */}
       <div className="page-blue">
         <Header />
 
-        {/* kártya a header alatt */}
         <div className="profile-page">
           <div className="profile-card">
             <div className="profile-header">
@@ -182,6 +179,7 @@ export default function GroupEditor() {
                 <div className="group-avatar-block">
                   <p className="field-label">Group avatar</p>
 
+                  {/* 🔵 CAROUSEL — több avatar látszik */}
                   <div className="avatar-carousel">
                     <button
                       type="button"
@@ -191,16 +189,30 @@ export default function GroupEditor() {
                       ‹
                     </button>
 
-                    {/* csak az aktuális avatar látszik */}
-                    <button
-                      type="button"
-                      className="avatar-circle avatar-circle--active"
-                    >
-                      <img
-                        src={avatars[avatarIndex]}
-                        alt="Group avatar"
-                      />
-                    </button>
+                    <div className="avatar-carousel-window">
+                      <div
+                        className="avatar-carousel-track"
+                        style={{
+                          transform: `translateX(-${
+                            avatarOffset * (100 / VISIBLE_AVATARS)
+                          }%)`,
+                        }}
+                      >
+                        {avatars.map((src, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className={
+                              "avatar-circle" +
+                              (i === avatarIndex ? " avatar-circle--active" : "")
+                            }
+                            onClick={() => setAvatarIndex(i)}
+                          >
+                            <img src={src} alt={`Avatar ${i + 1}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     <button
                       type="button"
@@ -212,6 +224,7 @@ export default function GroupEditor() {
                   </div>
                 </div>
 
+                {/* GROUP NAME */}
                 <div className="field">
                   <label className="field-label">Group name</label>
                   <input
@@ -222,6 +235,7 @@ export default function GroupEditor() {
                   />
                 </div>
 
+                {/* DESCRIPTION */}
                 <div className="field">
                   <label className="field-label">
                     Description (max. 250 words)
@@ -236,7 +250,7 @@ export default function GroupEditor() {
                 </div>
               </section>
 
-              {/* JOBB OLDAL - SKILLEK */}
+              {/* JOBB OLDAL – SKILLEK */}
               <section className="profile-section">
                 <h3 className="section-title">Group skills</h3>
 
