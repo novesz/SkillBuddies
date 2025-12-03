@@ -17,7 +17,7 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX - 70,
       });
-      console.log(isLoggedIn.isLoggedIn);
+      
     }
     setOpen(!open);
   };

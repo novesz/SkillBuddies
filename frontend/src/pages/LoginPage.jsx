@@ -17,12 +17,11 @@ export default function LoginPage({isLoggedIn, setIsLoggedIn}) {
             e.preventDefault();
             const email = e.target[0].value;
             const password = e.target[1].value;
-            console.log(email, password);
+            
             axios.post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
               .then((response) => {
                 setIsLoggedIn(response.data.loggedIn);
                 alert("Login successful!");
-                console.log(response.data.loggedIn);
                 navigate("/");
                   
               })

@@ -82,10 +82,12 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
   const selectedSkills = allSkills.filter((s) =>
     selectedSkillIds.includes(s.SkillID)
   );
-
+  
   // keresési találatok
   const filteredSkills = allSkills
-    .filter((s) => s.Skill.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((s) =>
+      s.Skill.toLowerCase().startsWith(searchTerm.toLowerCase())
+    )
     .filter((s) => !selectedSkillIds.includes(s.SkillID))
     .slice(0, 6);
 
