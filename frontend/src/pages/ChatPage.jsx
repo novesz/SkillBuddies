@@ -11,19 +11,17 @@ export default function ChatPage({ currentUserId }) {
   const [newMessage, setNewMessage] = useState("");
   const chatEndRef = useRef(null);
 
-  // 1️⃣ Chat lista lekérése backendből
+  // Chat lista lekérése
   useEffect(() => {
     axios.get("http://localhost:3001/chats/all")
       .then(res => {
         setChats(res.data);
         if (res.data.length > 0) setCurrentGroup(res.data[0].ChatID);
       })
-      .catch(err => {
-        console.error("Hiba a chat lista lekérésekor:", err);
-      });
+      .catch(err => console.error("Hiba a chat lista lekérésekor:", err));
   }, []);
 
-  // 2️⃣ Üzenetek lekérése az aktuális chathez
+  // Üzenetek lekérése az aktuális chathez
   useEffect(() => {
     if (!currentGroup) return;
 
@@ -44,12 +42,12 @@ export default function ChatPage({ currentUserId }) {
       });
   }, [currentGroup, currentUserId]);
 
-  // 3️⃣ Scroll mindig a legújabb üzenethez
+  // Scroll mindig a legújabb üzenethez
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [groups, currentGroup]);
 
-  // 4️⃣ Üzenet küldése
+  // Üzenet küldése
   const sendMessage = () => {
     const trimmed = newMessage.trim();
     if (!trimmed || !currentUserId || !currentGroup) return;
@@ -60,7 +58,6 @@ export default function ChatPage({ currentUserId }) {
       Content: trimmed
     })
     .then(res => {
-      // UI frissítése
       setGroups(prev => ({
         ...prev,
         [currentGroup]: [...(prev[currentGroup] || []), {
@@ -83,20 +80,12 @@ export default function ChatPage({ currentUserId }) {
 
   return (
     <div className="chat-page">
+      {/* HEADER */}
       <div className="header-container">
         <Header />
-        <div className="right">
-          <button className="profile-btn" onClick={() => setMenuOpen(!menuOpen)}>⚙️</button>
-          {menuOpen && (
-            <div className="dropdown">
-              <button>People</button>
-              <button>Skills</button>
-              <button>Leave</button>
-            </div>
-          )}
-        </div>
       </div>
 
+      {/* MAIN CONTENT */}
       <div className="content">
         {/* Chat lista */}
         <div className="user-list">
@@ -106,38 +95,55 @@ export default function ChatPage({ currentUserId }) {
               className={`user-row ${chat.ChatID === currentGroup ? "active" : ""}`}
               onClick={() => setCurrentGroup(chat.ChatID)}
             >
-              <div className="dot">
-                <img 
-                  src={`/images/${chat.ChatPic}`} 
-                  alt={chat.ChatName} 
-                  style={{ width: "20px", height: "20px", borderRadius: "50%" }} 
-                />
-              </div>
+              <img
+                src={`/images/${chat.ChatPic}`}
+                alt={chat.ChatName}
+                className="chat-pic"
+              />
               <span>{chat.ChatName}</span>
             </div>
           ))}
         </div>
 
         {/* Chat box */}
-        <div className="chat-box">
-          {currentGroup && (groups[currentGroup] || []).map((message) => (
-            <div key={message.MsgID} className={`message ${message.type}`}>
-              {message.text}
-            </div>
-          ))}
-          <div ref={chatEndRef} />
-          <form onSubmit={e => { e.preventDefault(); sendMessage(); }}>
-            <div className="input-row">
-              <input
-                type="text"
-                placeholder="Text here"
-                value={newMessage}
-                onChange={e => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-              />
-              <button className="send-btn" type="submit">↑</button>
-            </div>
-          </form>
+        <div className="chat-container">
+          <div className="chat-box">
+            {currentGroup && (groups[currentGroup] || []).map((message) => (
+              <div key={message.MsgID} className={`message ${message.type}`}>
+                {message.text}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+            <form onSubmit={e => { e.preventDefault(); sendMessage(); }}>
+              <div className="input-row">
+                <input
+                  type="text"
+                  placeholder="Text here"
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                />
+                <button className="send-btn" type="submit">↑</button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right panel (Discord-stílusú beállítás) */}
+          <div className="right-panel">
+            <button
+              className="profile-btn"
+              onClick={() => setMenuOpen(prev => !prev)}
+            >
+              ⚙️
+            </button>
+            {menuOpen && (
+              <div className="settings-dropdown">
+                <button>People</button>
+                <button>Skills</button>
+                <button>Leave</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

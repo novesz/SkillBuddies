@@ -1,194 +1,142 @@
 :root {
-    --bg1:#89a8d8; 
-    --bg2:#6286bf; 
-    --card:#82a3db;
-    --text:#0f172a; 
-    --chip:#efe6f8; 
-    --shadow:10px 10px 20px rgba(0,0,0,.25);
-  }
-  
-  /* PAGE */
-  .chat-page {
-    height: 100vh;
-    background:
-      radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
-      linear-gradient(135deg, var(--bg1), #9bb6e9 60%, #a9bdea);
-    color: var(--text);
-    display:flex;
-    flex-direction:column;
-  }
-  
-  /* HEADER */
-  .header {
-    height: 60px;
-    backdrop-filter: blur(6px);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:0 20px;
-    border-bottom:1px solid rgba(0,0,0,0.3);
-  }
-  
-  .left {
-    display:flex;
-    align-items:center;
-    gap:15px;
-  }
-  
-  .menu-btn, .profile-btn {
-    font-size:22px;
-    background:none;
-    border:none;
-    cursor:pointer;
-  }
-  
-  /* Ensure the button is aligned to the right */
-  .right {
-    display: flex;
-    flex-direction: column; /* Stack items vertically */
-    align-items: flex-end; /* Align items to the right */
-    position: relative;
-  }
+  --bg1: #89a8d8; 
+  --bg2: #6286bf; 
+  --card: #82a3db;
+  --text: #0f172a; 
+  --chip: #efe6f8; 
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --incoming: #ffb300;
+  --outgoing: #4caf50;
+  --hover: rgba(255,255,255,0.2);
+  --active: #d8e3ff;
+}
 
-  
-  
-  /* DROPDOWN */
-  .dropdown {
-    position: absolute;
-    top: 100%; /* Position the dropdown below the button */
-    right: 0;
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    animation: fadeIn 0.2s ease;
-  }
-  
-  .dropdown button {
-    width:100%;
-    padding:10px 20px;
-    border:none;
-    background:white;
-    text-align:left;
-    cursor:pointer;
-    border-bottom:1px solid #ccc;
-  }
-  
-  .dropdown button:hover {
-    background:#e6efff;
-  }
-  
-  /* LAYOUT */
-  .content {
-    display:flex;
-    flex:1;
-  }
-  
-  /* USER LIST */
-  .user-list {
-    width:180px;
-    backdrop-filter:blur(8px);
-    border-right:1px solid rgba(0,0,0,0.3);
-    padding-top:20px;
-  }
-  
-  .user-row {
-    display:flex;
-    align-items:center;
-    padding:10px 15px;
-    gap:10px;
-    cursor:pointer;
-  }
-  
-  .user-row:hover {
-    background:rgba(255,255,255,0.2);
-  }
-  
-  .dot {
-    width:20px;
-    height:20px;
-    background:#ffb300;
-    border-radius:50%;
-  }
-  
-  /* CHAT BOX */
-  /* Bejövő és kimenő üzenetek színei */
-  .message.outgoing {
-    align-self: flex-start;   /* saját üzeneted balra */
-    background: #4caf50;
-    color: white;
-  }
-  
-  .message.incoming {
-    align-self: flex-end;     /* más üzenete jobbra */
-    background: #ffb300;      /* sárga */
-    color: black;
-  }
-  
-  
-  
-  /* Scrollozható chat box */
-  .chat-box {
-    flex: 1;
-    padding: 25px 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-  }
-  
-  /* Dropdown már eleve benne volt a CSS-edben, működik */
-  
-  
-  .message {
-    max-width: 220px;
-    padding: 15px;
-    border-radius: 10px;
-    background: #ffb300;
-    color: white;
-  }
-  
-  .incoming {
-    align-self: flex-start;
-  }
-  
-  .outgoing {
-    align-self: flex-end;
-    background: #4caf50;
-  }
-  
-  /* INPUT */
-  .input-row {
-    display: flex;
-    gap: 10px;
-    margin-top: auto;
-    padding: 10px;
-  }
-  
-  .input-row input {
-    flex: 1;
-    padding: 12px 15px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    background: #efe6f8;
-  }
-  
-  .input-row .send-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: #4caf50;
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
-  }
-  
-  /* ANIMATION */
-  @keyframes fadeIn {
-    from { opacity:0; transform:translateY(-5px); }
-    to { opacity:1; transform:translateY(0); }
-  }
+/* PAGE */
+.chat-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  background:
+    radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
+    linear-gradient(135deg, var(--bg1), #9bb6e9 60%, #a9bdea);
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+.header-container {
+  height: 60px;
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* USER LIST */
+.user-list {
+  width: 200px;
+  backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(0,0,0,0.3);
+  padding-top: 20px;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.1);
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.user-row:hover { background: var(--hover); }
+.user-row.active { background: var(--active); font-weight: bold; }
+
+.chat-pic { width: 30px; height: 30px; border-radius: 50%; }
+
+/* CHAT CONTAINER */
+.chat-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+/* CHAT BOX */
+.chat-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px 30px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+/* MESSAGES */
+.message {
+  padding: 12px 18px;
+  border-radius: 12px;
+  max-width: 70%;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.message.incoming { align-self: flex-start; background: var(--incoming); color: black; }
+.message.outgoing { align-self: flex-end; background: var(--outgoing); color: white; }
+
+/* INPUT ROW */
+.input-row { display: flex; gap: 10px; padding: 10px; margin-top: auto; }
+.input-row input {
+  flex: 1;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: var(--chip);
+  font-size: 14px;
+}
+.send-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--outgoing);
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* RIGHT PANEL (Discord-stílus) */
+.right-panel {
+  width: 60px;
+  background: #2f3136;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+  border-left: 1px solid #202225;
+  position: relative;
+}
+
+.right-panel .profile-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #7289da;
+  color: white;
+  border: none;
+  f
+}
