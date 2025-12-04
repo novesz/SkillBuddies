@@ -61,10 +61,13 @@ app.post('/login', (req, res) => {
         if (results.length === 0) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
-        res.cookie('session_token', process.env.SESSION_TOKEN, { httpOnly: true, secure: false, sameSite: 'Lax', maxAge: 76*60*60*1000}); 
+        res.cookie('session_token', process.env.SESSION_TOKEN, { 
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 76*60*60*1000}); 
         res.json({
-            message: "Login successful",
-            user: results[0],
+            loggedIn: true
         });
         
     });
@@ -425,9 +428,7 @@ app.get('/messages/:chatId', (req, res) => {
     });
 });
 // Start server
-app.listen(3001, () => {
-    console.log(`Server is running on port 3001`);
-});
+
 
 // Eszti szuro
 
@@ -559,4 +560,48 @@ app.get("/groups", (req, res) => {
 });
 
 
+// PUT /users/:id/avatar – profilkép mentése
+app.put('/users/:id/avatar', (req, res) => {
+  const userId = req.params.id;
+  const { avatar } = req.body; // pl. "/avatars/cat.png"
 
+  if (!avatar) {
+    return res.status(400).json({ error: "Hiányzik az avatar." });
+  }
+
+  const sql = "UPDATE users SET Avatar = ? WHERE UserID = ?";
+
+  db.query(sql, [avatar, userId], (err, result) => {
+    if (err) {
+      console.error("Hiba az avatar frissítésekor:", err);
+      return res.status(500).json({ error: "Adatbázis hiba." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+    }
+
+    return res.json({ message: "Avatar frissítve.", avatar });
+  });
+});
+
+// GET /users/:id – 1 felhasználó adatai
+app.get('/users/:id', (req, res) => {
+  const userId = req.params.id;
+  const sql = "SELECT UserID, Email, Avatar FROM users WHERE UserID = ?";
+
+  db.query(sql, [userId], (err, rows) => {
+    if (err) {
+      console.error("Hiba user lekérdezésnél:", err);
+      return res.status(500).json({ error: "Adatbázis hiba." });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+    }
+    res.json(rows[0]);
+  });
+});
+
+app.listen(3001, () => {
+    console.log(`Server is running on port 3001`);
+});

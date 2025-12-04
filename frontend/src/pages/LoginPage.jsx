@@ -2,28 +2,31 @@ import React, { useState } from "react";
 import "../styles/LoginPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
-  const [loginData, setLoginData] = useState({Email: "", Password: ""});
+export default function LoginPage({isLoggedIn, setIsLoggedIn}) {
+  const navigate = useNavigate();
     
   return (
     
     <div className="login-page">
-         <Header />
+        <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
       <div className="login-container">
         <h2 className="login-title">LOGIN</h2>
         <form className="login-form" onSubmit={(e) => {
             e.preventDefault();
             const email = e.target[0].value;
             const password = e.target[1].value;
-            console.log(email, password);
+            
             axios.post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
               .then((response) => {
-                  alert("Login successful!");
-                  window.location.href = "/";
+                setIsLoggedIn(response.data.loggedIn);
+                alert("Login successful!");
+                navigate("/");
+                  
               })
               .catch((error) => {
-                  alert(error.response?.data?.message || "Login failed");
+                alert(error.response?.data?.message || "Login failed");
               });
           }}>
           <input type="text" placeholder="Email" required />

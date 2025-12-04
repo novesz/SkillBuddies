@@ -9,21 +9,33 @@ import AboutPage from './pages/AboutPage'
 import SupportPage from './pages/SupportPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import GroupEditor from './pages/GroupEditor'
+import { useEffect } from 'react'
+import axios from 'axios'
 import ChatPage from './pages/ChatPage'
 function App() {
-
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+      axios.get("http://localhost:3001/auth/status", { withCredentials: true })
+        .then((response) => {
+          setIsLoggedIn(response.data.loggedIn);
+          console.log(response.data.loggedIn);
+        })
+        .catch((error) => {
+          console.error("Hiba a bejelentkezési állapot lekérésekor:", error);
+        });
+      
+    }, []);
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegistPage />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/resetpass" element={<ResetPasswordPage />} />
-        <Route path="/groupeditor" element={<GroupEditor />} />
+        <Route path="/" element={<Home isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/login" element={<LoginPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/register" element={<RegistPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/profile" element={<Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/about" element={<AboutPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/support" element={<SupportPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/resetpass" element={<ResetPasswordPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
+        <Route path="/groupeditor" element={<GroupEditor isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
         <Route path="/chat" element={<ChatPage />} />
       </Routes>
     </>

@@ -79,18 +79,57 @@
   min-height: 72px;
 }
 
-/* avatar rész */
+/* ---------- avatar rész (vízszintes carousel, több avatar) ---------- */
 
 .group-avatar-block {
   margin-bottom: 8px;
 }
 
+/* teljes sor bal gomb – avatar sáv – jobb gomb */
 .avatar-carousel {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* avatar sáv "ablaka" – innen nem lóghat ki semmi */
+.avatar-carousel-window {
+  overflow: hidden;
+  width: 260px;                /* igazíthatod, ha szélesebb kell */
+}
+
+/* a csúszó sáv */
+.avatar-carousel-track {
+  display: flex;
+  transition: transform 0.3s ease;
+}
+
+/* egy avatar "slot" – 3 fér el egyszerre */
+.avatar-circle {
+  flex: 0 0 calc(100% / 3);   /* 3 avatar oldalanként */
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.avatar-circle img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-circle--active {
+  border-color: #ffd36a;
+  box-shadow: 0 0 0 3px rgba(255, 211, 106, 0.5);
+}
+
+/* bal/jobb "lapozó" gombok */
 .avatar-nav-btn {
   width: 36px;
   height: 36px;
@@ -105,32 +144,12 @@
   color: var(--text, #213153);
 }
 
-/* csak egy avatar látszik középen */
-.avatar-circle {
-  width: 72px;
-  height: 72px;
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.avatar-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
-.avatar-circle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-circle--active {
-  border-color: #ffd36a;
-  box-shadow: 0 0 0 3px rgba(255, 211, 106, 0.5);
-}
-
-/* skills */
+/* ---------- skills ---------- */
 
 .skills-chips {
   display: flex;
@@ -287,5 +306,9 @@
 @media (max-width: 768px) {
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .avatar-carousel-window {
+    width: 220px;
   }
 }
