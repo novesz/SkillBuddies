@@ -2,7 +2,7 @@ import React from "react";
 import "../styles/AboutPage.css";
 import Header from "../components/header/Header";
 
-export default function AboutPage(isLoggedIn, setIsLoggedIn) {
+export default function AboutPage({isLoggedIn, setIsLoggedIn}) {
   return (
     <div className="about-page">
       <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn} className="sticky-header" />

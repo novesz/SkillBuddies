@@ -9,7 +9,7 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
   const [open, setOpen] = useState(false); // lowercase "open"
   const profileRef = useRef(null);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
-
+  
   const togglePopup = () => {
     if (!open && profileRef.current) {
       const rect = profileRef.current.getBoundingClientRect();
@@ -17,10 +17,11 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX - 70,
       });
+      
     }
     setOpen(!open);
   };
-
+  
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -30,7 +31,7 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
         
       )
       .then(() => {
-        setIsLoggedIn(false);
+        isLoggedIn.setIsLoggedIn(false);
         alert("Logout successful!");
       });
     } catch (error) {
@@ -73,7 +74,7 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
           className="profile-popup"
           style={{ top: popupPosition.top, left: -70 }}
         >
-          {isLoggedIn === true ? (
+          {isLoggedIn.isLoggedIn ? (
             <>
               <Link to="/profile" className="link-item">
                 <p>Profile</p>

@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import "../styles/LoginPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function LoginPage(isLoggedIn, setIsLoggedIn) {
-  
+export default function LoginPage({isLoggedIn, setIsLoggedIn}) {
+  const navigate = useNavigate();
     
   return (
     
@@ -16,17 +17,16 @@ export default function LoginPage(isLoggedIn, setIsLoggedIn) {
             e.preventDefault();
             const email = e.target[0].value;
             const password = e.target[1].value;
-            console.log(email, password);
+            
             axios.post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
               .then((response) => {
-                isLoggedIn(response.data.loggedIn);
+                setIsLoggedIn(response.data.loggedIn);
                 alert("Login successful!");
-                console.log(response.data.loggedIn);
-                window.location.href = "/";
+                navigate("/");
                   
               })
               .catch((error) => {
-                  alert(error.response?.data?.message || "Login failed");
+                alert(error.response?.data?.message || "Login failed");
               });
           }}>
           <input type="text" placeholder="Email" required />

@@ -1,7 +1,7 @@
 import React from "react";
 import "../styles/ResetPasswordPage.css";
 import Header from "../components/header/Header";
-export default function ForgotPasswordPage(isLoggedIn, setIsLoggedIn) {
+export default function ForgotPasswordPage({isLoggedIn, setIsLoggedIn}) {
     return (
       <div className="forgot-page">
         <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>

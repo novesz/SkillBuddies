@@ -3,7 +3,7 @@ import Header from "../components/header/Header";
 import axios from "axios";
 import "../styles/Home.css";
 
-export default function Home(isLoggedIn, setIsLoggedIn) {
+export default function Home({isLoggedIn, setIsLoggedIn}) {
   
   const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
   const [allCards, setAllCards] = useState([]);    // összes csoport

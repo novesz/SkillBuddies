@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/GroupEditor.css";
 import Header from "../components/header/Header";
 
-export default function GroupEditor(isLoggedIn, setIsLoggedIn) {
+export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);
@@ -82,10 +82,12 @@ export default function GroupEditor(isLoggedIn, setIsLoggedIn) {
   const selectedSkills = allSkills.filter((s) =>
     selectedSkillIds.includes(s.SkillID)
   );
-
+  
   // keresési találatok
   const filteredSkills = allSkills
-    .filter((s) => s.Skill.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((s) =>
+      s.Skill.toLowerCase().startsWith(searchTerm.toLowerCase())
+    )
     .filter((s) => !selectedSkillIds.includes(s.SkillID))
     .slice(0, 6);
 
