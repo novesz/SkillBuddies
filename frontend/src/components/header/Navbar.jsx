@@ -11,6 +11,7 @@ export default function Navbar() {
           <li><Link to="/groupeditor">Create group</Link></li>
           <li><Link to="/support">Support</Link></li>
           <li><Link to="/about">About</Link></li>
+          <li><Link to="/chat">Chat</Link></li>
         </ul>
       </div>
     </nav>

@@ -4,6 +4,9 @@ const mysql = require('mysql2');
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const app = express();
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
 
@@ -40,42 +43,61 @@ app.get('/users/all', (req, res) => {
     });
 });
 //login
-app.get("/auth/status", (req, res) => {
-    const sessionToken = req.cookies.session_token;
-    if (sessionToken === process.env.SESSION_TOKEN) {
-        return res.json({ loggedIn: true });
+function authMiddleware(req, res, next) {
+    const token = req.cookies.token;
+  
+    if (!token) return res.json({ loggedIn: false });
+  
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.userId = decoded.userId;
+      next();
+    } catch {
+      return res.json({ loggedIn: false, userId: userId });
     }
-    return res.json({ loggedIn: false });
-   
-});
-app.post('/login', (req, res) => {
-    const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
-    const values = [req.body.Email, req.body.Password];
-
-    db.query(sql, values, (err, results) => {
-        if (err) {
-            console.error("Error:", err);
-            return res.status(500).json({ message: "Internal server error" });
-        }
-
-        if (results.length === 0) {
-            return res.status(401).json({ message: "Invalid email or password" });
-        }
-        res.cookie('session_token', process.env.SESSION_TOKEN, { 
-            httpOnly: true,
-            secure: false,
-            sameSite: 'lax',
-            maxAge: 76*60*60*1000}); 
-        res.json({
-            loggedIn: true
-        });
-        
+}
+  
+app.get("/auth/status", authMiddleware, (req, res) => {
+    res.json({
+      loggedIn: true,
+      userId: req.userId
     });
 });
-app.post('/logout', (req, res) => {
-    res.clearCookie('session_token');
-    return res.json({ message: "Logged out" });
+  
+app.post("/login", (req, res) => {
+    const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
+    const values = [req.body.Email, req.body.Password];
+  
+    db.query(sql, values, (err, results) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+  
+      if (results.length === 0) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+  
+      const user = results[0];
+  
+      const token = jwt.sign(
+        { userId: user.UserID },    // ← real user id from DB
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+  
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",  // allow cross-origin from frontend
+        secure: false     // if you’re on http localhost
+      });
+  
+      res.json({ loggedIn: true });
+    });
+  });
+  
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ loggedIn: false });
 });
+
 //get user by ID
 app.get('/users/:id', (req, res) => {
     const sql = "SELECT * FROM users where UserID = ?";

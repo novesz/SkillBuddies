@@ -14,11 +14,19 @@ import axios from 'axios'
 import ChatPage from './pages/ChatPage'
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState(false);
   useEffect(() => {
       axios.get("http://localhost:3001/auth/status", { withCredentials: true })
         .then((response) => {
           setIsLoggedIn(response.data.loggedIn);
           console.log(response.data.loggedIn);
+          console.log(response.data);
+          if(response.data.loggedIn){
+            setUserId(response.data.userId);
+            console.log(response.data.userId);
+          }
+          
+
         })
         .catch((error) => {
           console.error("Hiba a bejelentkezési állapot lekérésekor:", error);
@@ -36,7 +44,7 @@ function App() {
         <Route path="/support" element={<SupportPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
         <Route path="/resetpass" element={<ResetPasswordPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
         <Route path="/groupeditor" element={<GroupEditor isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
-        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat" element={<ChatPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn}/>} />
       </Routes>
     </>
   )
