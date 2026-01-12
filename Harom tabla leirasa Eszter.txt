@@ -1,0 +1,84 @@
+CHATS TÁBLA (chats)
+
+	ChatID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy hosszúságú
+	Elsődleges kulcs, egyedileg azonosítja a chatet
+	
+	ChatName VARCHAR(45)
+	VARCHAR változó hosszúságú szöveg
+	maximum 45 karakter
+	A chat neve
+
+	ChatPic VARCHAR(45)
+	VARCHAR szöveg típus
+	maximum 45 karakter
+	A chat képének elérési útja vagy fájlneve
+
+	CreatedAt DATETIME
+	DATETIME dátum és idő
+	A chat létrehozásának időpontja
+
+	Kapcsolatok
+	chats.ChatID kapcsolódik msgs.ChatID mezőhöz, egy chathez több üzenet tartozhat
+	chats.ChatID kapcsolódik uac.ChatID mezőhöz, egy chatben több felhasználó lehet
+
+MSGS TÁBLA (msgs)
+
+	MsgID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy
+	Elsődleges kulcs, az üzenet egyedi azonosítója
+
+	UserID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy
+	Idegen kulcs, a felhasználót azonosítja
+	Kapcsolódik users.UserID mezőhöz
+
+	ChatID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy
+	Idegen kulcs, a chatet azonosítja
+	Kapcsolódik chats.ChatID mezőhöz
+
+	Content TEXT
+	TEXT hosszú szöveg tárolására szolgál
+	Az üzenet tartalma
+
+	SentAt DATETIME
+	DATETIME dátum és idő
+	Az üzenet elküldésének időpontja
+
+	Kapcsolatok
+	msgs.ChatID kapcsolódik chats.ChatID mezőhöz
+	msgs.UserID kapcsolódik users.UserID mezőhöz
+
+UAC TÁBLA (uac)
+
+	UserID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy
+	Idegen kulcs, a felhasználót azonosítja
+	Kapcsolódik users.UserID mezőhöz
+
+	ChatID INT(11)
+	INT egész szám típus
+	maximum 11 számjegy
+	Idegen kulcs, a chatet azonosítja
+	Kapcsolódik chats.ChatID mezőhöz
+
+	IsChatAdmin TINYINT(1)
+	TINYINT kis egész szám
+	1 logikai értékként használjuk
+	0 nem admin
+	1 admin
+
+	JoinedAt DATETIME
+	DATETIME dátum és idő
+	A belépés időpontja
+
+	Kapcsolatok
+	A users és chats táblák között sok-sok kapcsolatot valósít meg
+	Egy felhasználó több chathez tartozhat
+	Egy chathez több felhasználó tartozhat
