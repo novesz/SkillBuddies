@@ -28,15 +28,10 @@ export default function AvatarPicker({ value, onChange }) {
     updateArrows();
     const el = listRef.current;
     if (!el) return;
-
     el.addEventListener("scroll", updateArrows, { passive: true });
     const ro = new ResizeObserver(updateArrows);
     ro.observe(el);
-
-    return () => {
-      el.removeEventListener("scroll", updateArrows);
-      ro.disconnect();
-    };
+    return () => { el.removeEventListener("scroll", updateArrows); ro.disconnect(); };
   }, []);
 
   const scrollByAmount = (dir) => {
@@ -46,25 +41,15 @@ export default function AvatarPicker({ value, onChange }) {
     el.scrollBy({ left: dir * amount, behavior: "smooth" });
   };
 
-  const onSave = () => onChange(pending);
+  const onSave = () => onChange?.(pending);
   const onCancel = () => setPending(value || "");
-
-  const unchanged = pending === (value || "");
 
   return (
     <section className="avatar-section card">
       <div className="avatar-title">Profile picture</div>
 
       <div className="avatar-strip-wrap">
-        <button
-          type="button"
-          className="nav-btn"
-          aria-label="Scroll left"
-          onClick={() => scrollByAmount(-1)}
-          disabled={!canLeft}
-        >
-          ‹
-        </button>
+        <button type="button" className="nav-btn" onClick={() => scrollByAmount(-1)} disabled={!canLeft}>‹</button>
 
         <div className="avatar-strip" ref={listRef}>
           {PRESETS.map((src) => (
@@ -80,22 +65,14 @@ export default function AvatarPicker({ value, onChange }) {
           ))}
         </div>
 
-        <button
-          type="button"
-          className="nav-btn"
-          aria-label="Scroll right"
-          onClick={() => scrollByAmount(1)}
-          disabled={!canRight}
-        >
-          ›
-        </button>
+        <button type="button" className="nav-btn" onClick={() => scrollByAmount(1)} disabled={!canRight}>›</button>
       </div>
 
       <div className="row-right" style={{ marginTop: 10 }}>
-        <button className="btn" type="button" onClick={onCancel} disabled={unchanged}>
+        <button className="btn" type="button" onClick={onCancel} disabled={pending === (value || "")}>
           Cancel
         </button>
-        <button className="btn btn-primary" type="button" onClick={onSave} disabled={unchanged}>
+        <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === (value || "")}>
           Save
         </button>
       </div>

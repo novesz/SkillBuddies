@@ -12,6 +12,10 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
     avatarUrl: "",
     skills: [],
   });
+  const { setAvatarUrl } = useUser(); // Profile.jsx tetején
+
+
+
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -69,7 +73,11 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
       console.error(err);
       setError(err.message);
     }
+
+    // sikeres mentés után:
+  setAvatarUrl(user.avatarUrl);
   };
+  
 
   // Logout
   const handleLogout = async () => {

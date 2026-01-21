@@ -109,7 +109,13 @@ app.post("/logout", (req, res) => {
 app.get("/users/me/profile", authMiddleware, (req, res) => {
   const userId = req.userId;
 
-  const sqlUser = "SELECT Username, Email, Avatar FROM users WHERE UserID = ?";
+  const sqlUser = `
+    SELECT u.Username, u.Email, p.URL AS avatarUrl
+    FROM users u
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
+    WHERE u.UserID = ?
+  `;
+
   const sqlSkills = `
     SELECT s.Skill
     FROM skills s
@@ -119,21 +125,28 @@ app.get("/users/me/profile", authMiddleware, (req, res) => {
   `;
 
   db.query(sqlUser, [userId], (err, userRows) => {
-    if (err) return res.status(500).json({ error: "DB error (user)" });
+    if (err) {
+      console.error("DB error (user):", err);
+      return res.status(500).json({ error: "DB error (user)" });
+    }
     if (userRows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
 
     db.query(sqlSkills, [userId], (err, skillRows) => {
-      if (err) return res.status(500).json({ error: "DB error (skills)" });
+      if (err) {
+        console.error("DB error (skills):", err);
+        return res.status(500).json({ error: "DB error (skills)" });
+      }
 
       res.json({
         name: userRows[0].Username,
         email: userRows[0].Email,
-        avatarUrl: userRows[0].Avatar || "",
+        avatarUrl: userRows[0].avatarUrl || "",
         skills: skillRows.map((r) => r.Skill),
       });
     });
   });
 });
+
 
 //users save
 
@@ -141,37 +154,50 @@ app.put("/users/me/profile", authMiddleware, (req, res) => {
   const userId = req.userId;
   const { avatarUrl, skills } = req.body;
 
+  // DEBUG: mit kap a backend
+  console.log("SAVE PROFILE userId:", userId);
+  console.log("SAVE PROFILE avatarUrl:", avatarUrl);
+  console.log("SAVE PROFILE skills:", skills);
+
   if (!Array.isArray(skills)) {
     return res.status(400).json({ error: "skills must be an array" });
   }
 
   db.beginTransaction((err) => {
-    if (err) return res.status(500).json({ error: "Tranzakció indítási hiba." });
+    if (err) {
+      console.error("BEGIN TRANSACTION ERROR:", err);
+      return res.status(500).json({ error: "Tranzakció indítási hiba.", details: err.message });
+    }
 
-    const updateAvatarSql = "UPDATE users SET Avatar = ? WHERE UserID = ?";
-    db.query(updateAvatarSql, [avatarUrl || null, userId], (err) => {
-      if (err) {
-        return db.rollback(() => res.status(500).json({ error: "Avatar mentési hiba." }));
-      }
-
+    const saveSkillsPart = () => {
       const deleteSkillsSql = "DELETE FROM uas WHERE UserID = ?";
       db.query(deleteSkillsSql, [userId], (err) => {
         if (err) {
-          return db.rollback(() => res.status(500).json({ error: "Skillek törlési hiba." }));
+          console.error("Skillek törlési hiba:", err);
+          return db.rollback(() =>
+            res.status(500).json({ error: "Skillek törlési hiba.", details: err.message })
+          );
         }
 
         if (skills.length === 0) {
           return db.commit((err) => {
-            if (err) return db.rollback(() => res.status(500).json({ error: "Commit hiba." }));
+            if (err) {
+              console.error("Commit hiba:", err);
+              return db.rollback(() =>
+                res.status(500).json({ error: "Commit hiba.", details: err.message })
+              );
+            }
             return res.json({ message: "Profile saved" });
           });
         }
 
-        // Skill nevekből SkillID-k
         const lookupSql = "SELECT SkillID, Skill FROM skills WHERE Skill IN (?)";
         db.query(lookupSql, [skills], (err, rows) => {
           if (err) {
-            return db.rollback(() => res.status(500).json({ error: "Skill lookup hiba." }));
+            console.error("Skill lookup hiba:", err);
+            return db.rollback(() =>
+              res.status(500).json({ error: "Skill lookup hiba.", details: err.message })
+            );
           }
 
           const skillIds = rows.map((r) => r.SkillID);
@@ -187,19 +213,75 @@ app.put("/users/me/profile", authMiddleware, (req, res) => {
 
           db.query(insertSql, [insertValues], (err) => {
             if (err) {
-              return db.rollback(() => res.status(500).json({ error: "Skill insert hiba." }));
+              console.error("Skill insert hiba:", err);
+              return db.rollback(() =>
+                res.status(500).json({ error: "Skill insert hiba.", details: err.message })
+              );
             }
 
             db.commit((err) => {
-              if (err) return db.rollback(() => res.status(500).json({ error: "Commit hiba." }));
+              if (err) {
+                console.error("Commit hiba:", err);
+                return db.rollback(() =>
+                  res.status(500).json({ error: "Commit hiba.", details: err.message })
+                );
+              }
               res.json({ message: "Profile saved" });
             });
           });
         });
       });
+    };
+
+    // ---- Avatar mentés: pictures + users.PfpID ----
+    if (!avatarUrl) {
+      return saveSkillsPart();
+    }
+
+    const findPicSql = "SELECT PicID FROM pictures WHERE URL = ? LIMIT 1";
+    db.query(findPicSql, [avatarUrl], (err, rows) => {
+      if (err) {
+        console.error("Picture lookup hiba:", err);
+        return db.rollback(() =>
+          res.status(500).json({ error: "Picture lookup hiba.", details: err.message })
+        );
+      }
+
+      const setUserPic = (picId) => {
+        const updateUserSql = "UPDATE users SET PfpID = ? WHERE UserID = ?";
+        db.query(updateUserSql, [picId, userId], (err) => {
+          if (err) {
+            console.error("PfpID mentési hiba:", err);
+            return db.rollback(() =>
+              res.status(500).json({ error: "Pfp mentési hiba.", details: err.message })
+            );
+          }
+
+          // utána skillek
+          saveSkillsPart();
+        });
+      };
+
+      if (rows.length > 0) {
+        return setUserPic(rows[0].PicID);
+      }
+
+      const insertPicSql = "INSERT INTO pictures (URL) VALUES (?)";
+      db.query(insertPicSql, [avatarUrl], (err, result) => {
+        if (err) {
+          console.error("Picture insert hiba:", err);
+          return db.rollback(() =>
+            res.status(500).json({ error: "Picture insert hiba.", details: err.message })
+          );
+        }
+
+        setUserPic(result.insertId);
+      });
     });
   });
 });
+
+
 
 //user change password
 
