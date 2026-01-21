@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useUser } from "../../context/UserContext";
 
 const PRESETS = [
   "/avatars/BB.png","/avatars/BC.png","/avatars/BD.png",
@@ -8,14 +7,16 @@ const PRESETS = [
   "/avatars/YC.png","/avatars/YS.png",
 ];
 
-export default function AvatarPicker() {
-  const { avatarUrl, setAvatarUrl } = useUser();
-  const [pending, setPending] = useState(avatarUrl);
+export default function AvatarPicker({ value, onChange }) {
+  const [pending, setPending] = useState(value || "");
   const listRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
-  // görgethetőség figyelése
+  useEffect(() => {
+    setPending(value || "");
+  }, [value]);
+
   const updateArrows = () => {
     const el = listRef.current;
     if (!el) return;
@@ -27,10 +28,15 @@ export default function AvatarPicker() {
     updateArrows();
     const el = listRef.current;
     if (!el) return;
+
     el.addEventListener("scroll", updateArrows, { passive: true });
     const ro = new ResizeObserver(updateArrows);
     ro.observe(el);
-    return () => { el.removeEventListener("scroll", updateArrows); ro.disconnect(); };
+
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      ro.disconnect();
+    };
   }, []);
 
   const scrollByAmount = (dir) => {
@@ -40,8 +46,10 @@ export default function AvatarPicker() {
     el.scrollBy({ left: dir * amount, behavior: "smooth" });
   };
 
-  const onSave = () => setAvatarUrl(pending);
-  const onCancel = () => setPending(avatarUrl);
+  const onSave = () => onChange(pending);
+  const onCancel = () => setPending(value || "");
+
+  const unchanged = pending === (value || "");
 
   return (
     <section className="avatar-section card">
@@ -54,12 +62,15 @@ export default function AvatarPicker() {
           aria-label="Scroll left"
           onClick={() => scrollByAmount(-1)}
           disabled={!canLeft}
-        >‹</button>
+        >
+          ‹
+        </button>
 
         <div className="avatar-strip" ref={listRef}>
-          {PRESETS.map(src => (
+          {PRESETS.map((src) => (
             <button
               key={src}
+              type="button"
               className={`preset ${pending === src ? "active" : ""}`}
               style={{ backgroundImage: `url(${src})` }}
               onClick={() => setPending(src)}
@@ -75,14 +86,16 @@ export default function AvatarPicker() {
           aria-label="Scroll right"
           onClick={() => scrollByAmount(1)}
           disabled={!canRight}
-        >›</button>
+        >
+          ›
+        </button>
       </div>
 
       <div className="row-right" style={{ marginTop: 10 }}>
-        <button className="btn" type="button" onClick={onCancel} disabled={pending === avatarUrl}>
+        <button className="btn" type="button" onClick={onCancel} disabled={unchanged}>
           Cancel
         </button>
-        <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === avatarUrl}>
+        <button className="btn btn-primary" type="button" onClick={onSave} disabled={unchanged}>
           Save
         </button>
       </div>
