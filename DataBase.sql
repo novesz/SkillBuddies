@@ -58,9 +58,11 @@ DROP TABLE IF EXISTS `chats`;
 CREATE TABLE `chats` (
   `ChatID` int(11) NOT NULL AUTO_INCREMENT,
   `ChatName` varchar(45) NOT NULL,
-  `ChatPic` varchar(45) DEFAULT NULL,
+  `ChatPic` int(11) DEFAULT NULL,
   `CreatedAt` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`ChatID`)
+  PRIMARY KEY (`ChatID`),
+  KEY `PicFk_idx` (`ChatPic`),
+  CONSTRAINT `fkPicture` FOREIGN KEY (`ChatPic`) REFERENCES `pictures` (`PicID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -70,7 +72,7 @@ CREATE TABLE `chats` (
 
 LOCK TABLES `chats` WRITE;
 /*!40000 ALTER TABLE `chats` DISABLE KEYS */;
-INSERT INTO `chats` VALUES (1,'Cuncik','Cuncik.png','2025-01-01 00:00:00'),(2,'NotPoopie','SteakLover.png','2025-11-04 11:47:40');
+INSERT INTO `chats` VALUES (1,'Cuncik',NULL,'2025-01-01 00:00:00'),(2,'NotPoopie',NULL,'2025-11-04 11:47:40');
 /*!40000 ALTER TABLE `chats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,6 +135,29 @@ INSERT INTO `neededskills` VALUES (1,4),(1,6),(1,7),(1,9),(2,4),(2,5),(2,8);
 UNLOCK TABLES;
 
 --
+-- Table structure for table `pictures`
+--
+
+DROP TABLE IF EXISTS `pictures`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pictures` (
+  `PicID` int(11) NOT NULL AUTO_INCREMENT,
+  `URL` text NOT NULL,
+  PRIMARY KEY (`PicID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pictures`
+--
+
+LOCK TABLES `pictures` WRITE;
+/*!40000 ALTER TABLE `pictures` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pictures` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `reviews`
 --
 
@@ -143,7 +168,7 @@ CREATE TABLE `reviews` (
   `Reviewer` int(11) NOT NULL,
   `Reviewee` int(11) NOT NULL,
   `Rating` int(1) DEFAULT NULL,
-  `Tartalom` varchar(200) DEFAULT NULL,
+  `Content` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`Reviewer`,`Reviewee`),
   KEY `Reviewee` (`Reviewee`),
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`Reviewer`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -304,12 +329,15 @@ CREATE TABLE `users` (
   `Username` varchar(45) NOT NULL,
   `Password` varchar(45) NOT NULL,
   `Email` varchar(45) NOT NULL,
+  `PfpID` int(11) DEFAULT NULL,
   `Tokens` int(11) NOT NULL DEFAULT 0,
   `rankID` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`UserID`),
   UNIQUE KEY `Username` (`Username`),
   UNIQUE KEY `Email` (`Email`),
   KEY `fkRank_idx` (`rankID`),
+  KEY `fkPic_idx` (`PfpID`),
+  CONSTRAINT `fkPic` FOREIGN KEY (`PfpID`) REFERENCES `pictures` (`PicID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fkRank` FOREIGN KEY (`rankID`) REFERENCES `user_rank` (`rankID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -320,7 +348,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (4,'Pali','PaliPaliPali','palpal828@hengersor.hu',10000,3),(8,'Eszter','Eszter','novesz831@hengersor.hu',0,3),(9,'Hubi','Hubertusz','szahub608@hengersor.hu',0,3),(10,'random','random1','random@example.com',0,0);
+INSERT INTO `users` VALUES (4,'Pali','PaliPaliPali','palpal828@hengersor.hu',NULL,10000,3),(8,'Eszter','Eszter','novesz831@hengersor.hu',NULL,0,3),(9,'Hubi','Hubertusz','szahub608@hengersor.hu',NULL,0,3),(10,'random','random1','random@example.com',NULL,0,0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -396,4 +424,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-01  9:14:38
+-- Dump completed on 2026-01-21 11:22:33
