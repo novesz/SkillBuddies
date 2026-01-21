@@ -44,25 +44,32 @@ app.get('/users/all', (req, res) => {
 });
 //login
 function authMiddleware(req, res, next) {
-    const token = req.cookies.token;
-  
-    if (!token) return res.json({ loggedIn: false });
-  
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.userId = decoded.userId;
-      next();
-    } catch {
-      return res.json({ loggedIn: false, userId: userId });
-    }
+  const token = req.cookies.token;
+
+  if (!token) return res.status(401).json({ loggedIn: false });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch (err) {
+    return res.status(401).json({ loggedIn: false });
+  }
 }
+
   
-app.get("/auth/status", authMiddleware, (req, res) => {
-    res.json({
-      loggedIn: true,
-      userId: req.userId
-    });
+app.get("/auth/status", (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.json({ loggedIn: false });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ loggedIn: true, userId: decoded.userId });
+  } catch {
+    res.json({ loggedIn: false });
+  }
 });
+
   
 app.post("/login", (req, res) => {
     const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
@@ -78,15 +85,15 @@ app.post("/login", (req, res) => {
       const user = results[0];
   
       const token = jwt.sign(
-        { userId: user.UserID },    // ← real user id from DB
+        { userId: user.UserID },   
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
   
       res.cookie("token", token, {
         httpOnly: true,
-        sameSite: "lax",  // allow cross-origin from frontend
-        secure: false     // if you’re on http localhost
+        sameSite: "lax",
+        secure: false     
       });
   
       res.json({ loggedIn: true });
@@ -97,6 +104,128 @@ app.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.json({ loggedIn: false });
 });
+
+//users avatar skills profile
+app.get("/users/me/profile", authMiddleware, (req, res) => {
+  const userId = req.userId;
+
+  const sqlUser = "SELECT Username, Email, Avatar FROM users WHERE UserID = ?";
+  const sqlSkills = `
+    SELECT s.Skill
+    FROM skills s
+    JOIN uas ON uas.SkillID = s.SkillID
+    WHERE uas.UserID = ?
+    ORDER BY s.Skill
+  `;
+
+  db.query(sqlUser, [userId], (err, userRows) => {
+    if (err) return res.status(500).json({ error: "DB error (user)" });
+    if (userRows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+
+    db.query(sqlSkills, [userId], (err, skillRows) => {
+      if (err) return res.status(500).json({ error: "DB error (skills)" });
+
+      res.json({
+        name: userRows[0].Username,
+        email: userRows[0].Email,
+        avatarUrl: userRows[0].Avatar || "",
+        skills: skillRows.map((r) => r.Skill),
+      });
+    });
+  });
+});
+
+//users save
+
+app.put("/users/me/profile", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  const { avatarUrl, skills } = req.body;
+
+  if (!Array.isArray(skills)) {
+    return res.status(400).json({ error: "skills must be an array" });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) return res.status(500).json({ error: "Tranzakció indítási hiba." });
+
+    const updateAvatarSql = "UPDATE users SET Avatar = ? WHERE UserID = ?";
+    db.query(updateAvatarSql, [avatarUrl || null, userId], (err) => {
+      if (err) {
+        return db.rollback(() => res.status(500).json({ error: "Avatar mentési hiba." }));
+      }
+
+      const deleteSkillsSql = "DELETE FROM uas WHERE UserID = ?";
+      db.query(deleteSkillsSql, [userId], (err) => {
+        if (err) {
+          return db.rollback(() => res.status(500).json({ error: "Skillek törlési hiba." }));
+        }
+
+        if (skills.length === 0) {
+          return db.commit((err) => {
+            if (err) return db.rollback(() => res.status(500).json({ error: "Commit hiba." }));
+            return res.json({ message: "Profile saved" });
+          });
+        }
+
+        // Skill nevekből SkillID-k
+        const lookupSql = "SELECT SkillID, Skill FROM skills WHERE Skill IN (?)";
+        db.query(lookupSql, [skills], (err, rows) => {
+          if (err) {
+            return db.rollback(() => res.status(500).json({ error: "Skill lookup hiba." }));
+          }
+
+          const skillIds = rows.map((r) => r.SkillID);
+
+          if (skillIds.length !== skills.length) {
+            return db.rollback(() =>
+              res.status(400).json({ error: "Van olyan skill, ami nincs benne a skills táblában." })
+            );
+          }
+
+          const insertValues = skillIds.map((id) => [userId, id]);
+          const insertSql = "INSERT INTO uas (UserID, SkillID) VALUES ?";
+
+          db.query(insertSql, [insertValues], (err) => {
+            if (err) {
+              return db.rollback(() => res.status(500).json({ error: "Skill insert hiba." }));
+            }
+
+            db.commit((err) => {
+              if (err) return db.rollback(() => res.status(500).json({ error: "Commit hiba." }));
+              res.json({ message: "Profile saved" });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
+//user change password
+
+app.post("/users/me/change-password", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  const { current, next } = req.body;
+
+  if (!current || !next) {
+    return res.status(400).json({ error: "Hiányzó adatok." });
+  }
+
+  db.query("SELECT Password FROM users WHERE UserID = ?", [userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (rows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+
+    if (rows[0].Password !== current) {
+      return res.status(401).json({ error: "A jelenlegi jelszó nem helyes." });
+    }
+
+    db.query("UPDATE users SET Password = ? WHERE UserID = ?", [next, userId], (err) => {
+      if (err) return res.status(500).json({ error: "Jelszó frissítési hiba." });
+      res.json({ message: "Password changed" });
+    });
+  });
+});
+
 
 //get user by ID
 app.get('/users/:id', (req, res) => {
