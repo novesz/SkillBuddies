@@ -5,6 +5,8 @@ require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,7 +17,7 @@ app.use(cookieParser());
 app.use(cors(
     {
         origin: 'http://localhost:5173',
-        credentials: true
+        credentials: true 
     }
 ));
 // MySQL connection
@@ -26,7 +28,10 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME, 
     port: process.env.DB_PORT
 });
-
+const hashPassword = async (password) => {
+  const hash = await bcrypt.hash(password, saltRounds);
+  return hash;
+};
 // Test route
 app.get('/', (req, res) => {
     res.json('Server is running');
@@ -71,34 +76,42 @@ app.get("/auth/status", (req, res) => {
 });
 
   
-app.post("/login", (req, res) => {
-    const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
-    const values = [req.body.Email, req.body.Password];
-  
-    db.query(sql, values, (err, results) => {
+app.post("/login", async (req, res) => {
+  const { Email, Password } = req.body;
+
+  // 1. Get user by email
+  db.query("SELECT * FROM users WHERE Email = ?", [Email], async (err, results) => {
       if (err) return res.status(500).json({ message: "DB error" });
-  
-      if (results.length === 0) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-  
+      if (results.length === 0) return res.status(401).json({ message: "Invalid email or password" });
+
       const user = results[0];
-  
-      const token = jwt.sign(
-        { userId: user.UserID },   
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-  
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false     
-      });
-  
-      res.json({ loggedIn: true });
-    });
+
+      try {
+          // 2. Compare password with bcrypt
+          const match = await bcrypt.compare(Password, user.Password);
+          if (!match) return res.status(401).json({ message: "Invalid email or password" });
+
+          // 3. Password is correct → generate JWT
+          const token = jwt.sign(
+              { userId: user.UserID },
+              process.env.JWT_SECRET,
+              { expiresIn: "7d" }
+          );
+
+          // 4. Set cookie
+          res.cookie("token", token, {
+              httpOnly: true,
+              sameSite: "lax",
+              secure: false // set to true in production (HTTPS)
+          });
+
+          res.json({ loggedIn: true });
+      } catch (error) {
+          console.error("Error comparing passwords:", error);
+          res.status(500).json({ message: "Internal server error" });
+      }
   });
+});
   
 app.post("/logout", (req, res) => {
   res.clearCookie("token");
@@ -320,9 +333,10 @@ app.get('/users/:id', (req, res) => {
         res.json(results);
     });
 });
-app.post('/users/create', (req, res) => {
+app.post('/users/create', async (req, res) => {
     const sql = "INSERT INTO users (Username, Email, Password, rankID) VALUES (?, ?, ?, ?)";
-    const values = [req.body.name, req.body.email, req.body.password, req.body.rank || 1];
+    const hashed = await hashPassword(req.body.password)
+    const values = [req.body.name, req.body.email, hashed, req.body.rank || 1];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating user:', err);
