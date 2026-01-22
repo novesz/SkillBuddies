@@ -1,143 +1,118 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/ChatPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
 
 export default function ChatPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [currentGroup, setCurrentGroup] = useState(null);
-  const [groups, setGroups] = useState({});
-  const [chats, setChats] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [editingMsg, setEditingMsg] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [messagesMap, setMessagesMap] = useState({});
+  const [messageInput, setMessageInput] = useState("");
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const chatEndRef = useRef(null);
 
-  // 1️⃣ Bejelentkezett felhasználó ellenőrzése
+  // --- FETCH CURRENT USER ---
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/auth/status", { withCredentials: true })
-      .then(res => {
-        if (res.data.loggedIn) setCurrentUserId(res.data.userId);
-        else setCurrentUserId(null);
-      })
-      .catch(err => console.error("Auth error:", err));
+    axios.get("http://localhost:3001/auth/status", { withCredentials: true })
+      .then(res => res.data.loggedIn && setCurrentUserId(res.data.userId))
+      .catch(console.error);
   }, []);
 
-  // 2️⃣ Csak a saját chatek betöltése
+  // --- FETCH USER'S CHATS ---
   useEffect(() => {
     if (!currentUserId) return;
-
-    axios
-      .get(`http://localhost:3001/chats/users/${currentUserId}`)
+    axios.get(`http://localhost:3001/chats/users/${currentUserId}`)
       .then(res => {
         setChats(res.data);
-        if (res.data.length > 0 && !currentGroup) setCurrentGroup(res.data[0].ChatID);
+        if (!selectedChat && res.data.length > 0) setSelectedChat(res.data[0].ChatID);
       })
-      .catch(err => console.error("Chats load error:", err));
+      .catch(console.error);
   }, [currentUserId]);
 
-  // 3️⃣ Üzenetek betöltése a kiválasztott chathez
+  // --- FETCH MESSAGES FOR SELECTED CHAT ---
   useEffect(() => {
-    if (!currentGroup || !currentUserId) return;
+    if (!selectedChat || !currentUserId) return;
 
-    axios
-      .get(`http://localhost:3001/messages/${currentGroup}`)
+    axios.get(`http://localhost:3001/messages/${selectedChat}`)
       .then(res => {
-        const formatted = res.data.map(msg => {
-          const isMine = msg.UserID ? parseInt(msg.UserID) === parseInt(currentUserId) : false;
-          return {
-            text: msg.Content,
-            MsgID: msg.MsgID,
-            type: isMine ? "outgoing" : "incoming",
-            username: msg.Username || (isMine ? "Te" : "Valaki"),
-            UserID: msg.UserID || null
-          };
-        });
-
-        setGroups(prev => ({
-          ...prev,
-          [currentGroup]: formatted
+        const msgs = res.data.map(msg => ({
+          ...msg,
+          text: msg.Content,
+          type: msg.UserID === Number(currentUserId) ? "outgoing" : "incoming",
+          username: msg.UserID === Number(currentUserId) ? "Te" : msg.Username || "Valaki"
         }));
-      })
-      .catch(err => console.error("Messages load error:", err));
-  }, [currentGroup, currentUserId]);
 
-  // 4️⃣ Scroll az új üzenetekre
+        setMessagesMap(prev => ({ ...prev, [selectedChat]: msgs }));
+      })
+      .catch(console.error);
+  }, [selectedChat, currentUserId]);
+
+  // --- SCROLL TO BOTTOM ---
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [groups, currentGroup]);
+  }, [messagesMap, selectedChat]);
 
-  // 5️⃣ Üzenet küldés vagy szerkesztés
-  const sendMessage = () => {
-    if (!newMessage.trim() || !currentUserId || !currentGroup) return;
+  // --- SEND OR EDIT MESSAGE ---
+  const handleSend = () => {
+    if (!messageInput.trim() || !currentUserId || !selectedChat) return;
 
-    if (editingMsg) {
-      // Edit üzenet
-      axios
-        .put(
-          `http://localhost:3001/messages/edit/${editingMsg.MsgID}`,
-          { Content: newMessage },
-          { withCredentials: true }
-        )
+    if (editingMessage) {
+      // Edit message
+      axios.put(`http://localhost:3001/messages/edit/${editingMessage.MsgID}`, { Content: messageInput }, { withCredentials: true })
         .then(() => {
-          setGroups(prev => ({
+          setMessagesMap(prev => ({
             ...prev,
-            [currentGroup]: prev[currentGroup].map(msg =>
-              msg.MsgID === editingMsg.MsgID ? { ...msg, text: newMessage } : msg
-            )
+            [selectedChat]: prev[selectedChat].map(m => m.MsgID === editingMessage.MsgID ? { ...m, text: messageInput } : m)
           }));
-          setEditingMsg(null);
-          setNewMessage("");
+          setEditingMessage(null);
+          setMessageInput("");
         })
-        .catch(err => console.error("Edit message error:", err));
+        .catch(console.error);
     } else {
-      // Új üzenet
-      axios
-        .post(
-          "http://localhost:3001/messages/create",
-          { ChatID: currentGroup, UserID: currentUserId, Content: newMessage },
-          { withCredentials: true }
-        )
-        .then(res => {
-          setGroups(prev => ({
-            ...prev,
-            [currentGroup]: [
-              ...(prev[currentGroup] || []),
-              { 
-                text: newMessage, 
-                MsgID: res.data.MsgID, 
-                type: "outgoing", 
-                username: "Te",
-                UserID: currentUserId
-              }
-            ]
-          }));
-          setNewMessage("");
-        })
-        .catch(err => console.error("Send message error:", err));
+      // Send new message
+      axios.post("http://localhost:3001/messages/create", {
+        ChatID: selectedChat,
+        UserID: currentUserId,
+        Content: messageInput
+      }, { withCredentials: true })
+      .then(res => {
+        const newMsg = {
+          MsgID: res.data.MsgID,
+          text: messageInput,
+          type: "outgoing",
+          username: "Te",
+          UserID: currentUserId
+        };
+        setMessagesMap(prev => ({
+          ...prev,
+          [selectedChat]: [...(prev[selectedChat] || []), newMsg]
+        }));
+        setMessageInput("");
+      })
+      .catch(console.error);
     }
   };
 
-  // 6️⃣ Üzenet törlés
-  const deleteMessage = (msg) => {
+  // --- DELETE MESSAGE ---
+  const handleDelete = (msg) => {
     if (!window.confirm("Biztosan törölni szeretnéd az üzenetet?")) return;
 
-    axios
-      .delete(`http://localhost:3001/messages/delete/${msg.MsgID}`, { withCredentials: true })
+    axios.delete(`http://localhost:3001/messages/delete/${msg.MsgID}`, { withCredentials: true })
       .then(() => {
-        setGroups(prev => ({
+        setMessagesMap(prev => ({
           ...prev,
-          [currentGroup]: prev[currentGroup].filter(m => m.MsgID !== msg.MsgID)
+          [selectedChat]: prev[selectedChat].filter(m => m.MsgID !== msg.MsgID)
         }));
       })
-      .catch(err => console.error("Delete message error:", err));
+      .catch(console.error);
   };
 
-  // 7️⃣ Edit kezdete
-  const startEdit = (msg) => {
-    setEditingMsg(msg);
-    setNewMessage(msg.text);
+  // --- START EDIT ---
+  const handleEdit = (msg) => {
+    setEditingMessage(msg);
+    setMessageInput(msg.text);
   };
 
   return (
@@ -145,64 +120,52 @@ export default function ChatPage() {
       <Header />
 
       <div className="content">
-        {/* CHAT LIST */}
+        {/* --- CHAT LIST --- */}
         <div className="user-list">
-          {chats.length === 0 ? (
-            <p>Nincsenek chatek.</p>
-          ) : (
-            chats.map(chat => (
-              <div
-                key={chat.ChatID}
-                className={`user-row ${chat.ChatID === currentGroup ? "active" : ""}`}
-                onClick={() => setCurrentGroup(chat.ChatID)}
-              >
-                <img src={`/images/${chat.ChatPic}`} alt={chat.ChatName} className="chat-pic" />
-                <span>{chat.ChatName}</span>
-              </div>
-            ))
-          )}
+          {chats.map(chat => (
+            <div
+              key={chat.ChatID}
+              className={`user-row ${chat.ChatID === selectedChat ? "active" : ""}`}
+              onClick={() => setSelectedChat(chat.ChatID)}
+            >
+              <img src={`/images/${chat.ChatPic}`} alt={chat.ChatName} className="chat-pic" />
+              <span>{chat.ChatName}</span>
+            </div>
+          ))}
         </div>
 
-        {/* CHAT */}
+        {/* --- CHAT BOX --- */}
         <div className="chat-container">
           <div className="chat-box">
-            {groups[currentGroup]?.map(msg => (
+            {messagesMap[selectedChat]?.map(msg => (
               <div key={msg.MsgID} className={`message ${msg.type}`}>
                 <span>{msg.text}</span>
+                <small style={{ display: "block", fontSize: "10px", color: "#555" }}>{msg.username}</small>
                 {msg.type === "outgoing" && (
                   <div className="message-actions">
-                    <button onClick={() => startEdit(msg)}>Edit</button>
-                    <button onClick={() => deleteMessage(msg)}>Delete</button>
+                    <button onClick={() => handleEdit(msg)}>Edit</button>
+                    <button onClick={() => handleDelete(msg)}>Delete</button>
                   </div>
                 )}
               </div>
             ))}
             <div ref={chatEndRef} />
 
-            <form
-              onSubmit={e => {
-                e.preventDefault();
-                sendMessage();
-              }}
-            >
+            <form onSubmit={e => { e.preventDefault(); handleSend(); }}>
               <div className="input-row">
                 <input
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  placeholder={editingMsg ? "Üzenet szerkesztése..." : "Üzenet..."}
+                  value={messageInput}
+                  onChange={e => setMessageInput(e.target.value)}
+                  placeholder={editingMessage ? "Üzenet szerkesztése..." : "Írj üzenetet..."}
                 />
-                <button className="send-btn" type="submit">
-                  {editingMsg ? "↑" : "↑"}
-                </button>
+                <button type="submit" className="send-btn">{editingMessage ? "↑" : "→"}</button>
               </div>
             </form>
           </div>
 
+          {/* --- RIGHT PANEL --- */}
           <div className="right-panel">
-            <button className="profile-btn" onClick={() => setMenuOpen(prev => !prev)}>
-              ⚙️
-            </button>
-
+            <button className="profile-btn" onClick={() => setMenuOpen(prev => !prev)}>⚙️</button>
             {menuOpen && (
               <div className="settings-dropdown">
                 <button>People</button>

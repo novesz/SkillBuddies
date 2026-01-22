@@ -440,15 +440,21 @@ app.delete('/messages/delete/:id', (req, res) => {
 });
 //get messages by chat
 app.get('/messages/:chatId', (req, res) => {
-    const sql = "SELECT msgs.MsgID, msgs.Content, msgs.SentAt, users.Username FROM msgs JOIN users ON msgs.UserID = users.UserID WHERE msgs.ChatID = ? ORDER BY msgs.SentAt ASC";
+    const sql = `
+      SELECT msgs.MsgID, msgs.Content, msgs.SentAt, msgs.UserID, users.Username
+      FROM msgs
+      JOIN users ON msgs.UserID = users.UserID
+      WHERE msgs.ChatID = ?
+      ORDER BY msgs.SentAt ASC
+    `;
     db.query(sql, [req.params.chatId], (err, results) => {
-        if (err) {
-            console.error('Error fetching messages:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.json(results);
+      if (err) {
+        console.error('Error fetching messages:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.json(results);
     });
-});
+  });
 // Start server
 
 
