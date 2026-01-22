@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useUser } from "../../context/UserContext";
 
 const PRESETS = [
   "/avatars/BB.png","/avatars/BC.png","/avatars/BD.png",
@@ -8,14 +7,16 @@ const PRESETS = [
   "/avatars/YC.png","/avatars/YS.png",
 ];
 
-export default function AvatarPicker() {
-  const { avatarUrl, setAvatarUrl } = useUser();
-  const [pending, setPending] = useState(avatarUrl);
+export default function AvatarPicker({ value, onChange }) {
+  const [pending, setPending] = useState(value || "");
   const listRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
-  // görgethetőség figyelése
+  useEffect(() => {
+    setPending(value || "");
+  }, [value]);
+
   const updateArrows = () => {
     const el = listRef.current;
     if (!el) return;
@@ -40,26 +41,21 @@ export default function AvatarPicker() {
     el.scrollBy({ left: dir * amount, behavior: "smooth" });
   };
 
-  const onSave = () => setAvatarUrl(pending);
-  const onCancel = () => setPending(avatarUrl);
+  const onSave = () => onChange?.(pending);
+  const onCancel = () => setPending(value || "");
 
   return (
     <section className="avatar-section card">
       <div className="avatar-title">Profile picture</div>
 
       <div className="avatar-strip-wrap">
-        <button
-          type="button"
-          className="nav-btn"
-          aria-label="Scroll left"
-          onClick={() => scrollByAmount(-1)}
-          disabled={!canLeft}
-        >‹</button>
+        <button type="button" className="nav-btn" onClick={() => scrollByAmount(-1)} disabled={!canLeft}>‹</button>
 
         <div className="avatar-strip" ref={listRef}>
-          {PRESETS.map(src => (
+          {PRESETS.map((src) => (
             <button
               key={src}
+              type="button"
               className={`preset ${pending === src ? "active" : ""}`}
               style={{ backgroundImage: `url(${src})` }}
               onClick={() => setPending(src)}
@@ -69,20 +65,14 @@ export default function AvatarPicker() {
           ))}
         </div>
 
-        <button
-          type="button"
-          className="nav-btn"
-          aria-label="Scroll right"
-          onClick={() => scrollByAmount(1)}
-          disabled={!canRight}
-        >›</button>
+        <button type="button" className="nav-btn" onClick={() => scrollByAmount(1)} disabled={!canRight}>›</button>
       </div>
 
       <div className="row-right" style={{ marginTop: 10 }}>
-        <button className="btn" type="button" onClick={onCancel} disabled={pending === avatarUrl}>
+        <button className="btn" type="button" onClick={onCancel} disabled={pending === (value || "")}>
           Cancel
         </button>
-        <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === avatarUrl}>
+        <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === (value || "")}>
           Save
         </button>
       </div>

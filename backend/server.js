@@ -5,6 +5,8 @@ require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,7 +17,7 @@ app.use(cookieParser());
 app.use(cors(
     {
         origin: 'http://localhost:5173',
-        credentials: true
+        credentials: true 
     }
 ));
 // MySQL connection
@@ -26,7 +28,10 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME, 
     port: process.env.DB_PORT
 });
-
+const hashPassword = async (password) => {
+  const hash = await bcrypt.hash(password, saltRounds);
+  return hash;
+};
 // Test route
 app.get('/', (req, res) => {
     res.json('Server is running');
@@ -44,59 +49,278 @@ app.get('/users/all', (req, res) => {
 });
 //login
 function authMiddleware(req, res, next) {
-    const token = req.cookies.token;
-  
-    if (!token) return res.json({ loggedIn: false });
-  
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.userId = decoded.userId;
-      next();
-    } catch {
-      return res.json({ loggedIn: false, userId: userId });
-    }
+  const token = req.cookies.token;
+
+  if (!token) return res.status(401).json({ loggedIn: false });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch (err) {
+    return res.status(401).json({ loggedIn: false });
+  }
 }
+
   
-app.get("/auth/status", authMiddleware, (req, res) => {
-    res.json({
-      loggedIn: true,
-      userId: req.userId
-    });
+app.get("/auth/status", (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.json({ loggedIn: false });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ loggedIn: true, userId: decoded.userId });
+  } catch {
+    res.json({ loggedIn: false });
+  }
 });
+
   
-app.post("/login", (req, res) => {
-    const sql = "SELECT * FROM users WHERE Email = ? AND Password = ?";
-    const values = [req.body.Email, req.body.Password];
-  
-    db.query(sql, values, (err, results) => {
+app.post("/login", async (req, res) => {
+  const { Email, Password } = req.body;
+
+  // 1. Get user by email
+  db.query("SELECT * FROM users WHERE Email = ?", [Email], async (err, results) => {
       if (err) return res.status(500).json({ message: "DB error" });
-  
-      if (results.length === 0) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-  
+      if (results.length === 0) return res.status(401).json({ message: "Invalid email or password" });
+
       const user = results[0];
-  
-      const token = jwt.sign(
-        { userId: user.UserID },    // ← real user id from DB
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-  
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",  // allow cross-origin from frontend
-        secure: false     // if you’re on http localhost
-      });
-  
-      res.json({ loggedIn: true });
-    });
+
+      try {
+          // 2. Compare password with bcrypt
+          const match = await bcrypt.compare(Password, user.Password);
+          if (!match) return res.status(401).json({ message: "Invalid email or password" });
+
+          // 3. Password is correct → generate JWT
+          const token = jwt.sign(
+              { userId: user.UserID },
+              process.env.JWT_SECRET,
+              { expiresIn: "7d" }
+          );
+
+          // 4. Set cookie
+          res.cookie("token", token, {
+              httpOnly: true,
+              sameSite: "lax",
+              secure: false // set to true in production (HTTPS)
+          });
+
+          res.json({ loggedIn: true });
+      } catch (error) {
+          console.error("Error comparing passwords:", error);
+          res.status(500).json({ message: "Internal server error" });
+      }
   });
+});
   
 app.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.json({ loggedIn: false });
 });
+
+//users avatar skills profile
+app.get("/users/me/profile", authMiddleware, (req, res) => {
+  const userId = req.userId;
+
+  const sqlUser = `
+    SELECT u.Username, u.Email, p.URL AS avatarUrl
+    FROM users u
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
+    WHERE u.UserID = ?
+  `;
+
+  const sqlSkills = `
+    SELECT s.Skill
+    FROM skills s
+    JOIN uas ON uas.SkillID = s.SkillID
+    WHERE uas.UserID = ?
+    ORDER BY s.Skill
+  `;
+
+  db.query(sqlUser, [userId], (err, userRows) => {
+    if (err) {
+      console.error("DB error (user):", err);
+      return res.status(500).json({ error: "DB error (user)" });
+    }
+    if (userRows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+
+    db.query(sqlSkills, [userId], (err, skillRows) => {
+      if (err) {
+        console.error("DB error (skills):", err);
+        return res.status(500).json({ error: "DB error (skills)" });
+      }
+
+      res.json({
+        name: userRows[0].Username,
+        email: userRows[0].Email,
+        avatarUrl: userRows[0].avatarUrl || "",
+        skills: skillRows.map((r) => r.Skill),
+      });
+    });
+  });
+});
+
+
+//users save
+
+app.put("/users/me/profile", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  const { avatarUrl, skills } = req.body;
+
+  // DEBUG: mit kap a backend
+  console.log("SAVE PROFILE userId:", userId);
+  console.log("SAVE PROFILE avatarUrl:", avatarUrl);
+  console.log("SAVE PROFILE skills:", skills);
+
+  if (!Array.isArray(skills)) {
+    return res.status(400).json({ error: "skills must be an array" });
+  }
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("BEGIN TRANSACTION ERROR:", err);
+      return res.status(500).json({ error: "Tranzakció indítási hiba.", details: err.message });
+    }
+
+    const saveSkillsPart = () => {
+      const deleteSkillsSql = "DELETE FROM uas WHERE UserID = ?";
+      db.query(deleteSkillsSql, [userId], (err) => {
+        if (err) {
+          console.error("Skillek törlési hiba:", err);
+          return db.rollback(() =>
+            res.status(500).json({ error: "Skillek törlési hiba.", details: err.message })
+          );
+        }
+
+        if (skills.length === 0) {
+          return db.commit((err) => {
+            if (err) {
+              console.error("Commit hiba:", err);
+              return db.rollback(() =>
+                res.status(500).json({ error: "Commit hiba.", details: err.message })
+              );
+            }
+            return res.json({ message: "Profile saved" });
+          });
+        }
+
+        const lookupSql = "SELECT SkillID, Skill FROM skills WHERE Skill IN (?)";
+        db.query(lookupSql, [skills], (err, rows) => {
+          if (err) {
+            console.error("Skill lookup hiba:", err);
+            return db.rollback(() =>
+              res.status(500).json({ error: "Skill lookup hiba.", details: err.message })
+            );
+          }
+
+          const skillIds = rows.map((r) => r.SkillID);
+
+          if (skillIds.length !== skills.length) {
+            return db.rollback(() =>
+              res.status(400).json({ error: "Van olyan skill, ami nincs benne a skills táblában." })
+            );
+          }
+
+          const insertValues = skillIds.map((id) => [userId, id]);
+          const insertSql = "INSERT INTO uas (UserID, SkillID) VALUES ?";
+
+          db.query(insertSql, [insertValues], (err) => {
+            if (err) {
+              console.error("Skill insert hiba:", err);
+              return db.rollback(() =>
+                res.status(500).json({ error: "Skill insert hiba.", details: err.message })
+              );
+            }
+
+            db.commit((err) => {
+              if (err) {
+                console.error("Commit hiba:", err);
+                return db.rollback(() =>
+                  res.status(500).json({ error: "Commit hiba.", details: err.message })
+                );
+              }
+              res.json({ message: "Profile saved" });
+            });
+          });
+        });
+      });
+    };
+
+    // ---- Avatar mentés: pictures + users.PfpID ----
+    if (!avatarUrl) {
+      return saveSkillsPart();
+    }
+
+    const findPicSql = "SELECT PicID FROM pictures WHERE URL = ? LIMIT 1";
+    db.query(findPicSql, [avatarUrl], (err, rows) => {
+      if (err) {
+        console.error("Picture lookup hiba:", err);
+        return db.rollback(() =>
+          res.status(500).json({ error: "Picture lookup hiba.", details: err.message })
+        );
+      }
+
+      const setUserPic = (picId) => {
+        const updateUserSql = "UPDATE users SET PfpID = ? WHERE UserID = ?";
+        db.query(updateUserSql, [picId, userId], (err) => {
+          if (err) {
+            console.error("PfpID mentési hiba:", err);
+            return db.rollback(() =>
+              res.status(500).json({ error: "Pfp mentési hiba.", details: err.message })
+            );
+          }
+
+          // utána skillek
+          saveSkillsPart();
+        });
+      };
+
+      if (rows.length > 0) {
+        return setUserPic(rows[0].PicID);
+      }
+
+      const insertPicSql = "INSERT INTO pictures (URL) VALUES (?)";
+      db.query(insertPicSql, [avatarUrl], (err, result) => {
+        if (err) {
+          console.error("Picture insert hiba:", err);
+          return db.rollback(() =>
+            res.status(500).json({ error: "Picture insert hiba.", details: err.message })
+          );
+        }
+
+        setUserPic(result.insertId);
+      });
+    });
+  });
+});
+
+
+
+//user change password
+
+app.post("/users/me/change-password", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  const { current, next } = req.body;
+
+  if (!current || !next) {
+    return res.status(400).json({ error: "Hiányzó adatok." });
+  }
+
+  db.query("SELECT Password FROM users WHERE UserID = ?", [userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (rows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+
+    if (rows[0].Password !== current) {
+      return res.status(401).json({ error: "A jelenlegi jelszó nem helyes." });
+    }
+
+    db.query("UPDATE users SET Password = ? WHERE UserID = ?", [next, userId], (err) => {
+      if (err) return res.status(500).json({ error: "Jelszó frissítési hiba." });
+      res.json({ message: "Password changed" });
+    });
+  });
+});
+
 
 //get user by ID
 app.get('/users/:id', (req, res) => {
@@ -109,9 +333,10 @@ app.get('/users/:id', (req, res) => {
         res.json(results);
     });
 });
-app.post('/users/create', (req, res) => {
+app.post('/users/create', async (req, res) => {
     const sql = "INSERT INTO users (Username, Email, Password, rankID) VALUES (?, ?, ?, ?)";
-    const values = [req.body.name, req.body.email, req.body.password, req.body.rank || 1];
+    const hashed = await hashPassword(req.body.password)
+    const values = [req.body.name, req.body.email, hashed, req.body.rank || 1];
     db.query(sql, values, (err, results) => {
         if (err) {
             console.error('Error creating user:', err);

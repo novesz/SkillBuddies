@@ -1,4 +1,3 @@
-// Profile.jsx
 import { useState, useEffect } from "react";
 import AvatarPicker from "../components/profile/AvatarPicker.jsx";
 import SkillManager from "../components/profile/SkillManager.jsx";
@@ -6,26 +5,32 @@ import PasswordPanel from "../components/profile/PasswordPanel.jsx";
 import Header from "../components/header/Header.jsx";
 import "../styles/Profile.css";
 
-export default function Profile({isLoggedIn, setIsLoggedIn}) {
+export default function Profile({ isLoggedIn, setIsLoggedIn }) {
   const [user, setUser] = useState({
     name: "",
     email: "",
     avatarUrl: "",
-    skills: [],          // ⬅ ne legyen benne az üres string
+    skills: [],
   });
+  const { setAvatarUrl } = useUser(); // Profile.jsx tetején
+
+
+
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Ezt majd kiveszed localStorage-ből / contextből
-  const userId = 8; // idegl. hardcode, hogy tudj tesztelni
-
-  // profil betöltése belépéskor
+  // profil betöltés (token alapján)
   useEffect(() => {
     const loadProfile = async () => {
       try {
         setError("");
-        const resp = await fetch(`http://localhost:3001/users/${userId}/profile`);
+        setMessage("");
+
+        const resp = await fetch("http://localhost:3001/users/me/profile", {
+          credentials: "include",
+        });
+
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || "Hiba a profil lekérésekor.");
 
@@ -33,7 +38,7 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
           name: data.name || "",
           email: data.email || "",
           avatarUrl: data.avatarUrl || "",
-          skills: data.skills || [],
+          skills: Array.isArray(data.skills) ? data.skills : [],
         });
       } catch (err) {
         console.error(err);
@@ -42,7 +47,7 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
     };
 
     loadProfile();
-  }, [userId]);
+  }, []);
 
   // Profil mentése (avatar + skillek)
   const handleSaveProfile = async () => {
@@ -50,9 +55,10 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
       setError("");
       setMessage("");
 
-      const resp = await fetch(`http://localhost:3001/users/${userId}/profile`, {
+      const resp = await fetch("http://localhost:3001/users/me/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           avatarUrl: user.avatarUrl,
           skills: user.skills,
@@ -67,12 +73,33 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
       console.error(err);
       setError(err.message);
     }
+
+    // sikeres mentés után:
+  setAvatarUrl(user.avatarUrl);
+  };
+  
+
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:3001/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (e) {
+      // akkor is kiléptetjük frontenden
+      console.warn("Logout request failed:", e);
+    } finally {
+      setIsLoggedIn(false);
+      // ha van navigate nálad, akkor ide jöhet: navigate("/login")
+    }
   };
 
   return (
     <>
-      <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
-      <main className="profile-wrap" >
+      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+
+      <main className="profile-wrap">
         <section className="profile-card">
           <header className="profile-header">
             <h1>Profile</h1>
@@ -89,9 +116,7 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
               skills={user.skills}
               onAdd={(s) =>
                 setUser((u) =>
-                  u.skills.includes(s)
-                    ? u
-                    : { ...u, skills: [...u.skills, s] }
+                  u.skills.includes(s) ? u : { ...u, skills: [...u.skills, s] }
                 )
               }
               onRemove={(s) =>
@@ -103,13 +128,8 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
             />
           </div>
 
-          {/* Profil mentése */}
           <div className="row-right" style={{ marginTop: 16 }}>
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={handleSaveProfile}
-            >
+            <button className="btn btn-primary" type="button" onClick={handleSaveProfile}>
               Save profile
             </button>
           </div>
@@ -119,20 +139,25 @@ export default function Profile({isLoggedIn, setIsLoggedIn}) {
 
           <PasswordPanel
             onSubmit={async ({ current, next }) => {
-              // TODO: majd /change-password endpoint
-              console.log("change password", { current, next });
+              setError("");
+              setMessage("");
+
+              const resp = await fetch("http://localhost:3001/users/me/change-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ current, next }),
+              });
+
+              const data = await resp.json();
+              if (!resp.ok) throw new Error(data.error || "Password change failed");
+
+              setMessage("Password changed ✅");
             }}
           />
 
           <div className="logout-row">
-            <button
-              className="btn btn-danger"
-              type="button"
-              onClick={() => {
-                // TODO: token törlése + navigate("/")
-                console.log("logout");
-              }}
-            >
+            <button className="btn btn-danger" type="button" onClick={handleLogout}>
               Log out
             </button>
           </div>

@@ -6,7 +6,6 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-box">
         <ul>
-          <li><Link to="/profile">Profile</Link></li>
           <li><Link to="/">Group Finder</Link></li>
           <li><Link to="/groupeditor">Create group</Link></li>
           <li><Link to="/support">Support</Link></li>
