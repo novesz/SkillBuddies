@@ -14,6 +14,7 @@ const websocket = require("ws");
 const wss = new websocket.Server({ server }); 
 // Middleware
 
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors(
@@ -75,6 +76,8 @@ wss.on("connection", (ws, req) => {
 });
 // WebSocket message broadcast function
 function broadcastToChat(chatId, payload) {
+  console.log("Broadcasting to chat:", chatId, payload);
+
   const sql = "SELECT UserID FROM uac WHERE ChatID = ?";
 
   db.query(sql, [chatId], (err, rows) => {
@@ -85,13 +88,15 @@ function broadcastToChat(chatId, payload) {
       if (!sockets) return;
 
       sockets.forEach(ws => {
-        if (ws.readyState === WebSocket.OPEN) {
+        if (ws.readyState === websocket.OPEN) {
+          console.log("Sending WS to user:", UserID);
           ws.send(JSON.stringify(payload));
         }
       });
     });
   });
 }
+
 
 // Test route
 app.get('/', (req, res) => {
@@ -946,3 +951,4 @@ app.get('/users/:id', (req, res) => {
 server.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });
+
