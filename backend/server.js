@@ -9,7 +9,9 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 const JWT_SECRET = process.env.JWT_SECRET;
-
+const server = require('http').createServer(app);
+const websocket = require("ws");  
+const wss = new websocket.Server({ server }); 
 // Middleware
 
 app.use(express.json());
@@ -32,6 +34,65 @@ const hashPassword = async (password) => {
   const hash = await bcrypt.hash(password, saltRounds);
   return hash;
 };
+//websocket
+const clients = new Map(); 
+// userId -> Set of sockets
+
+wss.on("connection", (ws, req) => {
+  try {
+    const cookies = req.headers.cookie;
+    if (!cookies) return ws.close();
+
+    const token = cookies
+      .split("; ")
+      .find(c => c.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) return ws.close();
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    ws.userId = userId;
+
+    if (!clients.has(userId)) {
+      clients.set(userId, new Set());
+    }
+    clients.get(userId).add(ws);
+
+    console.log("WS connected:", userId);
+
+    ws.on("close", () => {
+      clients.get(userId)?.delete(ws);
+      if (clients.get(userId)?.size === 0) {
+        clients.delete(userId);
+      }
+    });
+
+  } catch (err) {
+    ws.close();
+  }
+});
+// WebSocket message broadcast function
+function broadcastToChat(chatId, payload) {
+  const sql = "SELECT UserID FROM uac WHERE ChatID = ?";
+
+  db.query(sql, [chatId], (err, rows) => {
+    if (err) return console.error("WS broadcast error:", err);
+
+    rows.forEach(({ UserID }) => {
+      const sockets = clients.get(UserID);
+      if (!sockets) return;
+
+      sockets.forEach(ws => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(payload));
+        }
+      });
+    });
+  });
+}
+
 // Test route
 app.get('/', (req, res) => {
     res.json('Server is running');
@@ -630,16 +691,32 @@ app.delete('/chats/delete/:id', (req, res) => {
 });
 // write message
 app.post('/messages/create', (req, res) => {
-    const sql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
-    const values = [req.body.ChatID, req.body.UserID, req.body.Content];
-    db.query(sql, values, (err, results) => {
-        if (err) {
-            console.error('Error creating message:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.status(201).json({ message: 'Message created successfully', MsgID: results.insertId });
-    });
+  const sql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
+  const values = [req.body.ChatID, req.body.UserID, req.body.Content];
+
+  db.query(sql, values, (err, results) => {
+    if (err) {
+      console.error('Error creating message:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    const message = {
+      type: "NEW_MESSAGE",
+      msg: {
+        MsgID: results.insertId,
+        ChatID: req.body.ChatID,
+        UserID: req.body.UserID,
+        Content: req.body.Content,
+        SentAt: new Date()
+      }
+    };
+
+    broadcastToChat(req.body.ChatID, message);
+
+    res.status(201).json({ message: 'Message created successfully' });
+  });
 });
+
 //message edit
 app.put('/messages/edit/:id', (req, res) => {
     const sql = "UPDATE msgs SET Content = ? WHERE MsgID = ?";
@@ -855,6 +932,6 @@ app.get('/users/:id', (req, res) => {
   });
 });
 
-app.listen(3001, () => {
+server.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });

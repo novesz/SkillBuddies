@@ -327,7 +327,7 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `Username` varchar(45) NOT NULL,
-  `Password` varchar(45) NOT NULL,
+  `Password` varchar(255) NOT NULL,
   `Email` varchar(45) NOT NULL,
   `PfpID` int(11) DEFAULT NULL,
   `Tokens` int(11) NOT NULL DEFAULT 0,
@@ -424,4 +424,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-21 11:22:33
+-- Dump completed on 2026-01-22 10:02:01
