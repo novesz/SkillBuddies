@@ -10,6 +10,7 @@
 2025-11-19 ChangeMade trigger megírása logolás érdekébe
 2025-11-26 neededskills kötőtábla létrehozása
 2026-01-21 képek táblába szedése
+2026-01-22 hashelt jelszavak miatt az eddigi adatok javítása
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
@@ -26,9 +27,11 @@
 2025-11-05 a legutóbbi adatbázis változás (2025-11-04) alapján backend megjavítása és tesztelése és login api
 2025-11-10 Adatbázis változás utáni korrigálás a backendbe
 2026-01-07 Cookies megoldása (frontend is)
+2026-01-22 jelszavak hashelése bcryptel
 
 2025-11-05, 2025-11-06, 2025-11-10 Support page elkészítése
 2025-11-13 about page háttérszín javítása
 2025-11-20 register és login page kontrollerjeinek megírása
 2025-12-02 Navbar-ba lenyíló menü
 2026-01-07 Cookies megoldása (backend is)
+

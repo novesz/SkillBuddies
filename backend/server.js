@@ -661,6 +661,17 @@ app.put('/chats/makeAdmin', (req, res) => {
         res.status(201).json({ message: 'User made chat admin successfully' });
     });
 });
+//users by chat 
+app.get('/chats/users/:chatId', (req, res) => {
+    const sql = "SELECT * FROM uac WHERE uac.ChatID = 1;";
+    db.query(sql, [req.params.chatId], (err, results) => {
+        if (err) {
+            console.error('Error fetching users by chat:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json(results);
+    });
+});
 //edit chat info
 app.put('/chats/edit/:id', (req, res) => {
     const chatId = req.params.id;
