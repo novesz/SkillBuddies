@@ -35,7 +35,7 @@ CREATE TABLE `changes` (
   PRIMARY KEY (`ChangeID`),
   KEY `fkUser` (`UserID`),
   CONSTRAINT `fkUser` FOREIGN KEY (`UserID`) REFERENCES `users` (`UserID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,7 +44,6 @@ CREATE TABLE `changes` (
 
 LOCK TABLES `changes` WRITE;
 /*!40000 ALTER TABLE `changes` DISABLE KEYS */;
-INSERT INTO `changes` VALUES (9,10,'random','random1','random@example.com',0,'2025-11-19 10:31:32'),(11,10,'random','random1','random@example.com',0,'2025-11-19 10:34:07'),(12,10,'random','random1','random@example.com',1,'2025-11-19 10:34:22');
 /*!40000 ALTER TABLE `changes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -103,7 +102,7 @@ CREATE TABLE `msgs` (
 
 LOCK TABLES `msgs` WRITE;
 /*!40000 ALTER TABLE `msgs` DISABLE KEYS */;
-INSERT INTO `msgs` VALUES (2,4,1,'Szeretem a tejet','2025-11-04 12:06:30'),(3,4,1,'a kakaót is','2025-11-04 12:06:47'),(4,4,1,'hihetetlenül','2025-11-04 12:06:55');
+INSERT INTO `msgs` VALUES (1,1,1,'ASDASD','2026-01-22 10:34:23'),(2,1,2,'ASDASD2','2026-01-22 10:34:23'),(3,2,1,'Pali ne','2026-01-22 10:34:23');
 /*!40000 ALTER TABLE `msgs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -182,7 +181,6 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (4,9,4,'Good guy'),(4,10,1,'troll'),(8,4,1,'Pali...'),(9,8,5,'Great teamwork');
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -262,7 +260,7 @@ CREATE TABLE `uac` (
 
 LOCK TABLES `uac` WRITE;
 /*!40000 ALTER TABLE `uac` DISABLE KEYS */;
-INSERT INTO `uac` VALUES (4,1,1,'2025-01-01 00:00:00'),(8,1,1,'2025-11-17 10:28:01'),(9,1,1,'2025-11-17 10:28:01'),(10,1,0,'2025-11-17 10:28:01'),(10,2,1,'2025-11-17 10:28:01');
+INSERT INTO `uac` VALUES (1,1,1,'2026-01-22 10:33:28'),(1,2,0,'2026-01-22 10:33:28'),(2,1,1,'2026-01-22 10:33:28'),(2,2,1,'2026-01-22 10:33:28'),(3,1,0,'2026-01-22 10:33:28'),(3,2,1,'2026-01-22 10:33:28');
 /*!40000 ALTER TABLE `uac` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -289,7 +287,7 @@ CREATE TABLE `uas` (
 
 LOCK TABLES `uas` WRITE;
 /*!40000 ALTER TABLE `uas` DISABLE KEYS */;
-INSERT INTO `uas` VALUES (4,1),(4,2),(4,4),(8,2),(8,3),(9,4);
+INSERT INTO `uas` VALUES (1,1),(1,2),(1,3),(1,4),(2,3),(2,4),(3,1),(3,2);
 /*!40000 ALTER TABLE `uas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -339,7 +337,7 @@ CREATE TABLE `users` (
   KEY `fkPic_idx` (`PfpID`),
   CONSTRAINT `fkPic` FOREIGN KEY (`PfpID`) REFERENCES `pictures` (`PicID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fkRank` FOREIGN KEY (`rankID`) REFERENCES `user_rank` (`rankID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -348,7 +346,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (4,'Pali','PaliPaliPali','palpal828@hengersor.hu',NULL,10000,3),(8,'Eszter','Eszter','novesz831@hengersor.hu',NULL,0,3),(9,'Hubi','Hubertusz','szahub608@hengersor.hu',NULL,0,3),(10,'random','random1','random@example.com',NULL,0,0);
+INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',NULL,0,1),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',NULL,0,1),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',NULL,0,1);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -424,4 +422,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-22 10:02:01
+-- Dump completed on 2026-01-22 11:52:35
