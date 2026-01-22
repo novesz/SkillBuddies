@@ -4,6 +4,8 @@ import SkillManager from "../components/profile/SkillManager.jsx";
 import PasswordPanel from "../components/profile/PasswordPanel.jsx";
 import Header from "../components/header/Header.jsx";
 import "../styles/Profile.css";
+import { useUser } from "../context/UserContext";
+
 
 export default function Profile({ isLoggedIn, setIsLoggedIn }) {
   const [user, setUser] = useState({
@@ -40,6 +42,8 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
           avatarUrl: data.avatarUrl || "",
           skills: Array.isArray(data.skills) ? data.skills : [],
         });
+
+        setAvatarUrl(data.avatarUrl || "");
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -138,23 +142,46 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
           {message && <p className="form-success">{message}</p>}
 
           <PasswordPanel
-            onSubmit={async ({ current, next }) => {
-              setError("");
-              setMessage("");
+              onSubmit={async ({ currentPassword, newPassword, confirmPassword }) => {
+                console.log("PW SUBMIT DATA:", { current, next });
+                setError("");
+                setMessage("");
 
-              const resp = await fetch("http://localhost:3001/users/me/change-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ current, next }),
-              });
+                try {
+                  if (!currentPassword || !newPassword) {
+                    throw new Error("Hiányzó adatok (current/new password).");
+                  }
+                  if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+                    throw new Error("A két új jelszó nem egyezik.");
+                  }
 
-              const data = await resp.json();
-              if (!resp.ok) throw new Error(data.error || "Password change failed");
+                  const resp = await fetch("http://localhost:3001/users/me/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                      currentPassword,
+                      newPassword,
+                    }),
+                  });
 
-              setMessage("Password changed ✅");
-            }}
-          />
+                  const data = await resp.json().catch(() => ({}));
+
+                  if (!resp.ok) {
+                    throw new Error(data?.message || data?.error || "Jelszó frissítési hiba.");
+                  }
+
+                  setMessage("Password changed ✅");
+                  alert("Jelszó sikeresen frissítve!");
+                } catch (err) {
+                  console.log("CHANGE-PASS ERROR:", err);
+                  setError(err.message);
+                  alert(err.message);
+                }
+              }}
+            />
+
+
 
           <div className="logout-row">
             <button className="btn btn-danger" type="button" onClick={handleLogout}>

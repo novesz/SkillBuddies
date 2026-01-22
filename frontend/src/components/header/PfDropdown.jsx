@@ -6,34 +6,33 @@ import "../../styles/Header.css";
 import "../../styles/PfDropdown.css";
 
 export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
-  const [open, setOpen] = useState(false); // lowercase "open"
+  const [open, setOpen] = useState(false);
   const profileRef = useRef(null);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
-  
+
   const togglePopup = () => {
     if (!open && profileRef.current) {
       const rect = profileRef.current.getBoundingClientRect();
+
+      // ✅ VÁLTOZÁS: scrollY/scrollX nélkül (viewporthoz mérve)
       setPopupPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX - 70,
+        top: rect.bottom,
+        left: rect.left - 70,
       });
-      
     }
-    setOpen(!open);
+    setOpen((prev) => !prev);
   };
-  
+
   const handleLogout = async () => {
     try {
       await axios.post(
         "http://localhost:3001/logout",
         {},
         { withCredentials: true }
-        
-      )
-      .then(() => {
-        isLoggedIn.setIsLoggedIn(false);
-        alert("Logout successful!");
-      });
+      );
+      setIsLoggedIn(false);
+      alert("Logout successful!");
+      setOpen(false);
     } catch (error) {
       alert("Logout failed");
       console.error(error);
@@ -72,13 +71,24 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
       {open && (
         <div
           className="profile-popup"
-          style={{ top: popupPosition.top, left: -70 }}
+          // ✅ VÁLTOZÁS: position: fixed, hogy biztos látszódjon
+          style={{
+            position: "fixed",
+            top: popupPosition.top,
+            left: popupPosition.left,
+            zIndex: 99999,
+          }}
         >
-          {isLoggedIn.isLoggedIn ? (
+          {isLoggedIn ? (
             <>
-              <Link to="/profile" className="link-item">
+              <Link
+                to="/profile"
+                className="link-item"
+                onClick={() => setOpen(false)}
+              >
                 <p>Profile</p>
               </Link>
+
               <button
                 className="link-item"
                 onClick={handleLogout}
@@ -99,10 +109,18 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
             </>
           ) : (
             <>
-              <Link to="/login" className="link-item">
+              <Link
+                to="/login"
+                className="link-item"
+                onClick={() => setOpen(false)}
+              >
                 <p>Login</p>
               </Link>
-              <Link to="/register" className="link-item">
+              <Link
+                to="/register"
+                className="link-item"
+                onClick={() => setOpen(false)}
+              >
                 <p>Register</p>
               </Link>
             </>

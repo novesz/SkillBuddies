@@ -69,13 +69,13 @@ export default function AvatarPicker({ value, onChange }) {
       </div>
 
       <div className="row-right" style={{ marginTop: 10 }}>
-        <button className="btn" type="button" onClick={onCancel} disabled={pending === (value || "")}>
+         <button className="btn" type="button" onClick={onCancel} disabled={pending === (value || "")}>
           Cancel
         </button>
         <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === (value || "")}>
           Save
         </button>
-      </div>
+      </div> 
     </section>
   );
 }
