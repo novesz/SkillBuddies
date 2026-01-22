@@ -26,7 +26,6 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  
   color: var(--text);
   background:
     radial-gradient(1500px 800px at 25% 30%, var(--bg2), transparent 60%),
@@ -59,10 +58,12 @@
   padding: 10px 15px;
   cursor: pointer;
   border-radius: 8px;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .user-row:hover {
-  background: var(--hover);
+  background: linear-gradient(120deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+  transform: translateX(2px);
 }
 
 .user-row.active {
@@ -91,29 +92,82 @@
   padding: 20px 30px;
   background: #f9f9f9;
   overflow-y: auto;
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  border-radius: 10px;
 }
 
 /* MESSAGES */
 .message {
+  position: relative;
   padding: 12px 18px;
-  border-radius: 12px;
+  border-radius: 20px;
   max-width: 70%;
   word-wrap: break-word;
   font-size: 14px;
   margin-bottom: 10px;
+  transition: all 0.2s ease;
 }
 
 .message.incoming {
   align-self: flex-start;
-  background: var(--incoming);
-  color: black;
+  background: linear-gradient(135deg, #ffc947, #ffb300);
+  color: #0f0f0f;
+  animation: floatIn 0.3s ease-out;
 }
 
 .message.outgoing {
   align-self: flex-end;
-  background: var(--outgoing);
+  background: linear-gradient(135deg, #4caf50, #43a047);
   color: white;
+  animation: floatIn 0.3s ease-out;
+}
+
+@keyframes floatIn {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.message-actions {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  gap: 5px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  padding: 4px 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.message-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.message-actions button:hover {
+  background: #eee;
 }
 
 /* INPUT ROW */
@@ -132,6 +186,12 @@
   border: 1px solid #ccc;
   background: var(--chip);
   font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-row input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 6px rgba(59,130,246,0.4);
 }
 
 .send-btn {
@@ -139,10 +199,18 @@
   height: 42px;
   border-radius: 50%;
   border: none;
-  background: var(--outgoing);
+  background: linear-gradient(135deg, #4caf50, #43a047);
   color: white;
   cursor: pointer;
   font-size: 18px;
+  transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.send-btn:hover {
+  background: linear-gradient(135deg, #45a049, #388e3c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
 /* RIGHT PANEL */
@@ -164,6 +232,12 @@
   color: white;
   border: none;
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 /* SETTINGS DROPDOWN */
@@ -184,8 +258,149 @@
   border: none;
   background: none;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .settings-dropdown button:hover {
-  background: #eee;
+  background: linear-gradient(90deg, #f0f0f0, #e0e0e0);
+}
+
+/* PEOPLE SIDEBAR */
+.people-sidebar {
+  position: absolute;
+  right: 60px;
+  top: 0;
+  width: 220px;
+  height: 100%;
+  background: #2f3136;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.3);
+  z-index: 5000;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+
+.people-sidebar h3 {
+  margin: 10px 0;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 5px;
+}
+
+.people-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.people-sidebar li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.people-sidebar li:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.person-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.close-btn {
+  background: #7289da;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  align-self: flex-end;
+}
+
+.close-btn:hover {
+  background: #5b6eae;
+}
+
+/* SKILLS SIDEBAR */
+.skills-sidebar {
+  position: absolute;
+  right: 60px;
+  top: 0;
+  width: 220px;
+  height: 100%;
+  background: #3b3f46;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.3);
+  z-index: 5000;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+}
+
+.skills-sidebar h3 {
+  margin: 10px 0;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 5px;
+}
+
+.skill-row {
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: default;
+  transition: background 0.2s;
+}
+
+.skill-row:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.close-skills {
+  background: #7289da;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  align-self: flex-end;
+}
+
+.close-skills:hover {
+  background: #5b6eae;
+}
+/* FINOM SCROLLBAR */
+.chat-box::-webkit-scrollbar,
+.people-sidebar::-webkit-scrollbar,
+.skills-sidebar::-webkit-scrollbar,
+.user-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb,
+.people-sidebar::-webkit-scrollbar-thumb,
+.skills-sidebar::-webkit-scrollbar-thumb,
+.user-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+}
+
+.chat-box::-webkit-scrollbar-track,
+.people-sidebar::-webkit-scrollbar-track,
+.skills-sidebar::-webkit-scrollbar-track,
+.user-list::-webkit-scrollbar-track {
+  background: transparent;
 }
