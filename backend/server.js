@@ -8,10 +8,14 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const server = require('http').createServer(app);
-const websocket = require("ws");  
-const wss = new websocket.Server({ server }); 
+const WebSocket = require("ws");  
+const wss = new WebSocket.Server({ server });
+
+
+
 // Middleware
 
 
@@ -41,39 +45,36 @@ const clients = new Map();
 
 wss.on("connection", (ws, req) => {
   try {
-    const cookies = req.headers.cookie;
-    if (!cookies) return ws.close();
+    const cookies = req.headers.cookie; // <-- this is where the cookie is
+    console.log("Cookies received:", cookies);
 
-    const token = cookies
-      .split("; ")
-      .find(c => c.startsWith("token="))
-      ?.split("=")[1];
+    if (!cookies) return ws.close(4001, "No cookies sent");
 
-    if (!token) return ws.close();
+    const token = cookies.split("; ").find(c => c.startsWith("token="))?.split("=")[1];
+    if (!token) return ws.close(4002, "No token found");
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.userId;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    ws.userId = decoded.userId;
 
-    ws.userId = userId;
-
-    if (!clients.has(userId)) {
-      clients.set(userId, new Set());
-    }
-    clients.get(userId).add(ws);
-
-    console.log("WS connected:", userId);
+    // add socket to clients map
+    if (!clients.has(ws.userId)) clients.set(ws.userId, new Set());
+    clients.get(ws.userId).add(ws);
 
     ws.on("close", () => {
-      clients.get(userId)?.delete(ws);
-      if (clients.get(userId)?.size === 0) {
-        clients.delete(userId);
-      }
+      clients.get(ws.userId).delete(ws);
+      if (clients.get(ws.userId).size === 0) clients.delete(ws.userId);
     });
 
+    console.log("✅ WS connected for user:", ws.userId);
   } catch (err) {
-    ws.close();
+    console.error("❌ WS connection error:", err.message);
+    ws.close(4003, "Invalid token");
   }
 });
+
+
+
+
 // WebSocket message broadcast function
 function broadcastToChat(chatId, payload) {
   console.log("Broadcasting to chat:", chatId, payload);
@@ -88,7 +89,7 @@ function broadcastToChat(chatId, payload) {
       if (!sockets) return;
 
       sockets.forEach(ws => {
-        if (ws.readyState === websocket.OPEN) {
+        if (ws.readyState === WebSocket .OPEN) {
           console.log("Sending WS to user:", UserID);
           ws.send(JSON.stringify(payload));
         }
