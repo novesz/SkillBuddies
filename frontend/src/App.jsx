@@ -18,7 +18,6 @@ import PrivateRoute from "./components/PrivateRoute";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState(0); 
-
   useEffect(() => {
     axios
       .get("http://localhost:3001/auth/status", { withCredentials: true })

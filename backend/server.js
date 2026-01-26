@@ -23,8 +23,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(
     {
-        origin: 'http://localhost:5173',
-        credentials: true 
+      origin: 'http://localhost:5173',
+      credentials: true 
     }
 ));
 // MySQL connection
@@ -39,65 +39,102 @@ const hashPassword = async (password) => {
   const hash = await bcrypt.hash(password, saltRounds);
   return hash;
 };
-//websocket
-const clients = new Map(); 
-// userId -> Set of sockets
+const cookie = require("cookie");
+
+// clients: Map<userId, Set<WebSocket>>
+const clients = new Map();
 
 wss.on("connection", (ws, req) => {
   try {
-    const cookies = req.headers.cookie; // <-- this is where the cookie is
-    console.log("Cookies received:", cookies);
+    // --- Parse cookies safely ---
+    const cookies = cookie.parse(req.headers.cookie || "");
+    const token = cookies.token;
+    if (!token) return ws.close(4002, "No token provided");
 
-    if (!cookies) return ws.close(4001, "No cookies sent");
-
-    const token = cookies.split("; ").find(c => c.startsWith("token="))?.split("=")[1];
-    if (!token) return ws.close(4002, "No token found");
-
+    // --- Verify JWT ---
     const decoded = jwt.verify(token, JWT_SECRET);
     ws.userId = decoded.userId;
 
-    // add socket to clients map
+    // --- Add socket to clients map ---
     if (!clients.has(ws.userId)) clients.set(ws.userId, new Set());
     clients.get(ws.userId).add(ws);
 
     ws.on("close", () => {
-      clients.get(ws.userId).delete(ws);
-      if (clients.get(ws.userId).size === 0) clients.delete(ws.userId);
+      clients.get(ws.userId)?.delete(ws);
+      if (clients.get(ws.userId)?.size === 0) clients.delete(ws.userId);
     });
 
     console.log("✅ WS connected for user:", ws.userId);
   } catch (err) {
     console.error("❌ WS connection error:", err.message);
-    ws.close(4003, "Invalid token");
+    return ws.close(4003, "Invalid token");
   }
+
+  // --- Handle incoming messages ---
+  ws.on("message", async (raw) => {
+    try {
+      const data = JSON.parse(raw);
+
+      if (data.type === "NEW_MESSAGE") {
+        const { ChatID, Content } = data;
+
+        if (!ChatID || !Content) return;
+
+        // --- Check user belongs to chat ---
+        const checkSql = "SELECT 1 FROM uac WHERE ChatID = ? AND UserID = ?";
+        db.query(checkSql, [ChatID, ws.userId], (err, rows) => {
+          if (err) return console.error("DB error (chat check):", err);
+          if (rows.length === 0) return console.warn("User not in chat:", ws.userId, ChatID);
+
+          // --- Insert message into DB ---
+          const insertSql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
+          db.query(insertSql, [ChatID, ws.userId, Content], (err, result) => {
+            if (err) return console.error("DB error (insert message):", err);
+
+            const messagePayload = {
+              type: "NEW_MESSAGE",
+              msg: {
+                MsgID: result.insertId,
+                ChatID,
+                UserID: ws.userId,
+                Content,
+                SentAt: new Date().toISOString(),
+              },
+            };
+
+            // --- Broadcast to all users in this chat ---
+            broadcastToChat(ChatID, messagePayload);
+          });
+        });
+      }
+    } catch (err) {
+      console.error("WS message error:", err);
+    }
+  });
 });
 
-
-
-
-// WebSocket message broadcast function
+// --- Broadcast function ---
 function broadcastToChat(chatId, payload) {
-  console.log("Broadcasting to chat:", chatId, payload);
-
   const sql = "SELECT UserID FROM uac WHERE ChatID = ?";
-
   db.query(sql, [chatId], (err, rows) => {
-    if (err) return console.error("WS broadcast error:", err);
+    if (err) return console.error("WS broadcast DB error:", err);
 
     rows.forEach(({ UserID }) => {
-      const sockets = clients.get(UserID);
-      if (!sockets) return;
+      const userSockets = clients.get(UserID);
+      if (!userSockets) return;
 
-      sockets.forEach(ws => {
-        if (ws.readyState === WebSocket .OPEN) {
-          console.log("Sending WS to user:", UserID);
-          ws.send(JSON.stringify(payload));
+      userSockets.forEach((ws) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          try {
+            ws.send(JSON.stringify(payload));
+          } catch (e) {
+            console.error("WS send error:", e);
+          }
         }
       });
     });
   });
 }
-
 
 // Test route
 app.get('/', (req, res) => {

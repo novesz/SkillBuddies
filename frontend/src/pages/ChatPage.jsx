@@ -17,6 +17,8 @@ export default function ChatPage() {
   const [chatUsers, setChatUsers] = useState([]);
   const [chatSkills, setChatSkills] = useState([]);
 
+  const ws = useRef(null);
+
   const chatEndRef = useRef(null);
 
   // --- Bejelentkezett felhasználó ellenőrzése ---
@@ -42,7 +44,39 @@ export default function ChatPage() {
         if (!selectedChat && res.data.length > 0) setSelectedChat(res.data[0].ChatID);
       })
       .catch(console.error);
+
   }, [currentUserId]);
+  useEffect(() => {
+    if (!currentUserId) return;
+  
+    // Connect to WebSocket server
+    ws.current = new WebSocket("ws://localhost:3001"); // your WS server URL
+  
+    ws.current.onopen = () => {
+      console.log("Connected to WebSocket server");
+      // Optionally send current user info to server
+      ws.current.send(JSON.stringify({ type: "join", userId: currentUserId }));
+    };
+  
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+  
+      // Example data: { type: "message", chatId: 1, message: {...} }
+      if (data.type === "message") {
+        setMessagesMap((prev) => ({
+          ...prev,
+          [data.chatId]: [...(prev[data.chatId] || []), data.message],
+        }));
+      }
+    };
+  
+    ws.current.onclose = () => console.log("Disconnected from WebSocket server");
+    ws.current.onerror = (err) => console.error("WS error:", err);
+  
+    // Cleanup on unmount
+    return () => ws.current?.close();
+  }, [currentUserId]);
+  
 
   // --- Üzenetek betöltése ---
   useEffect(() => {
@@ -99,27 +133,7 @@ export default function ChatPage() {
 
   // --- Üzenet küldése vagy szerkesztése ---
   const handleSend = () => {
-    if (!messageInput.trim() || !currentUserId || !selectedChat) return;
-
-    if (editingMessage) {
-      axios
-        .put(
-          `http://localhost:3001/messages/edit/${editingMessage.MsgID}`,
-          { Content: messageInput },
-          { withCredentials: true }
-        )
-        .then(() => {
-          setMessagesMap((prev) => ({
-            ...prev,
-            [selectedChat]: prev[selectedChat].map((m) =>
-              m.MsgID === editingMessage.MsgID ? { ...m, text: messageInput } : m
-            ),
-          }));
-          setEditingMessage(null);
-          setMessageInput("");
-        })
-        .catch(console.error);
-    } else {
+    if (!editingMessage) {
       axios
         .post(
           "http://localhost:3001/messages/create",
@@ -138,14 +152,27 @@ export default function ChatPage() {
             username: currentUsername,
             UserID: currentUserId,
           };
+    
+          // Update local state immediately
           setMessagesMap((prev) => ({
             ...prev,
             [selectedChat]: [...(prev[selectedChat] || []), newMsg],
           }));
+    
+          // Send over WebSocket
+          ws.current?.send(
+            JSON.stringify({
+              type: "message",
+              chatId: selectedChat,
+              message: newMsg,
+            })
+          );
+    
           setMessageInput("");
         })
         .catch(console.error);
     }
+    
   };
 
   // --- Üzenet törlése ---
