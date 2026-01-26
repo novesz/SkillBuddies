@@ -94,7 +94,7 @@ export default function ChatPage() {
         setMessagesMap((prev) => ({ ...prev, [selectedChat]: msgs }));
       })
       .catch(console.error);
-  }, [selectedChat, currentUserId, currentUsername]);
+  }, [selectedChat, currentUserId, currentUsername, messagesMap]);
 
   // --- Chat felhasználók betöltése ---
   const loadChatUsers = (chatId) => {

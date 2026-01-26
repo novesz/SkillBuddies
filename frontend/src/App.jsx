@@ -23,9 +23,10 @@ function App() {
       .get("http://localhost:3001/auth/status", { withCredentials: true })
       .then((response) => {
         setIsLoggedIn(response.data.loggedIn);
-
+        console.log("login:", response.data.loggedIn);
         if (response.data.loggedIn) {
           setUserId(response.data.userId);
+          console.log("userId:", response.data.userId);
         } else {
           setUserId(0);
         }
