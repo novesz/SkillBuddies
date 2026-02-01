@@ -143,7 +143,7 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
 
           <PasswordPanel
               onSubmit={async ({ currentPassword, newPassword, confirmPassword }) => {
-                console.log("PW SUBMIT DATA:", { current, next });
+                console.log("PW SUBMIT DATA:", { next });
                 setError("");
                 setMessage("");
 
