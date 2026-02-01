@@ -400,29 +400,100 @@ app.put("/users/me/profile", authMiddleware, (req, res) => {
 
 
 
-//user change password
+//user change password (encrypted with bcrypt, max once per 24 hours if LastPasswordChange column exists)
 
-app.post("/users/me/change-password", authMiddleware, (req, res) => {
+const PASSWORD_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+app.post("/users/me/change-password", authMiddleware, async (req, res) => {
   const userId = req.userId;
   const { current, next } = req.body;
 
   if (!current || !next) {
-    return res.status(400).json({ error: "Hiányzó adatok." });
+    return res.status(400).json({ error: "Hiányzó adatok.", message: "Current and new password are required." });
   }
 
-  db.query("SELECT Password FROM users WHERE UserID = ?", [userId], (err, rows) => {
-    if (err) return res.status(500).json({ error: "DB error" });
-    if (rows.length === 0) return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+  try {
+    // 1. Get stored password hash only (works even without LastPasswordChange column)
+    const rows = await new Promise((resolve, reject) => {
+      db.query("SELECT Password FROM users WHERE UserID = ?", [userId], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
 
-    if (rows[0].Password !== current) {
-      return res.status(401).json({ error: "A jelenlegi jelszó nem helyes." });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Nincs ilyen felhasználó.", message: "User not found." });
     }
 
-    db.query("UPDATE users SET Password = ? WHERE UserID = ?", [next, userId], (err) => {
-      if (err) return res.status(500).json({ error: "Jelszó frissítési hiba." });
-      res.json({ message: "Password changed" });
+    const storedHash = rows[0].Password;
+
+    const match = await bcrypt.compare(current, storedHash);
+    if (!match) {
+      return res.status(401).json({ error: "A jelenlegi jelszó nem helyes.", message: "Current password is incorrect." });
+    }
+
+    // 2. Optional: 24h cooldown (only if LastPasswordChange column exists)
+    let lastChange = null;
+    try {
+      const cooldownRows = await new Promise((resolve, reject) => {
+        db.query("SELECT LastPasswordChange FROM users WHERE UserID = ?", [userId], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
+      if (cooldownRows.length > 0) lastChange = cooldownRows[0].LastPasswordChange;
+    } catch (e) {
+      // Column might not exist yet; ignore and allow password change
+    }
+
+    if (lastChange) {
+      const elapsed = Date.now() - new Date(lastChange).getTime();
+      if (elapsed < PASSWORD_CHANGE_COOLDOWN_MS) {
+        const hoursLeft = Math.ceil((PASSWORD_CHANGE_COOLDOWN_MS - elapsed) / (60 * 60 * 1000));
+        return res.status(429).json({
+          error: "Csak 24 óránként változtathatod a jelszót.",
+          message: `You can change your password again in ${hoursLeft} hour(s).`,
+        });
+      }
+    }
+
+    const hashed = await hashPassword(next);
+
+    // 3. Update password; if LastPasswordChange column exists, set it too
+    try {
+      await new Promise((resolve, reject) => {
+        db.query(
+          "UPDATE users SET Password = ?, LastPasswordChange = NOW() WHERE UserID = ?",
+          [hashed, userId],
+          (err) => {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
+      });
+    } catch (updateErr) {
+      // If column doesn't exist (ER_BAD_FIELD_ERROR), update only Password
+      if (updateErr.code === "ER_BAD_FIELD_ERROR" || (updateErr.message && updateErr.message.includes("LastPasswordChange"))) {
+        await new Promise((resolve, reject) => {
+          db.query("UPDATE users SET Password = ? WHERE UserID = ?", [hashed, userId], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      } else {
+        throw updateErr;
+      }
+    }
+
+    res.json({ message: "Password changed" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    const msg = err.message || "Failed to update password.";
+    return res.status(500).json({
+      error: "Jelszó frissítési hiba.",
+      message: msg,
     });
-  });
+  }
 });
 
 

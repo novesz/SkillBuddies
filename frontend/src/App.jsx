@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import axios from "axios";
 import "./App.css";
+import { useUser } from "./context/UserContext";
 
 import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
@@ -17,16 +18,22 @@ import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState(0); 
+  const [userId, setUserId] = useState(0);
+  const { setAvatarUrl } = useUser();
+
   useEffect(() => {
     axios
       .get("http://localhost:3001/auth/status", { withCredentials: true })
       .then((response) => {
         setIsLoggedIn(response.data.loggedIn);
-        console.log("login:", response.data.loggedIn);
         if (response.data.loggedIn) {
-          setUserId(response.data.userId);
-          console.log("userId:", response.data.userId);
+          setUserId(response.data.userId ?? 0);
+          fetch("http://localhost:3001/users/me/profile", { credentials: "include" })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.avatarUrl) setAvatarUrl(data.avatarUrl);
+            })
+            .catch((err) => console.error("Profile load on init:", err));
         } else {
           setUserId(0);
         }
@@ -36,9 +43,7 @@ function App() {
         setIsLoggedIn(false);
         setUserId(0);
       });
-      
-
-  }, []);
+  }, [setAvatarUrl]);
 
   return (
     <>
@@ -77,7 +82,7 @@ function App() {
         />
         <Route
           path="/groupeditor"
-          element={<GroupEditor isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
+          element={<GroupEditor isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />}
         />
         <Route
           path="/chat"

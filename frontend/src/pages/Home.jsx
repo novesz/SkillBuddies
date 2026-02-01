@@ -5,10 +5,12 @@ import "../styles/Home.css";
 
 export default function Home({isLoggedIn, setIsLoggedIn}) {
   
-  const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
-  const [allCards, setAllCards] = useState([]);    // összes csoport
-  const [selectedChips, setSelectedChips] = useState([]); // kiválasztott skillek
-  const [searchText, setSearchText] = useState("");        // csoportnév kereső
+  const CHIPS_PER_ROW = 5;
+  const [chips, setChips] = useState([]);
+  const [allCards, setAllCards] = useState([]);
+  const [selectedChips, setSelectedChips] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [chipOffset, setChipOffset] = useState(0);
   const [error, setError] = useState("");
 
   // 🔹 Skillek (chipek) betöltése az adatbázisból
@@ -55,17 +57,17 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     loadGroups();
   }, []);
 
-  // 🔹 Több chip kijelölése (toggle)
   const handleChipClick = (chip) => {
-    setSelectedChips((prev) => {
-      if (prev.includes(chip)) {
-        // ha már benne van → vedd ki
-        return prev.filter((c) => c !== chip);
-      }
-      // ha még nincs benne → add hozzá
-      return [...prev, chip];
-    });
+    setSelectedChips((prev) =>
+      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+    );
   };
+
+  const maxChipOffset = Math.max(0, Math.ceil(chips.length / CHIPS_PER_ROW) - 1);
+  const visibleChips = chips.slice(
+    chipOffset * CHIPS_PER_ROW,
+    chipOffset * CHIPS_PER_ROW + CHIPS_PER_ROW
+  );
 
   // 🔹 Szűrés: csoportnév + skill chipek
   const filteredCards = allCards.filter((card) => {
@@ -125,17 +127,37 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
             </svg>
           </div>
 
-          <ul className="sb-chips">
-            {chips.map((c) => (
-              <li
-                key={c}
-                onClick={() => handleChipClick(c)}
-                className={selectedChips.includes(c) ? "sb-chip active" : "sb-chip"}
-              >
-                {c}
-              </li>
-            ))}
-          </ul>
+          <div className="sb-chips-row">
+            <button
+              type="button"
+              className="sb-chip-arrow"
+              aria-label="Previous filters"
+              onClick={() => setChipOffset((p) => Math.max(0, p - 1))}
+              disabled={chipOffset === 0}
+            >
+              ‹
+            </button>
+            <ul className="sb-chips">
+              {visibleChips.map((c) => (
+                <li
+                  key={c}
+                  onClick={() => handleChipClick(c)}
+                  className={selectedChips.includes(c) ? "sb-chip active" : "sb-chip"}
+                >
+                  {c}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="sb-chip-arrow"
+              aria-label="Next filters"
+              onClick={() => setChipOffset((p) => Math.min(maxChipOffset, p + 1))}
+              disabled={chipOffset >= maxChipOffset}
+            >
+              ›
+            </button>
+          </div>
         </section>
 
         {error && <p className="sb-error">{error}</p>}
