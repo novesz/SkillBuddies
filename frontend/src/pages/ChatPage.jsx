@@ -11,14 +11,15 @@ export default function ChatPage() {
   const [messagesMap, setMessagesMap] = useState({});
   const [messageInput, setMessageInput] = useState("");
   const [editingMessage, setEditingMessage] = useState(null);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(false);
+
   const [chatUsers, setChatUsers] = useState([]);
   const [chatSkills, setChatSkills] = useState([]);
 
   const ws = useRef(null);
-
   const chatEndRef = useRef(null);
 
   // --- Bejelentkezett felhasználó ellenőrzése ---
@@ -44,24 +45,21 @@ export default function ChatPage() {
         if (!selectedChat && res.data.length > 0) setSelectedChat(res.data[0].ChatID);
       })
       .catch(console.error);
-
   }, [currentUserId]);
+
+  // --- WebSocket ---
   useEffect(() => {
     if (!currentUserId) return;
-  
-    // Connect to WebSocket server
-    ws.current = new WebSocket("ws://localhost:3001"); // your WS server URL
-  
+
+    ws.current = new WebSocket("ws://localhost:3001");
+
     ws.current.onopen = () => {
-      console.log("Connected to WebSocket server");
-      // Optionally send current user info to server
+      console.log("Connected to WS server");
       ws.current.send(JSON.stringify({ type: "join", userId: currentUserId }));
     };
-  
+
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-  
-      // Example data: { type: "message", chatId: 1, message: {...} }
       if (data.type === "message") {
         setMessagesMap((prev) => ({
           ...prev,
@@ -69,14 +67,12 @@ export default function ChatPage() {
         }));
       }
     };
-  
-    ws.current.onclose = () => console.log("Disconnected from WebSocket server");
+
+    ws.current.onclose = () => console.log("WS disconnected");
     ws.current.onerror = (err) => console.error("WS error:", err);
-  
-    // Cleanup on unmount
+
     return () => ws.current?.close();
   }, [currentUserId]);
-  
 
   // --- Üzenetek betöltése ---
   useEffect(() => {
@@ -94,7 +90,7 @@ export default function ChatPage() {
         setMessagesMap((prev) => ({ ...prev, [selectedChat]: msgs }));
       })
       .catch(console.error);
-  }, [selectedChat, currentUserId, currentUsername, messagesMap]);
+  }, [selectedChat, currentUserId, currentUsername]);
 
   // --- Chat felhasználók betöltése ---
   const loadChatUsers = (chatId) => {
@@ -105,20 +101,27 @@ export default function ChatPage() {
       .catch(console.error);
   };
 
-  // --- Chat skillek betöltése (később backendből) ---
+  // --- Chat skillek betöltése ---
   const loadChatSkills = (chatId) => {
     if (!chatId) return;
-    // ide lehet backend hívást tenni
-    // pl: axios.get(`/chats/skills/${chatId}`).then(res => setChatSkills(res.data))
-    // most mock adat
-    setChatSkills([
-      { SkillID: 1, SkillName: "React" },
-      { SkillID: 2, SkillName: "Node.js" },
-      { SkillID: 3, SkillName: "SQL" },
-    ]);
+    axios
+      .get("http://localhost:3001/groups")
+      .then((res) => {
+        const group = res.data.find((g) => g.ChatID === chatId);
+        if (group && group.Skills) {
+          setChatSkills(
+            group.Skills.split(", ").map((skill, index) => ({
+              SkillID: index,
+              SkillName: skill,
+            }))
+          );
+        } else {
+          setChatSkills([]);
+        }
+      })
+      .catch(console.error);
   };
 
-  // --- Betöltés selectedChat változásakor ---
   useEffect(() => {
     if (selectedChat) {
       loadChatUsers(selectedChat);
@@ -126,12 +129,12 @@ export default function ChatPage() {
     }
   }, [selectedChat]);
 
-  // --- Scroll az új üzenetekre ---
+  // --- Scroll új üzenetekre ---
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesMap, selectedChat]);
 
-  // --- Üzenet küldése vagy szerkesztése ---
+  // --- Üzenet küldése ---
   const handleSend = () => {
     if (!editingMessage) {
       axios
@@ -152,30 +155,19 @@ export default function ChatPage() {
             username: currentUsername,
             UserID: currentUserId,
           };
-    
-          // Update local state immediately
           setMessagesMap((prev) => ({
             ...prev,
             [selectedChat]: [...(prev[selectedChat] || []), newMsg],
           }));
-    
-          // Send over WebSocket
           ws.current?.send(
-            JSON.stringify({
-              type: "message",
-              chatId: selectedChat,
-              message: newMsg,
-            })
+            JSON.stringify({ type: "message", chatId: selectedChat, message: newMsg })
           );
-    
           setMessageInput("");
         })
         .catch(console.error);
     }
-    
   };
 
-  // --- Üzenet törlése ---
   const handleDelete = (msg) => {
     if (!window.confirm("Biztosan törölni szeretnéd az üzenetet?")) return;
 
@@ -190,12 +182,12 @@ export default function ChatPage() {
       .catch(console.error);
   };
 
-  // --- Edit kezdete ---
   const handleEdit = (msg) => {
     setEditingMessage(msg);
     setMessageInput(msg.text);
   };
 
+  // --- JSX ---
   return (
     <div className="chat-page">
       <Header />
@@ -221,7 +213,9 @@ export default function ChatPage() {
             {messagesMap[selectedChat]?.map((msg) => (
               <div key={msg.MsgID} className={`message ${msg.type}`}>
                 <span>{msg.text}</span>
-                <small style={{ display: "block", fontSize: "10px", color: "#555" }}>{msg.username}</small>
+                <small style={{ display: "block", fontSize: "10px", color: "#555" }}>
+                  {msg.username}
+                </small>
 
                 {msg.type === "outgoing" && (
                   <div className="message-actions">
@@ -254,17 +248,22 @@ export default function ChatPage() {
 
           {/* --- RIGHT PANEL --- */}
           <div className="right-panel">
-            <button className="profile-btn" onClick={() => setMenuOpen((prev) => !prev)}></button>
+            <button className="profile-btn" onClick={() => setMenuOpen((prev) => !prev)}>
+              ⚙️
+            </button>
+
             {menuOpen && (
               <div className="settings-dropdown">
                 <button
                   onClick={() => {
                     setPeopleOpen((prev) => !prev);
                     setSkillsOpen(false);
+                    if (!peopleOpen) loadChatUsers(selectedChat);
                   }}
                 >
                   People
                 </button>
+
                 <button
                   onClick={() => {
                     setSkillsOpen((prev) => !prev);
@@ -274,7 +273,8 @@ export default function ChatPage() {
                 >
                   Skills
                 </button>
-                <button>Leave</button>
+
+                <button onClick={() => alert("Leave chat functionality here")}>Leave</button>
               </div>
             )}
           </div>
@@ -283,7 +283,7 @@ export default function ChatPage() {
           {peopleOpen && (
             <div className="people-sidebar">
               <button className="close-people" onClick={() => setPeopleOpen(false)}>
-                Close
+                ✖
               </button>
               <h3>Users in this chat:</h3>
               <ul>
@@ -310,13 +310,13 @@ export default function ChatPage() {
           {skillsOpen && (
             <div className="skills-sidebar">
               <button className="close-skills" onClick={() => setSkillsOpen(false)}>
-                Close
+                ✖
               </button>
               <h3>Skills in this chat:</h3>
               <ul>
                 {chatSkills.map((skill) => (
                   <li key={skill.SkillID} className="skill-row">
-                    {skill.SkillName}
+                    {skill.Skill || skill.SkillName}
                   </li>
                 ))}
               </ul>
