@@ -11,6 +11,7 @@
 2025-11-26 neededskills kötőtábla létrehozása
 2026-01-21 képek táblába szedése
 2026-01-22 hashelt jelszavak miatt az eddigi adatok javítása
+2026-02-03 chatekhez nyílvános csatlakozási identifikáló mező felvétele
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
@@ -29,6 +30,7 @@
 2026-01-07 Cookies megoldása (frontend is)
 2026-01-22 jelszavak hashelése bcryptel
 2026-01-22, 23, 26 websocket implementálása
+2026-02-03 backend bugfix (users by chats) - statikus adat volt megadva tévesen
 
 2025-11-05, 2025-11-06, 2025-11-10 Support page elkészítése
 2025-11-13 about page háttérszín javítása
