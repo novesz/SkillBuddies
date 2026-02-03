@@ -25,6 +25,25 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   margin-top: 8px;
 }
 
+.sb-loading,
+.sb-end {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin: 6px 0 0;
+  color: rgba(15, 23, 42, 0.85);
+  font-weight: 700;
+}
+
+.sb-loading-more {
+  margin-top: 14px;
+}
+
+.sb-sentinel {
+  height: 1px;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
 
 /* tartalom: full width + kényelmes belső margó */
 .sb-content{

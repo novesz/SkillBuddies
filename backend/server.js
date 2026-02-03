@@ -918,7 +918,29 @@ app.post("/groups", (req, res) => {
 
 // Összes csoport lekérése a főoldalhoz
 app.get("/groups", (req, res) => {
-  const sql = `
+  // Backward compatible behavior:
+  // - If no pagination params are provided, return the full array (old behavior).
+  // - If `limit` (or `offset`) is provided, return a paged response:
+  //   { items: [...], nextOffset: number, hasMore: boolean }
+
+  const rawLimit = req.query.limit;
+  const rawOffset = req.query.offset;
+  const wantsPaging = rawLimit !== undefined || rawOffset !== undefined;
+
+  const limit = Math.min(Math.max(parseInt(rawLimit ?? "0", 10) || 0, 0), 50);
+  const offset = Math.max(parseInt(rawOffset ?? "0", 10) || 0, 0);
+
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const skillsParam = typeof req.query.skills === "string" ? req.query.skills.trim() : "";
+  const skills = skillsParam
+    ? skillsParam
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  // Base select
+  let sql = `
     SELECT 
       c.ChatID,
       c.ChatName,
@@ -930,16 +952,65 @@ app.get("/groups", (req, res) => {
     LEFT JOIN neededskills ns ON ns.ChatID = c.ChatID
     LEFT JOIN skills s ON ns.SkillID = s.SkillID
     LEFT JOIN uac u ON u.ChatID = c.ChatID
-    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
-    ORDER BY c.CreatedAt DESC;
   `;
 
-  db.query(sql, (err, rows) => {
+  const where = [];
+  const params = [];
+
+  if (search) {
+    where.push("c.ChatName LIKE ?");
+    params.push(`%${search}%`);
+  }
+
+  // Match ANY selected skill (same behavior as frontend chip filtering)
+  if (skills.length > 0) {
+    where.push(`
+      EXISTS (
+        SELECT 1
+        FROM neededskills ns2
+        JOIN skills s2 ON s2.SkillID = ns2.SkillID
+        WHERE ns2.ChatID = c.ChatID
+          AND s2.Skill IN (?)
+      )
+    `);
+    params.push(skills);
+  }
+
+  if (where.length > 0) {
+    sql += ` WHERE ${where.join(" AND ")} `;
+  }
+
+  sql += `
+    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
+    ORDER BY c.CreatedAt DESC
+  `;
+
+  // Old behavior: no paging requested -> return everything (but still allow filters if provided).
+  if (!wantsPaging || limit === 0) {
+    db.query(sql + ";", params, (err, rows) => {
+      if (err) {
+        console.error("Groups list hiba:", err);
+        return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
+      }
+      res.json(rows);
+    });
+    return;
+  }
+
+  // Paged behavior
+  const pagedSql = sql + " LIMIT ? OFFSET ?;";
+  const pagedParams = [...params, limit, offset];
+
+  db.query(pagedSql, pagedParams, (err, rows) => {
     if (err) {
       console.error("Groups list hiba:", err);
       return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
     }
-    res.json(rows);
+
+    const nextOffset = offset + rows.length;
+    const hasMore = rows.length === limit;
+
+    res.json({ items: rows, nextOffset, hasMore });
   });
 });
 

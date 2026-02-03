@@ -78,12 +78,8 @@
   padding: 0 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
-<<<<<<< Updated upstream
   background: #fff;
   color: var(--text);
-=======
-  background: #491a1a;
->>>>>>> Stashed changes
   cursor: pointer;
   transition: filter .2s, transform .05s, box-shadow .2s, background-color .2s, color .2s, border-color .2s;
 }

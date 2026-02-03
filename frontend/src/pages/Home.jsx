@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/header/Header";
-import axios from "axios";
 import "../styles/Home.css";
 
 export default function Home({isLoggedIn, setIsLoggedIn}) {
   
   const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
-  const [allCards, setAllCards] = useState([]);    // összes csoport
   const [selectedChips, setSelectedChips] = useState([]); // kiválasztott skillek
   const [searchText, setSearchText] = useState("");        // csoportnév kereső
   const [error, setError] = useState("");
+
+  // infinite scroll state
+  const PAGE_SIZE = 18;
+  const [cards, setCards] = useState([]); // loaded (already filtered by backend)
+  const [nextOffset, setNextOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const sentinelRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   // 🔹 Skillek (chipek) betöltése az adatbázisból
   useEffect(() => {
@@ -29,31 +38,105 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     loadSkills();
   }, []);
   
-  // 🔹 Kártyák betöltése az új /cards endpointból
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const resp = await fetch("http://localhost:3001/groups");
-        if (!resp.ok) throw new Error("Nem sikerült a csoportok lekérése.");
-        const data = await resp.json();
+  const debouncedSearch = useDebouncedValue(searchText, 300);
 
-        // Normalizáljuk a backend adatot a kártyához
-        const normalized = data.map((g) => ({
-          id: g.ChatID,
-          title: g.ChatName,
-          skills: g.Skills ? g.Skills.split(", ").filter(Boolean) : [],
-          users: g.MemberCount || 0,
-          pic: g.ChatPic || null,
-        }));
+  const skillsQuery = useMemo(() => {
+    if (selectedChips.length === 0) return "";
+    // backend expects comma-separated skill names
+    return selectedChips.join(",");
+  }, [selectedChips]);
 
-        setAllCards(normalized);
-      } catch (err) {
-        console.error("Hiba a csoportok lekérésekor:", err);
-        setError("Nem sikerült betölteni a csoportokat.");
+  const loadGroupsPage = async ({ reset } = { reset: false }) => {
+    const myRequestId = ++requestIdRef.current;
+
+    if (reset) {
+      setLoading(true);
+      setLoadingMore(false);
+      setError("");
+      setCards([]);
+      setNextOffset(0);
+      setHasMore(true);
+    } else {
+      setLoadingMore(true);
+      setError("");
+    }
+
+    try {
+      const offset = reset ? 0 : nextOffset;
+
+      const qs = new URLSearchParams();
+      qs.set("limit", String(PAGE_SIZE));
+      qs.set("offset", String(offset));
+      if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
+      if (skillsQuery) qs.set("skills", skillsQuery);
+
+      const resp = await fetch(`http://localhost:3001/groups?${qs.toString()}`);
+      if (!resp.ok) throw new Error("Nem sikerült a csoportok lekérése.");
+      const payload = await resp.json();
+
+      // Ignore out-of-order responses
+      if (myRequestId !== requestIdRef.current) return;
+
+      const rows = Array.isArray(payload) ? payload : payload.items;
+      const normalized = (rows || []).map((g) => ({
+        id: g.ChatID,
+        title: g.ChatName,
+        skills: g.Skills ? g.Skills.split(", ").filter(Boolean) : [],
+        users: g.MemberCount || 0,
+        pic: g.ChatPic || null,
+      }));
+
+      if (reset) {
+        setCards(normalized);
+      } else {
+        setCards((prev) => [...prev, ...normalized]);
       }
-    };
-    loadGroups();
-  }, []);
+
+      if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+        setNextOffset(payload.nextOffset ?? (offset + normalized.length));
+        setHasMore(Boolean(payload.hasMore));
+      } else {
+        // Fallback if server returned array
+        setNextOffset(offset + normalized.length);
+        setHasMore(normalized.length === PAGE_SIZE);
+      }
+    } catch (err) {
+      console.error("Hiba a csoportok lekérésekor:", err);
+      setError("Nem sikerült betölteni a csoportokat.");
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Load first page on mount + when filters change
+  useEffect(() => {
+    loadGroupsPage({ reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, skillsQuery]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (!first?.isIntersecting) return;
+        if (loading || loadingMore) return;
+        if (!hasMore) return;
+
+        loadGroupsPage({ reset: false });
+      },
+      { root: null, rootMargin: "400px 0px", threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, loading, loadingMore, nextOffset, debouncedSearch, skillsQuery]);
 
   // 🔹 Több chip kijelölése (toggle)
   const handleChipClick = (chip) => {
@@ -66,28 +149,6 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
       return [...prev, chip];
     });
   };
-
-  // 🔹 Szűrés: csoportnév + skill chipek
-  const filteredCards = allCards.filter((card) => {
-    const titleText = card.title.toLowerCase();
-    const search = searchText.toLowerCase();
-
-    // név szerinti szűrés
-    const matchesSearch =
-      search === "" ? true : titleText.includes(search);
-
-    // skill chipek szerinti szűrés
-    const matchesChips =
-      selectedChips.length === 0
-        ? true
-        : selectedChips.some((chip) =>
-            card.skills.some((skill) =>
-              skill.toLowerCase().includes(chip.toLowerCase())
-            )
-          );
-
-    return matchesSearch && matchesChips;
-  });
 
   return (
     <div className="sb-page">
@@ -142,7 +203,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
 
         {/* SZŰRT CSOPORTKÁRTYÁK */}
         <section className="sb-cards">
-          {filteredCards.map((card) => (
+          {cards.map((card) => (
             <Card
               key={card.id}
               title={card.title}
@@ -152,8 +213,23 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
             />
           ))}
 
-          {filteredCards.length === 0 && !error && (
+          {loading && (
+            <p className="sb-loading">Loading groups...</p>
+          )}
+
+          {!loading && cards.length === 0 && !error && (
             <p className="sb-empty">No groups match your filters.</p>
+          )}
+
+          {/* sentinel for infinite scroll */}
+          <div ref={sentinelRef} className="sb-sentinel" />
+
+          {loadingMore && (
+            <p className="sb-loading sb-loading-more">Loading more...</p>
+          )}
+
+          {!loading && !loadingMore && !error && cards.length > 0 && !hasMore && (
+            <p className="sb-end">You reached the end.</p>
           )}
         </section>
       </main>
@@ -195,4 +271,15 @@ function Card({ title, skills, users, pic }) {
       </div>
     </article>
   );
+}
+
+function useDebouncedValue(value, delayMs) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+
+  return debounced;
 }
