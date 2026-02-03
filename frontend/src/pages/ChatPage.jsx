@@ -11,18 +11,16 @@ export default function ChatPage() {
   const [messagesMap, setMessagesMap] = useState({});
   const [messageInput, setMessageInput] = useState("");
   const [editingMessage, setEditingMessage] = useState(null);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(false);
-
   const [chatUsers, setChatUsers] = useState([]);
   const [chatSkills, setChatSkills] = useState([]);
 
   const ws = useRef(null);
   const chatEndRef = useRef(null);
 
-  // --- Bejelentkezett felhasználó ellenőrzése ---
+  // --- Bejelentkezett felhasználó ---
   useEffect(() => {
     axios
       .get("http://localhost:3001/auth/status", { withCredentials: true })
@@ -35,7 +33,7 @@ export default function ChatPage() {
       .catch(console.error);
   }, []);
 
-  // --- Saját chatek betöltése ---
+  // --- Saját chatek ---
   useEffect(() => {
     if (!currentUserId) return;
     axios
@@ -55,15 +53,25 @@ export default function ChatPage() {
 
     ws.current.onopen = () => {
       console.log("Connected to WS server");
-      ws.current.send(JSON.stringify({ type: "join", userId: currentUserId }));
     };
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.type === "message") {
+      if (data.type === "NEW_MESSAGE") {
+        const msg = {
+          MsgID: data.msg.MsgID,
+          text: data.msg.Content,
+          username:
+            data.msg.UserID === currentUserId
+              ? currentUsername
+              : `User ${data.msg.UserID}`,
+          type: data.msg.UserID === currentUserId ? "outgoing" : "incoming",
+          UserID: data.msg.UserID,
+        };
+
         setMessagesMap((prev) => ({
           ...prev,
-          [data.chatId]: [...(prev[data.chatId] || []), data.message],
+          [data.msg.ChatID]: [...(prev[data.msg.ChatID] || []), msg],
         }));
       }
     };
@@ -72,27 +80,31 @@ export default function ChatPage() {
     ws.current.onerror = (err) => console.error("WS error:", err);
 
     return () => ws.current?.close();
-  }, [currentUserId]);
+  }, [currentUserId, currentUsername]);
 
   // --- Üzenetek betöltése ---
   useEffect(() => {
-    if (!selectedChat || !currentUserId) return;
+    if (!selectedChat) return;
 
     axios
       .get(`http://localhost:3001/messages/${selectedChat}`)
       .then((res) => {
         const msgs = res.data.map((msg) => ({
-          ...msg,
+          MsgID: msg.MsgID,
           text: msg.Content,
           type: msg.UserID === Number(currentUserId) ? "outgoing" : "incoming",
-          username: msg.UserID === Number(currentUserId) ? currentUsername : msg.Username || "Valaki",
+          username:
+            msg.UserID === Number(currentUserId)
+              ? currentUsername
+              : msg.Username || `User ${msg.UserID}`,
+          UserID: msg.UserID,
         }));
         setMessagesMap((prev) => ({ ...prev, [selectedChat]: msgs }));
       })
       .catch(console.error);
   }, [selectedChat, currentUserId, currentUsername]);
 
-  // --- Chat felhasználók betöltése ---
+  // --- Chat users ---
   const loadChatUsers = (chatId) => {
     if (!chatId) return;
     axios
@@ -101,7 +113,7 @@ export default function ChatPage() {
       .catch(console.error);
   };
 
-  // --- Chat skillek betöltése ---
+  // --- Chat skills ---
   const loadChatSkills = (chatId) => {
     if (!chatId) return;
     axios
@@ -129,13 +141,15 @@ export default function ChatPage() {
     }
   }, [selectedChat]);
 
-  // --- Scroll új üzenetekre ---
+  // --- Scroll ---
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesMap, selectedChat]);
 
   // --- Üzenet küldése ---
   const handleSend = () => {
+    if (!messageInput.trim()) return;
+
     if (!editingMessage) {
       axios
         .post(
@@ -159,9 +173,27 @@ export default function ChatPage() {
             ...prev,
             [selectedChat]: [...(prev[selectedChat] || []), newMsg],
           }));
-          ws.current?.send(
-            JSON.stringify({ type: "message", chatId: selectedChat, message: newMsg })
-          );
+          setMessageInput("");
+        })
+        .catch(console.error);
+    } else {
+      // edit üzenet
+      axios
+        .put(
+          `http://localhost:3001/messages/edit/${editingMessage.MsgID}`,
+          { Content: messageInput },
+          { withCredentials: true }
+        )
+        .then(() => {
+          setMessagesMap((prev) => ({
+            ...prev,
+            [selectedChat]: prev[selectedChat].map((m) =>
+              m.MsgID === editingMessage.MsgID
+                ? { ...m, text: messageInput }
+                : m
+            ),
+          }));
+          setEditingMessage(null);
           setMessageInput("");
         })
         .catch(console.error);
@@ -170,9 +202,10 @@ export default function ChatPage() {
 
   const handleDelete = (msg) => {
     if (!window.confirm("Biztosan törölni szeretnéd az üzenetet?")) return;
-
     axios
-      .delete(`http://localhost:3001/messages/delete/${msg.MsgID}`, { withCredentials: true })
+      .delete(`http://localhost:3001/messages/delete/${msg.MsgID}`, {
+        withCredentials: true,
+      })
       .then(() => {
         setMessagesMap((prev) => ({
           ...prev,
@@ -201,7 +234,11 @@ export default function ChatPage() {
               className={`user-row ${chat.ChatID === selectedChat ? "active" : ""}`}
               onClick={() => setSelectedChat(chat.ChatID)}
             >
-              <img src={`/images/${chat.ChatPic}`} alt={chat.ChatName} className="chat-pic" />
+              <img
+                src={chat.ChatPic ? `/images/${chat.ChatPic}` : "/images/default.png"}
+                alt={chat.ChatName}
+                className="chat-pic"
+              />
               <span>{chat.ChatName}</span>
             </div>
           ))}
@@ -281,30 +318,31 @@ export default function ChatPage() {
 
           {/* --- PEOPLE SIDEBAR --- */}
           {peopleOpen && (
-            <div className="people-sidebar">
-              <button className="close-people" onClick={() => setPeopleOpen(false)}>
-                ✖
-              </button>
-              <h3>Users in this chat:</h3>
-              <ul>
-                {chatUsers.map((user) => (
-                  <li key={user.UserID} className="person-row">
-                    <img
-                      src={user.Avatar ? `/images/${user.Avatar}` : "/images/default.png"}
-                      alt={user.Username}
-                      className="person-avatar"
-                    />
-                    <span>
-                      {user.UserID === currentUserId
-                        ? `${currentUsername} (You)`
-                        : user.Username || `UserID: ${user.UserID}`}
-                      {user.IsChatAdmin ? " (Admin)" : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+  <div className="people-sidebar">
+    <button className="close-people" onClick={() => setPeopleOpen(false)}>
+      ✖
+    </button>
+    <h3>Users in this chat:</h3>
+    <ul>
+      {chatUsers.length === 0 && <li>No users in this chat.</li>}
+      {chatUsers.map((user) => (
+        <li key={user.UserID} className="person-row">
+          <img
+            src={user.Avatar ? `/images/${user.Avatar}` : "/images/default.png"}
+            alt={user.Username}
+            className="person-avatar"
+          />
+          <span>
+            {user.UserID === currentUserId
+              ? `${currentUsername} (You)`
+              : user.Username}
+            {user.IsChatAdmin ? " (Admin)" : ""}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
 
           {/* --- SKILLS SIDEBAR --- */}
           {skillsOpen && (
