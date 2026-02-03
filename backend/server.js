@@ -135,7 +135,15 @@ function broadcastToChat(chatId, payload) {
     });
   });
 }
-
+// --- chat join code generator ---
+function generateJoinCode(length = 6) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
 // Test route
 app.get('/', (req, res) => {
     res.json('Server is running');
@@ -683,16 +691,41 @@ app.put('/users/updateTokens/:id', (req, res) => {
     });
 });
 //new chat
-app.post('/chats/create', (req, res) => {
-    const sql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
-    const values = [req.body.ChatName, req.body.ChatPic];
-    db.query(sql, values, (err, results) => {
-        if (err) {
-            console.error('Error creating chat:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.status(201).json({ message: 'Chat created successfully', ChatID: results.insertId });
-    });
+app.post('/chats/create', async (req, res) => {
+  const sql = "INSERT INTO chats (ChatName, ChatPic, PublicID) VALUES (?, ?, ?)";
+  const valuesBase = [req.body.ChatName, req.body.ChatPic];
+
+  let inserted = false;
+  let attempt = 0;
+  const maxAttempts = 10; // just in case to avoid infinite loop
+
+  while (!inserted && attempt < maxAttempts) {
+    const joinCode = generateJoinCode();
+    const values = [...valuesBase, joinCode];
+
+    try {
+      const [results] = await db.promise().query(sql, values); 
+      inserted = true;
+
+      res.status(201).json({
+        message: 'Chat created successfully',
+        ChatID: results.insertId,
+        PublicID: joinCode
+      });
+    } catch (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        // Collision on JoinCode → retry
+        attempt++;
+      } else {
+        console.error('Error creating chat:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    }
+  }
+
+  if (!inserted) {
+    res.status(500).json({ error: 'Could not generate unique join code, please try again.' });
+  }
 });
 //get all chats
 app.get('/chats/all', (req, res) => {
@@ -777,7 +810,7 @@ app.put('/chats/makeAdmin', (req, res) => {
 });
 //users by chat 
 app.get('/chats/users/:chatId', (req, res) => {
-    const sql = "SELECT * FROM uac WHERE uac.ChatID = 1;";
+    const sql = "SELECT * FROM uac WHERE uac.ChatID = ?;";
     db.query(sql, [req.params.chatId], (err, results) => {
         if (err) {
             console.error('Error fetching users by chat:', err);
