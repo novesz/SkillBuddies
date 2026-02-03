@@ -201,7 +201,32 @@
   flex: 1;
 }
 
-/* keresési javaslat lista */
+/* skills filter: one row of 5, arrows to see more */
+
+.skills-filter-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skills-filter-arrow {
+  flex-shrink: 0;
+}
+
+.skills-filter-strip {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow: hidden;
+  min-height: 36px;
+  align-items: center;
+}
+
+.skills-filter-strip .skills-suggestion-item {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 
 .skills-suggestions {
   margin-top: 6px;

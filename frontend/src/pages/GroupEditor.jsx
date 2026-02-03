@@ -2,42 +2,31 @@ import React, { useState, useEffect } from "react";
 import "../styles/GroupEditor.css";
 import Header from "../components/header/Header";
 
-export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
+const AVATARS = [
+  "/groupavatars/Ant.png",
+  "/groupavatars/Szarvi.png",
+  "/groupavatars/Bodi.png",
+];
+const MAX_WORDS = 250;
+const MAX_CHARS = 10000000;
+const VISIBLE_AVATARS = 3;
+const SKILLS_PER_PAGE = 5;
+
+export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [avatarIndex, setAvatarIndex] = useState(0);
-
-  // ÚJ: carousel pozíció
   const [avatarOffset, setAvatarOffset] = useState(0);
-
-  const MAX_WORDS = 250;
-  const MAX_CHARS = 10000000;
-
-  // egyszerre ennyi avatar látszik
-  const VISIBLE_AVATARS = 3;
-
-  const avatars = [
-    "/groupavatars/Ant.png",
-    "/groupavatars/Szarvi.png",
-    "/groupavatars/Bodi.png",
-    
-  ];
-
-  const maxOffset = Math.max(0, avatars.length - VISIBLE_AVATARS);
-
   const [allSkills, setAllSkills] = useState([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [skillSuggestionsOffset, setSkillSuggestionsOffset] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   const [showModal, setShowModal] = useState(false);
-  const [createdChatId, setCreatedChatId] = useState(null);
 
-  const currentUserId = 8;
+  const maxOffset = Math.max(0, AVATARS.length - VISIBLE_AVATARS);
 
-  // 🔹 skillek betöltése
   useEffect(() => {
     const fetchSkills = async () => {
       try {
@@ -53,7 +42,6 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
     fetchSkills();
   }, []);
 
-  // 🔹 leírás — max 250 szó
   const handleDescriptionChange = (e) => {
     let value = e.target.value || "";
     if (value.length > MAX_CHARS) value = value.slice(0, MAX_CHARS);
@@ -69,7 +57,6 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
     }
   };
 
-  // 🔹 avatar carousel lapozás
   const handlePrevAvatar = () => {
     setAvatarOffset((prev) => (prev === 0 ? maxOffset : prev - 1));
   };
@@ -78,22 +65,29 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
     setAvatarOffset((prev) => (prev === maxOffset ? 0 : prev + 1));
   };
 
-  // skill objektumok
   const selectedSkills = allSkills.filter((s) =>
     selectedSkillIds.includes(s.SkillID)
   );
-  
-  // keresési találatok
+
   const filteredSkills = allSkills
     .filter((s) =>
       s.Skill.toLowerCase().startsWith(searchTerm.toLowerCase())
     )
-    .filter((s) => !selectedSkillIds.includes(s.SkillID))
-    .slice(0, 6);
+    .filter((s) => !selectedSkillIds.includes(s.SkillID));
+
+  const maxSkillOffset = Math.max(
+    0,
+    Math.ceil(filteredSkills.length / SKILLS_PER_PAGE) - 1
+  );
+  const visibleSkills = filteredSkills.slice(
+    skillSuggestionsOffset * SKILLS_PER_PAGE,
+    skillSuggestionsOffset * SKILLS_PER_PAGE + SKILLS_PER_PAGE
+  );
 
   const handleAddSkill = (id) => {
     setSelectedSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setSearchTerm("");
+    setSkillSuggestionsOffset(0);
   };
 
   const handleRemoveSkill = (id) =>
@@ -102,8 +96,16 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (filteredSkills.length > 0) handleAddSkill(filteredSkills[0].SkillID);
+      if (visibleSkills.length > 0) handleAddSkill(visibleSkills[0].SkillID);
     }
+  };
+
+  const handlePrevSkillsPage = () => {
+    setSkillSuggestionsOffset((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNextSkillsPage = () => {
+    setSkillSuggestionsOffset((prev) => Math.min(maxSkillOffset, prev + 1));
   };
 
   const handleCancel = () => {
@@ -112,6 +114,7 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
     setSelectedSkillIds([]);
     setAvatarIndex(0);
     setAvatarOffset(0);
+    setSkillSuggestionsOffset(0);
     setError("");
     setSuccess("");
     setSearchTerm("");
@@ -133,9 +136,9 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
 
     const payload = {
       chatName: groupName,
-      chatPic: avatars[avatarIndex], // kiválasztott avatar
+      chatPic: AVATARS[avatarIndex],
       skillIds: selectedSkillIds,
-      userId: currentUserId,
+      userId,
     };
 
     try {
@@ -149,15 +152,12 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
 
       if (!resp.ok) throw new Error(data.error || "Ismeretlen hiba történt.");
 
-      setCreatedChatId(data.chatId);
       setSuccess("Csoport sikeresen létrehozva! 🎉");
       setShowModal(true);
     } catch (err) {
       setError(err.message);
     }
   };
-
-  const closeModal = () => setShowModal(false);
 
   return (
     <>
@@ -180,8 +180,6 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
 
                 <div className="group-avatar-block">
                   <p className="field-label">Group avatar</p>
-
-                  {/* 🔵 CAROUSEL — több avatar látszik */}
                   <div className="avatar-carousel">
                     <button
                       type="button"
@@ -200,7 +198,7 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
                           }%)`,
                         }}
                       >
-                        {avatars.map((src, i) => (
+                        {AVATARS.map((src, i) => (
                           <button
                             key={i}
                             type="button"
@@ -279,23 +277,46 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
                     className="text-input"
                     placeholder="Search skills…"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setSkillSuggestionsOffset(0);
+                    }}
                     onKeyDown={handleSearchKeyDown}
                   />
                 </div>
 
                 {searchTerm && filteredSkills.length > 0 && (
-                  <div className="skills-suggestions">
-                    {filteredSkills.map((skill) => (
-                      <button
-                        key={skill.SkillID}
-                        type="button"
-                        className="skills-suggestion-item"
-                        onClick={() => handleAddSkill(skill.SkillID)}
-                      >
-                        {skill.Skill}
-                      </button>
-                    ))}
+                  <div className="skills-filter-row">
+                    <button
+                      type="button"
+                      className="avatar-nav-btn skills-filter-arrow"
+                      aria-label="Previous skills"
+                      onClick={handlePrevSkillsPage}
+                      disabled={skillSuggestionsOffset === 0}
+                    >
+                      ‹
+                    </button>
+                    <div className="skills-filter-strip">
+                      {visibleSkills.map((skill) => (
+                        <button
+                          key={skill.SkillID}
+                          type="button"
+                          className="skills-suggestion-item"
+                          onClick={() => handleAddSkill(skill.SkillID)}
+                        >
+                          {skill.Skill}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="avatar-nav-btn skills-filter-arrow"
+                      aria-label="Next skills"
+                      onClick={handleNextSkillsPage}
+                      disabled={skillSuggestionsOffset >= maxSkillOffset}
+                    >
+                      ›
+                    </button>
                   </div>
                 )}
 
@@ -338,7 +359,7 @@ export default function GroupEditor({isLoggedIn, setIsLoggedIn}) {
           <div className="modal-card">
             <h3>Group created</h3>
             <p>Your group has been created successfully 🎉</p>
-            <button className="btn-primary" onClick={closeModal}>
+            <button className="btn-primary" onClick={() => setShowModal(false)}>
               OK
             </button>
           </div>

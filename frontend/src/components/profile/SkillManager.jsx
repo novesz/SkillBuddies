@@ -36,21 +36,22 @@ export default function SkillManager({ skills, onAdd, onRemove }) {
   const trimmed = value.trim();
   const exactMatch =
     trimmed && allSkills.find((s) => s.toLowerCase() === trimmed.toLowerCase());
-
   const canAdd = !!exactMatch && !skills.includes(exactMatch);
 
-  const tryAdd = () => {
-    if (!canAdd || !exactMatch) return;
-    onAdd(exactMatch);
+  const addSkillAndClear = (skill) => {
+    onAdd(skill);
     setValue("");
     setSuggestions([]);
   };
 
+  const tryAdd = () => {
+    if (!canAdd || !exactMatch) return;
+    addSkillAndClear(exactMatch);
+  };
+
   const handleSuggestionClick = (skill) => {
     if (skills.includes(skill)) return;
-    onAdd(skill);
-    setValue("");
-    setSuggestions([]);
+    addSkillAndClear(skill);
   };
 
   return (

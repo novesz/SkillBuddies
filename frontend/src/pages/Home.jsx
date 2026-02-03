@@ -138,16 +138,10 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loading, loadingMore, nextOffset, debouncedSearch, skillsQuery]);
 
-  // 🔹 Több chip kijelölése (toggle)
   const handleChipClick = (chip) => {
-    setSelectedChips((prev) => {
-      if (prev.includes(chip)) {
-        // ha már benne van → vedd ki
-        return prev.filter((c) => c !== chip);
-      }
-      // ha még nincs benne → add hozzá
-      return [...prev, chip];
-    });
+    setSelectedChips((prev) =>
+      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]
+    );
   };
 
   return (
@@ -186,17 +180,37 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
             </svg>
           </div>
 
-          <ul className="sb-chips">
-            {chips.map((c) => (
-              <li
-                key={c}
-                onClick={() => handleChipClick(c)}
-                className={selectedChips.includes(c) ? "sb-chip active" : "sb-chip"}
-              >
-                {c}
-              </li>
-            ))}
-          </ul>
+          <div className="sb-chips-row">
+            <button
+              type="button"
+              className="sb-chip-arrow"
+              aria-label="Previous filters"
+              onClick={() => setChipOffset((p) => Math.max(0, p - 1))}
+              disabled={chipOffset === 0}
+            >
+              ‹
+            </button>
+            <ul className="sb-chips">
+              {visibleChips.map((c) => (
+                <li
+                  key={c}
+                  onClick={() => handleChipClick(c)}
+                  className={selectedChips.includes(c) ? "sb-chip active" : "sb-chip"}
+                >
+                  {c}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="sb-chip-arrow"
+              aria-label="Next filters"
+              onClick={() => setChipOffset((p) => Math.min(maxChipOffset, p + 1))}
+              disabled={chipOffset >= maxChipOffset}
+            >
+              ›
+            </button>
+          </div>
         </section>
 
         {error && <p className="sb-error">{error}</p>}
