@@ -810,14 +810,19 @@ app.put('/chats/makeAdmin', (req, res) => {
 });
 //users by chat 
 app.get('/chats/users/:chatId', (req, res) => {
-    const sql = "SELECT * FROM uac WHERE uac.ChatID = ?;";
-    db.query(sql, [req.params.chatId], (err, results) => {
-        if (err) {
-            console.error('Error fetching users by chat:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-        res.json(results);
-    });
+  const sql = `
+    SELECT u.UserID, u.Username, uac.IsChatAdmin
+    FROM uac
+    JOIN users u ON u.UserID = uac.UserID
+    WHERE uac.ChatID = ?
+  `;
+  db.query(sql, [req.params.chatId], (err, results) => {
+    if (err) {
+      console.error('Error fetching users by chat:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
 });
 //edit chat info
 app.put('/chats/edit/:id', (req, res) => {

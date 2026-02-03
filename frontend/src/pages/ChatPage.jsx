@@ -109,8 +109,11 @@ export default function ChatPage() {
     if (!chatId) return;
     axios
       .get(`http://localhost:3001/chats/users/${chatId}`)
-      .then((res) => setChatUsers(res.data))
-      .catch(console.error);
+      .then((res) => {
+        console.log("Chat users:", res.data); // <-- nézd meg a konzolban
+        setChatUsers(res.data);
+      })
+      .catch((err) => console.error("loadChatUsers error:", err));
   };
 
   // --- Chat skills ---
@@ -319,9 +322,7 @@ export default function ChatPage() {
           {/* --- PEOPLE SIDEBAR --- */}
           {peopleOpen && (
   <div className="people-sidebar">
-    <button className="close-people" onClick={() => setPeopleOpen(false)}>
-      ✖
-    </button>
+    <button className="close-people" onClick={() => setPeopleOpen(false)}>✖</button>
     <h3>Users in this chat:</h3>
     <ul>
       {chatUsers.length === 0 && <li>No users in this chat.</li>}
