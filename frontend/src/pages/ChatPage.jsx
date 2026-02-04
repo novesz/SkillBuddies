@@ -107,14 +107,19 @@ export default function ChatPage() {
   // --- Chat users ---
   const loadChatUsers = (chatId) => {
     if (!chatId) return;
+  
     axios
-      .get(`http://localhost:3001/chats/users/${chatId}`)
+    .get(`http://localhost:3001/chats/chatUsers/${chatId}`)
       .then((res) => {
-        console.log("Chat users:", res.data); // <-- nézd meg a konzolban
+        console.log("CHAT USERS:", res.data);
         setChatUsers(res.data);
       })
-      .catch((err) => console.error("loadChatUsers error:", err));
+      .catch((err) => {
+        console.error("loadChatUsers error:", err);
+      });
   };
+
+    
 
   // --- Chat skills ---
   const loadChatSkills = (chatId) => {
@@ -322,22 +327,38 @@ export default function ChatPage() {
           {/* --- PEOPLE SIDEBAR --- */}
           {peopleOpen && (
   <div className="people-sidebar">
-    <button className="close-people" onClick={() => setPeopleOpen(false)}>✖</button>
+    <button
+      className="close-people"
+      onClick={() => setPeopleOpen(false)}
+    >
+      ✖
+    </button>
+
     <h3>Users in this chat:</h3>
+
     <ul>
-      {chatUsers.length === 0 && <li>No users in this chat.</li>}
+      {chatUsers.length === 0 && (
+        <li>Nincs felhasználó a chatben</li>
+      )}
+
       {chatUsers.map((user) => (
         <li key={user.UserID} className="person-row">
           <img
-            src={user.Avatar ? `/images/${user.Avatar}` : "/images/default.png"}
+            src={
+              user.Avatar
+                ? `/images/${user.Avatar}`
+                : "/images/default.png"
+            }
             alt={user.Username}
             className="person-avatar"
           />
+
           <span>
-            {user.UserID === currentUserId
+            {Number(user.UserID) === Number(currentUserId)
               ? `${currentUsername} (You)`
               : user.Username}
-            {user.IsChatAdmin ? " (Admin)" : ""}
+
+            {user.IsChatAdmin === 1 && " (Admin)"}
           </span>
         </li>
       ))}
