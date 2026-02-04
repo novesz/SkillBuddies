@@ -29,7 +29,7 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
         });
 
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || "Hiba a profil lekérésekor.");
+        if (!resp.ok) throw new Error(data.error || "Failed to load profile.");
 
         setUser({
           name: data.name || "",
@@ -65,7 +65,7 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
       });
 
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || "Hiba mentés közben.");
+      if (!resp.ok) throw new Error(data.error || "Failed to save.");
 
       setMessage("Profile saved successfully ✅");
       setAvatarUrl(user.avatarUrl);
@@ -141,7 +141,7 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
 
                 try {
                   if (!current || !next) {
-                    throw new Error("Hiányzó adatok (current/new password).");
+                    throw new Error("Current and new password are required.");
                   }
 
                   const resp = await fetch("http://localhost:3001/users/me/change-password", {
@@ -155,12 +155,12 @@ export default function Profile({ isLoggedIn, setIsLoggedIn }) {
 
                   if (!resp.ok) {
                     const serverMessage =
-                      data?.message || data?.error || resp.statusText || "Jelszó frissítési hiba.";
+                      data?.message || data?.error || resp.statusText || "Failed to update password.";
                     throw new Error(serverMessage);
                   }
 
                   setMessage("Password changed ✅");
-                  alert("Jelszó sikeresen frissítve!");
+                  alert("Password changed successfully!");
                 } catch (err) {
                   console.error("Change password error:", err);
                   setError(err.message);

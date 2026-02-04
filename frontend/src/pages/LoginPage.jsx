@@ -23,7 +23,7 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
       })
       .then((resp) => (resp ? resp.json() : null))
       .then((data) => {
-        if (data?.avatarUrl) setAvatarUrl(data.avatarUrl);
+        setAvatarUrl(data?.avatarUrl || "/avatars/BB.png");
         alert("Login successful!");
         navigate("/");
       })

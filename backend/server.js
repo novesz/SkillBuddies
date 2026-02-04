@@ -408,9 +408,33 @@ app.put("/users/me/profile", authMiddleware, (req, res) => {
 
 
 
-//user change password (encrypted with bcrypt, max once per 24 hours if LastPasswordChange column exists)
+// user change password (encrypted with bcrypt, max once per 24 hours if LastPasswordChange column exists)
 
 const PASSWORD_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// GET cooldown status (can the user change password now, and how many hours left if not)
+app.get("/users/me/password-cooldown", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  db.query("SELECT LastPasswordChange FROM users WHERE UserID = ?", [userId], (err, rows) => {
+    if (err) {
+      console.error("Password cooldown query error:", err);
+      return res.status(500).json({ error: "Adatbázis hiba." });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+    }
+    const lastChange = rows[0].LastPasswordChange;
+    if (!lastChange) {
+      return res.json({ canChange: true });
+    }
+    const elapsed = Date.now() - new Date(lastChange).getTime();
+    if (elapsed >= PASSWORD_CHANGE_COOLDOWN_MS) {
+      return res.json({ canChange: true });
+    }
+    const hoursLeft = Math.ceil((PASSWORD_CHANGE_COOLDOWN_MS - elapsed) / (60 * 60 * 1000));
+    return res.json({ canChange: false, hoursLeft });
+  });
+});
 
 app.post("/users/me/change-password", authMiddleware, async (req, res) => {
   const userId = req.userId;
@@ -958,8 +982,11 @@ app.get('/cards', (req, res) => {
 app.post("/groups", (req, res) => {
   const { chatName, chatPic, skillIds, userId } = req.body;
 
-  if (!chatName || !userId || !Array.isArray(skillIds) || skillIds.length === 0) {
-    return res.status(400).json({ error: "Hiányzó adatok (chatName, userId, skillIds)." });
+  if (!chatName || !Array.isArray(skillIds) || skillIds.length === 0) {
+    return res.status(400).json({ error: "Hiányzó adatok (chatName, skillIds)." });
+  }
+  if (!userId || userId === 0) {
+    return res.status(400).json({ error: "Bejelentkezés szükséges a csoport létrehozásához." });
   }
 
   db.beginTransaction((err) => {
@@ -968,60 +995,82 @@ app.post("/groups", (req, res) => {
       return res.status(500).json({ error: "Tranzakció indítási hiba." });
     }
 
-    // 1. chats insert
-    const insertChatSql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
-    db.query(insertChatSql, [chatName, chatPic || null], (err, chatResult) => {
-      if (err) {
-        console.error("Chat insert hiba:", err);
-        return db.rollback(() => {
-          res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
-        });
-      }
-
-      const newChatId = chatResult.insertId;
-
-      // 2. neededskills insert (több sor egyszerre)
-      const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
-      const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
-
-      db.query(insertNeededSql, [neededValues], (err) => {
+    // chatPic a frontendről URL string (pl. /groupavatars/Ant.png); a chats.ChatPic pedig pictures.PicID (int)
+    // chats.PublicID NOT NULL, egyedi 6 karakteres kód
+    const doInsertChat = (picId, retriesLeft = 3) => {
+      const publicId = generateJoinCode(6);
+      const insertChatSql = "INSERT INTO chats (ChatName, ChatPic, PublicID) VALUES (?, ?, ?)";
+      db.query(insertChatSql, [chatName, picId, publicId], (err, chatResult) => {
         if (err) {
-          console.error("neededskills insert hiba:", err);
+          if (err.code === "ER_DUP_ENTRY" && retriesLeft > 0) {
+            return doInsertChat(picId, retriesLeft - 1);
+          }
+          console.error("Chat insert hiba:", err);
           return db.rollback(() => {
-            res.status(500).json({ error: "Hiba a skillek mentésekor." });
+            res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
           });
         }
 
-        // 3. uac – a létrehozó legyen admin
-        const insertUacSql = `
-          INSERT INTO uac (UserID, ChatID, IsChatAdmin)
-          VALUES (?, ?, 1)
-        `;
+        const newChatId = chatResult.insertId;
 
-        db.query(insertUacSql, [userId, newChatId], (err) => {
+        // 2. neededskills insert (több sor egyszerre)
+        const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
+        const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
+
+        db.query(insertNeededSql, [neededValues], (err) => {
           if (err) {
-            console.error("uac insert hiba:", err);
+            console.error("neededskills insert hiba:", err);
             return db.rollback(() => {
-              res.status(500).json({ error: "Hiba a tag mentésekor." });
+              res.status(500).json({ error: "Hiba a skillek mentésekor." });
             });
           }
 
-          db.commit((err) => {
+          // 3. uac – a létrehozó legyen admin
+          const insertUacSql = `
+            INSERT INTO uac (UserID, ChatID, IsChatAdmin)
+            VALUES (?, ?, 1)
+          `;
+
+          db.query(insertUacSql, [userId, newChatId], (err) => {
             if (err) {
-              console.error("Commit hiba:", err);
+              console.error("uac insert hiba:", err);
               return db.rollback(() => {
-                res.status(500).json({ error: "Commit hiba." });
+                res.status(500).json({ error: "Hiba a tag mentésekor." });
               });
             }
 
-            res.status(201).json({
-              message: "Csoport sikeresen létrehozva!",
-              chatId: newChatId,
+            db.commit((err) => {
+              if (err) {
+                console.error("Commit hiba:", err);
+                return db.rollback(() => {
+                  res.status(500).json({ error: "Commit hiba." });
+                });
+              }
+
+              res.status(201).json({
+                message: "Csoport sikeresen létrehozva!",
+                chatId: newChatId,
+              });
             });
           });
         });
       });
-    });
+    };
+
+    if (chatPic && typeof chatPic === "string" && chatPic.trim() !== "") {
+      // Először beszúrjuk a képet a pictures táblába, a kapott PicID-t használjuk
+      db.query("INSERT INTO pictures (URL) VALUES (?)", [chatPic.trim()], (err, picResult) => {
+        if (err) {
+          console.error("Picture insert hiba:", err);
+          return db.rollback(() => {
+            res.status(500).json({ error: "Hiba a csoport kép mentésekor." });
+          });
+        }
+        doInsertChat(picResult.insertId);
+      });
+    } else {
+      doInsertChat(null);
+    }
   });
 });
 
@@ -1048,16 +1097,17 @@ app.get("/groups", (req, res) => {
         .filter(Boolean)
     : [];
 
-  // Base select
+  // Base select (ChatPic = PicID; a megjelenítéshez p.URL-t adjuk vissza ChatPicként)
   let sql = `
     SELECT 
       c.ChatID,
       c.ChatName,
-      c.ChatPic,
+      p.URL AS ChatPic,
       c.CreatedAt,
       GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills,
       COUNT(DISTINCT u.UserID) AS MemberCount
     FROM chats c
+    LEFT JOIN pictures p ON p.PicID = c.ChatPic
     LEFT JOIN neededskills ns ON ns.ChatID = c.ChatID
     LEFT JOIN skills s ON ns.SkillID = s.SkillID
     LEFT JOIN uac u ON u.ChatID = c.ChatID
@@ -1073,16 +1123,17 @@ app.get("/groups", (req, res) => {
 
   // Match ANY selected skill (same behavior as frontend chip filtering)
   if (skills.length > 0) {
+    const skillPlaceholders = skills.map(() => "?").join(", ");
     where.push(`
       EXISTS (
         SELECT 1
         FROM neededskills ns2
         JOIN skills s2 ON s2.SkillID = ns2.SkillID
         WHERE ns2.ChatID = c.ChatID
-          AND s2.Skill IN (?)
+          AND s2.Skill IN (${skillPlaceholders})
       )
     `);
-    params.push(skills);
+    params.push(...skills);
   }
 
   if (where.length > 0) {
@@ -1090,7 +1141,7 @@ app.get("/groups", (req, res) => {
   }
 
   sql += `
-    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
+    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt, p.URL
     ORDER BY c.CreatedAt DESC
   `;
 

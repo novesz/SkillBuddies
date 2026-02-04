@@ -45,6 +45,8 @@
   border-radius: 16px;
   padding: 16px 18px 18px;
   backdrop-filter: blur(12px);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .section-title {
@@ -192,40 +194,108 @@
   opacity: 0.9;
 }
 
-.skills-input-row {
+/* skills: search + row with arrows – like Home (always visible) */
+.skills-search-wrap {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+  width: 100%;
 }
 
-.skills-input-row .text-input {
-  flex: 1;
+.skills-search {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(10, 24, 63, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* skills filter: one row of 5, arrows to see more */
+.skills-search input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+  color: var(--text, #213153);
+}
+
+.skills-search input::placeholder {
+  color: #6b7280;
+}
+
+.skills-search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #667085;
+}
 
 .skills-filter-row {
-  margin-top: 10px;
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .skills-filter-arrow {
   flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(10, 24, 63, 0.25);
+  background: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text, #213153);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.skills-filter-arrow:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.skills-filter-arrow:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .skills-filter-strip {
   display: flex;
   flex-wrap: nowrap;
   gap: 8px;
-  overflow: hidden;
   min-height: 36px;
   align-items: center;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skills-filter-strip li {
+  flex: 0 0 auto;
 }
 
 .skills-filter-strip .skills-suggestion-item {
   flex: 0 0 auto;
   white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .skills-suggestions {
@@ -326,14 +396,136 @@
   margin: 0 0 16px 0;
 }
 
-/* mobil nézet */
+/* reszponzív / mobil nézet */
 
 @media (max-width: 768px) {
+  .profile-page {
+    padding: 20px 12px 40px;
+  }
+
+  .profile-card {
+    padding: 20px 20px 24px;
+    border-radius: 20px;
+  }
+
+  .profile-header h2 {
+    font-size: 20px;
+  }
+
+  .profile-header p {
+    font-size: 14px;
+  }
+
   .profile-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .profile-section {
+    padding: 14px 16px 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .avatar-carousel {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
   }
 
   .avatar-carousel-window {
-    width: 220px;
+    width: 100%;
+    max-width: 260px;
+    min-width: 0;
+  }
+
+  .avatar-circle {
+    flex: 0 0 calc(100% / 3);
+    padding: 4px;
+  }
+
+  .avatar-circle img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .avatar-nav-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    font-size: 22px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .profile-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 16px 10px 32px;
+  }
+
+  .profile-card {
+    padding: 16px 14px 20px;
+    border-radius: 16px;
+  }
+
+  .profile-header h2 {
+    font-size: 18px;
+  }
+
+  .group-avatar-block .field-label {
+    font-size: 12px;
+  }
+
+  .avatar-carousel-window {
+    max-width: 220px;
+  }
+
+  .avatar-circle img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .avatar-nav-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .text-input,
+  .text-area {
+    padding: 10px 12px;
+    font-size: 16px; /* iOS zoom elkerülés */
+  }
+
+  .profile-footer {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .modal-card {
+    margin: 16px;
+    padding: 18px 20px;
   }
 }

@@ -8,6 +8,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
   const [selectedChips, setSelectedChips] = useState([]); // kiválasztott skillek
   const [searchText, setSearchText] = useState("");        // csoportnév kereső
   const [error, setError] = useState("");
+  const [chipOffset, setChipOffset] = useState(0);       // chip carousel offset
 
   // infinite scroll state
   const PAGE_SIZE = 18;
@@ -19,19 +20,26 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
 
   const sentinelRef = useRef(null);
   const requestIdRef = useRef(0);
+  const isFetchingRef = useRef(false);
+  const hasMoreRef = useRef(hasMore);
+  const loadingRef = useRef(loading);
+  const loadingMoreRef = useRef(loadingMore);
+  hasMoreRef.current = hasMore;
+  loadingRef.current = loading;
+  loadingMoreRef.current = loadingMore;
 
   // 🔹 Skillek (chipek) betöltése az adatbázisból
   useEffect(() => {
     const loadSkills = async () => {
       try {
         const resp = await fetch("http://localhost:3001/skills");
-        if (!resp.ok) throw new Error("Nem sikerült a skillek lekérése.");
+        if (!resp.ok) throw new Error("Failed to load skills.");
         const data = await resp.json();
         // backend: SELECT SkillID, Skill FROM skills
         setChips(data.map((s) => s.Skill)); // csak a nevek kellenek chipnek
       } catch (err) {
         console.error("Hiba a skillek lekérésekor:", err);
-        setError("Nem sikerült betölteni a skilleket.");
+        setError("Failed to load skills.");
       }
     };
     
@@ -46,7 +54,17 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     return selectedChips.join(",");
   }, [selectedChips]);
 
+  const CHIPS_VISIBLE = 4; /* kevesebb egyszerre → nem csúszik a nyil alá, lapozás nyilakkal */
+  const maxChipOffset = Math.max(0, Math.ceil(chips.length / CHIPS_VISIBLE) - 1);
+  const visibleChips = useMemo(
+    () => chips.slice(chipOffset * CHIPS_VISIBLE, chipOffset * CHIPS_VISIBLE + CHIPS_VISIBLE),
+    [chips, chipOffset]
+  );
+
   const loadGroupsPage = async ({ reset } = { reset: false }) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     const myRequestId = ++requestIdRef.current;
 
     if (reset) {
@@ -71,7 +89,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
       if (skillsQuery) qs.set("skills", skillsQuery);
 
       const resp = await fetch(`http://localhost:3001/groups?${qs.toString()}`);
-      if (!resp.ok) throw new Error("Nem sikerült a csoportok lekérése.");
+      if (!resp.ok) throw new Error("Failed to load groups.");
       const payload = await resp.json();
 
       // Ignore out-of-order responses
@@ -89,24 +107,29 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
       if (reset) {
         setCards(normalized);
       } else {
-        setCards((prev) => [...prev, ...normalized]);
+        // Duplikátumok kiszűrése: csak olyan kártyák kerülnek hozzá, amik még nincsenek a listában
+        setCards((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const newOnes = normalized.filter((c) => !existingIds.has(c.id));
+          return newOnes.length === 0 ? prev : [...prev, ...newOnes];
+        });
       }
 
       if (payload && typeof payload === "object" && !Array.isArray(payload)) {
         setNextOffset(payload.nextOffset ?? (offset + normalized.length));
         setHasMore(Boolean(payload.hasMore));
       } else {
-        // Fallback if server returned array
         setNextOffset(offset + normalized.length);
         setHasMore(normalized.length === PAGE_SIZE);
       }
     } catch (err) {
       console.error("Hiba a csoportok lekérésekor:", err);
-      setError("Nem sikerült betölteni a csoportokat.");
+      setError("Failed to load groups.");
       setHasMore(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -116,7 +139,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, skillsQuery]);
 
-  // Infinite scroll observer
+  // Infinite scroll: csak akkor töltünk többet, ha a sentinel látszik és nincs már betöltés
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -125,18 +148,17 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
       (entries) => {
         const first = entries[0];
         if (!first?.isIntersecting) return;
-        if (loading || loadingMore) return;
-        if (!hasMore) return;
+        if (isFetchingRef.current || loadingRef.current || loadingMoreRef.current) return;
+        if (!hasMoreRef.current) return;
 
         loadGroupsPage({ reset: false });
       },
-      { root: null, rootMargin: "400px 0px", threshold: 0 }
+      { root: null, rootMargin: "320px 0px", threshold: 0 }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loading, loadingMore, nextOffset, debouncedSearch, skillsQuery]);
+  }, [hasMore, loading, loadingMore, debouncedSearch, skillsQuery]);
 
   const handleChipClick = (chip) => {
     setSelectedChips((prev) =>
@@ -155,7 +177,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
             <input
               type="text"
               placeholder="Search groups by name"
-              aria-label="Csoport név szerinti keresés"
+              aria-label="Search groups by name"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
@@ -254,8 +276,6 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
 function Card({ title, skills, users, pic }) {
   return (
     <article className="sb-card">
-      <div className="sb-card-badge" />
-
       <div className="sb-card-header">
         <div className="sb-card-avatar">
           {pic ? (
