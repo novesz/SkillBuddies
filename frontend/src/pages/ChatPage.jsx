@@ -107,14 +107,19 @@ export default function ChatPage() {
   // --- Chat users ---
   const loadChatUsers = (chatId) => {
     if (!chatId) return;
+  
     axios
-      .get(`http://localhost:3001/chats/users/${chatId}`)
+    .get(`http://localhost:3001/chats/chatUsers/${chatId}`)
       .then((res) => {
-        console.log("Chat users:", res.data); // <-- nézd meg a konzolban
+        console.log("CHAT USERS:", res.data);
         setChatUsers(res.data);
       })
-      .catch((err) => console.error("loadChatUsers error:", err));
+      .catch((err) => {
+        console.error("loadChatUsers error:", err);
+      });
   };
+
+    
 
   // --- Chat skills ---
   const loadChatSkills = (chatId) => {
@@ -289,7 +294,7 @@ export default function ChatPage() {
           {/* --- RIGHT PANEL --- */}
           <div className="right-panel">
             <button className="profile-btn" onClick={() => setMenuOpen((prev) => !prev)}>
-              ⚙️
+              
             </button>
 
             {menuOpen && (
@@ -320,12 +325,17 @@ export default function ChatPage() {
           </div>
 
           {/* --- PEOPLE SIDEBAR --- */}
-          {peopleOpen && (
-  <div className="people-sidebar">
-    <button className="close-people" onClick={() => setPeopleOpen(false)}>✖</button>
+{peopleOpen && (
+  <div className={`people-sidebar ${peopleOpen ? "open" : ""}`}>
+    <button
+      className="close-people"
+      onClick={() => setPeopleOpen(false)}
+    >
+      ✖
+    </button>
     <h3>Users in this chat:</h3>
     <ul>
-      {chatUsers.length === 0 && <li>No users in this chat.</li>}
+      {chatUsers.length === 0 && <li>Nincs felhasználó a chatben</li>}
       {chatUsers.map((user) => (
         <li key={user.UserID} className="person-row">
           <img
@@ -334,10 +344,10 @@ export default function ChatPage() {
             className="person-avatar"
           />
           <span>
-            {user.UserID === currentUserId
+            {Number(user.UserID) === Number(currentUserId)
               ? `${currentUsername} (You)`
               : user.Username}
-            {user.IsChatAdmin ? " (Admin)" : ""}
+            {user.IsChatAdmin === 1 && " (Admin)"}
           </span>
         </li>
       ))}
@@ -345,22 +355,22 @@ export default function ChatPage() {
   </div>
 )}
 
-          {/* --- SKILLS SIDEBAR --- */}
-          {skillsOpen && (
-            <div className="skills-sidebar">
-              <button className="close-skills" onClick={() => setSkillsOpen(false)}>
-                ✖
-              </button>
-              <h3>Skills in this chat:</h3>
-              <ul>
-                {chatSkills.map((skill) => (
-                  <li key={skill.SkillID} className="skill-row">
-                    {skill.Skill || skill.SkillName}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+{/* --- SKILLS SIDEBAR --- */}
+{skillsOpen && (
+  <div className={`skills-sidebar ${skillsOpen ? "open" : ""}`}>
+    <button className="close-skills" onClick={() => setSkillsOpen(false)}>
+      ✖
+    </button>
+    <h3>Skills in this chat:</h3>
+    <ul>
+      {chatSkills.map((skill) => (
+        <li key={skill.SkillID} className="skill-row">
+          {skill.Skill || skill.SkillName}
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
         </div>
       </div>
     </div>

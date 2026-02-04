@@ -101,11 +101,12 @@
   position: relative;
   padding: 12px 18px;
   border-radius: 20px;
-  max-width: 70%;
+  max-width: 75%;
   word-wrap: break-word;
   font-size: 14px;
   margin-bottom: 10px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .message.incoming {
@@ -167,12 +168,14 @@
 }
 
 .message-actions button:hover {
-  background: #eee;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 /* INPUT ROW */
 .input-row {
   display: flex;
+  align-items: center;
   gap: 10px;
   padding: 10px;
   border-top: 1px solid #ddd;
@@ -265,8 +268,9 @@
   background: linear-gradient(90deg, #f0f0f0, #e0e0e0);
 }
 
-/* PEOPLE SIDEBAR */
-.people-sidebar {
+/* --- PEOPLE & SKILLS SIDEBAR --- */
+.people-sidebar,
+.skills-sidebar {
   position: absolute;
   right: 60px;
   top: 0;
@@ -280,23 +284,34 @@
   box-shadow: -4px 0 12px rgba(0,0,0,0.3);
   z-index: 5000;
   overflow-y: auto;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateX(100%);
+  opacity: 0;
 }
 
-.people-sidebar h3 {
+.people-sidebar.open,
+.skills-sidebar.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.people-sidebar h3,
+.skills-sidebar h3 {
   margin: 10px 0;
   font-size: 16px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   padding-bottom: 5px;
 }
 
-.people-sidebar ul {
+.people-sidebar ul,
+.skills-sidebar ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.people-sidebar li {
+.people-sidebar li,
+.skills-sidebar li {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -306,7 +321,8 @@
   transition: background 0.2s;
 }
 
-.people-sidebar li:hover {
+.people-sidebar li:hover,
+.skills-sidebar li:hover {
   background: rgba(255,255,255,0.1);
 }
 
@@ -317,57 +333,7 @@
   object-fit: cover;
 }
 
-.close-btn {
-  background: #7289da;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 5px 8px;
-  cursor: pointer;
-  margin-bottom: 10px;
-  align-self: flex-end;
-}
-
-.close-btn:hover {
-  background: #5b6eae;
-}
-
-/* SKILLS SIDEBAR */
-.skills-sidebar {
-  position: absolute;
-  right: 60px;
-  top: 0;
-  width: 220px;
-  height: 100%;
-  background: #3b3f46;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  box-shadow: -4px 0 12px rgba(0,0,0,0.3);
-  z-index: 5000;
-  overflow-y: auto;
-  transition: transform 0.3s ease;
-}
-
-.skills-sidebar h3 {
-  margin: 10px 0;
-  font-size: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  padding-bottom: 5px;
-}
-
-.skill-row {
-  padding: 6px 4px;
-  border-radius: 6px;
-  cursor: default;
-  transition: background 0.2s;
-}
-
-.skill-row:hover {
-  background: rgba(255,255,255,0.1);
-}
-
+.close-people,
 .close-skills {
   background: #7289da;
   color: white;
@@ -379,9 +345,11 @@
   align-self: flex-end;
 }
 
+.close-people:hover,
 .close-skills:hover {
   background: #5b6eae;
 }
+
 /* FINOM SCROLLBAR */
 .chat-box::-webkit-scrollbar,
 .people-sidebar::-webkit-scrollbar,
@@ -403,4 +371,22 @@
 .skills-sidebar::-webkit-scrollbar-track,
 .user-list::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* RESZPONZÍV */
+@media (max-width: 768px) {
+  .user-list {
+    width: 60px;
+  }
+  .people-sidebar,
+  .skills-sidebar {
+    width: 180px;
+  }
+  .chat-container {
+    flex-direction: column;
+  }
+  .chat-box {
+    border-radius: 0;
+    padding: 15px;
+  }
 }
