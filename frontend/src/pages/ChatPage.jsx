@@ -107,9 +107,9 @@ export default function ChatPage() {
   // --- Chat users ---
   const loadChatUsers = (chatId) => {
     if (!chatId) return;
-  
+
     axios
-    .get(`http://localhost:3001/chats/chatUsers/${chatId}`)
+      .get(`http://localhost:3001/chats/chatUsers/${chatId}`)
       .then((res) => {
         console.log("CHAT USERS:", res.data);
         setChatUsers(res.data);
@@ -118,8 +118,6 @@ export default function ChatPage() {
         console.error("loadChatUsers error:", err);
       });
   };
-
-    
 
   // --- Chat skills ---
   const loadChatSkills = (chatId) => {
@@ -169,18 +167,7 @@ export default function ChatPage() {
           },
           { withCredentials: true }
         )
-        .then((res) => {
-          const newMsg = {
-            MsgID: res.data.MsgID,
-            text: messageInput,
-            type: "outgoing",
-            username: currentUsername,
-            UserID: currentUserId,
-          };
-          setMessagesMap((prev) => ({
-            ...prev,
-            [selectedChat]: [...(prev[selectedChat] || []), newMsg],
-          }));
+        .then(() => {
           setMessageInput("");
         })
         .catch(console.error);
@@ -226,6 +213,37 @@ export default function ChatPage() {
   const handleEdit = (msg) => {
     setEditingMessage(msg);
     setMessageInput(msg.text);
+  };
+
+  // --- Leave chat ---
+  const handleLeaveChat = async () => {
+    if (!selectedChat) return;
+
+    if (!window.confirm("Biztosan ki szeretnél lépni ebből a csoportból?")) return;
+
+    try {
+      await axios.delete(
+        `http://localhost:3001/chats/leave/${selectedChat}`,
+        { withCredentials: true }
+      );
+
+      // chat eltávolítása a listából
+      setChats((prev) => prev.filter((c) => c.ChatID !== selectedChat));
+
+      // kiválasztott chat nullázása
+      setMessagesMap((prev) => {
+        const copy = { ...prev };
+        delete copy[selectedChat];
+        return copy;
+      });
+      setSelectedChat(null);
+      setMenuOpen(false);
+      setPeopleOpen(false);
+      setSkillsOpen(false);
+    } catch (err) {
+      console.error("Leave chat error:", err);
+      alert("Nem sikerült kilépni a csoportból");
+    }
   };
 
   // --- JSX ---
@@ -319,58 +337,58 @@ export default function ChatPage() {
                   Skills
                 </button>
 
-                <button onClick={() => alert("Leave chat functionality here")}>Leave</button>
+                <button onClick={handleLeaveChat}>Leave</button>
               </div>
             )}
           </div>
 
           {/* --- PEOPLE SIDEBAR --- */}
-{peopleOpen && (
-  <div className={`people-sidebar ${peopleOpen ? "open" : ""}`}>
-    <button
-      className="close-people"
-      onClick={() => setPeopleOpen(false)}
-    >
-      ✖
-    </button>
-    <h3>Users in this chat:</h3>
-    <ul>
-      {chatUsers.length === 0 && <li>Nincs felhasználó a chatben</li>}
-      {chatUsers.map((user) => (
-        <li key={user.UserID} className="person-row">
-          <img
-            src={user.Avatar ? `/images/${user.Avatar}` : "/images/default.png"}
-            alt={user.Username}
-            className="person-avatar"
-          />
-          <span>
-            {Number(user.UserID) === Number(currentUserId)
-              ? `${currentUsername} (You)`
-              : user.Username}
-            {user.IsChatAdmin === 1 && " (Admin)"}
-          </span>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+          {peopleOpen && (
+            <div className={`people-sidebar ${peopleOpen ? "open" : ""}`}>
+              <button
+                className="close-people"
+                onClick={() => setPeopleOpen(false)}
+              >
+                ✖
+              </button>
+              <h3>Users in this chat:</h3>
+              <ul>
+                {chatUsers.length === 0 && <li>Nincs felhasználó a chatben</li>}
+                {chatUsers.map((user) => (
+                  <li key={user.UserID} className="person-row">
+                    <img
+                      src={user.Avatar ? `/images/${user.Avatar}` : "/images/default.png"}
+                      alt={user.Username}
+                      className="person-avatar"
+                    />
+                    <span>
+                      {Number(user.UserID) === Number(currentUserId)
+                        ? `${currentUsername} (You)`
+                        : user.Username}
+                      {user.IsChatAdmin === 1 && " (Admin)"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-{/* --- SKILLS SIDEBAR --- */}
-{skillsOpen && (
-  <div className={`skills-sidebar ${skillsOpen ? "open" : ""}`}>
-    <button className="close-skills" onClick={() => setSkillsOpen(false)}>
-      ✖
-    </button>
-    <h3>Skills in this chat:</h3>
-    <ul>
-      {chatSkills.map((skill) => (
-        <li key={skill.SkillID} className="skill-row">
-          {skill.Skill || skill.SkillName}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+          {/* --- SKILLS SIDEBAR --- */}
+          {skillsOpen && (
+            <div className={`skills-sidebar ${skillsOpen ? "open" : ""}`}>
+              <button className="close-skills" onClick={() => setSkillsOpen(false)}>
+                ✖
+              </button>
+              <h3>Skills in this chat:</h3>
+              <ul>
+                {chatSkills.map((skill) => (
+                  <li key={skill.SkillID} className="skill-row">
+                    {skill.Skill || skill.SkillName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

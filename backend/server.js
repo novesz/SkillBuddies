@@ -810,15 +810,24 @@ app.post('/chats/join', (req, res) => {
     });
 });
 //leave chat
-app.delete('/chats/leave/:id', (req, res) => {
-    const sql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
-    db.query(sql, [req.params.UserID, req.body.ChatID], (err, results) => {
-        if (err) {
-            console.error('Error leaving chat:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json({ message: 'Left chat successfully' });
-    });
+app.delete("/chats/leave/:chatId", authMiddleware, (req, res) => {
+  const userId = req.userId;           
+  const chatId = req.params.chatId;    
+
+  const sql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
+
+  db.query(sql, [userId, chatId], (err, result) => {
+    if (err) {
+      console.error("Error leaving chat:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not in chat" });
+    }
+
+    res.json({ message: "Left chat successfully" });
+  });
 });
 //make chat admin
 app.put('/chats/makeAdmin', (req, res) => {
