@@ -14,6 +14,7 @@ import SupportPage from "./pages/SupportPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import GroupEditor from "./pages/GroupEditor";
 import ChatPage from "./pages/ChatPage";
+import JoinByCodePage from "./pages/JoinByCodePage";
 import GroupFinderModal from "./pages/GroupFinder";
 
 import PrivateRoute from "./components/PrivateRoute";
@@ -118,7 +119,19 @@ function App() {
         />
         <Route
           path="/chat"
-          element={<ChatPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
+          element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <ChatPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/chat/join/:code"
+          element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <JoinByCodePage />
+            </PrivateRoute>
+          }
         />
       </Routes>
       {groupFinderOpen && <GroupFinderModal />}

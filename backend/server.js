@@ -762,9 +762,15 @@ app.get('/chats/all', (req, res) => {
         res.json(results);
     });
 });
-//get chats userenkent
+//get chats userenkent (PublicID, MemberCount)
 app.get('/chats/users/:userId', (req, res) => {
-    const sql = "SELECT chats.ChatID, chats.ChatName, chats.ChatPic FROM chats JOIN uac ON uac.ChatID = chats.ChatID WHERE uac.UserID = ?";
+    const sql = `
+      SELECT c.ChatID, c.ChatName, c.ChatPic, c.PublicID,
+             (SELECT COUNT(*) FROM uac WHERE uac.ChatID = c.ChatID) AS MemberCount
+      FROM chats c
+      JOIN uac ON uac.ChatID = c.ChatID
+      WHERE uac.UserID = ?
+    `;
     db.query(sql, [req.params.userId], (err, results) => {
         if (err) {
             console.error('Error fetching chats:', err);
@@ -773,6 +779,49 @@ app.get('/chats/users/:userId', (req, res) => {
         res.json(results);
     });
 });
+
+// get chat by public join code (for GroupFinder)
+app.get('/chats/byCode/:publicId', (req, res) => {
+    const publicId = (req.params.publicId || '').trim().toUpperCase();
+    if (!publicId) return res.status(400).json({ error: 'Code is required' });
+    const sql = "SELECT ChatID, ChatName, ChatPic, PublicID FROM chats WHERE PublicID = ?";
+    db.query(sql, [publicId], (err, results) => {
+        if (err) {
+            console.error('Error fetching chat by code:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (results.length === 0) return res.status(404).json({ error: 'No group found with this code' });
+        res.json(results[0]);
+    });
+});
+
+// join chat by public code (auth required)
+app.post('/chats/joinByCode', authMiddleware, (req, res) => {
+    const userId = req.userId;
+    const publicId = (req.body.publicId || req.body.code || '').trim().toUpperCase();
+    if (!publicId) return res.status(400).json({ error: 'Code is required' });
+
+    const findSql = "SELECT ChatID FROM chats WHERE PublicID = ?";
+    db.query(findSql, [publicId], (err, rows) => {
+        if (err) {
+            console.error('Error finding chat by code:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (rows.length === 0) return res.status(404).json({ error: 'No group found with this code' });
+
+        const chatId = rows[0].ChatID;
+        const insertSql = "INSERT INTO uac (UserID, ChatID) VALUES (?, ?)";
+        db.query(insertSql, [userId, chatId], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'You are already in this group' });
+                console.error('Error joining chat:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            res.status(201).json({ message: 'Joined successfully', ChatID: chatId });
+        });
+    });
+});
+
 //chat by ID
 app.get('/chats/:chatId', (req, res) => {
     const sql = "SELECT * FROM chats WHERE ChatID = ?";
@@ -841,12 +890,13 @@ app.put('/chats/makeAdmin', (req, res) => {
         res.status(201).json({ message: 'User made chat admin successfully' });
     });
 });
-//users by chat 
+//users by chat (avatar URL for profile module)
 app.get('/chats/chatUsers/:chatId', (req, res) => {
   const sql = `
-    SELECT u.UserID, u.Username, uac.IsChatAdmin
+    SELECT u.UserID, u.Username, uac.IsChatAdmin, p.URL AS Avatar
     FROM uac
     JOIN users u ON u.UserID = uac.UserID
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
     WHERE uac.ChatID = ?
   `;
 
@@ -857,6 +907,103 @@ app.get('/chats/chatUsers/:chatId', (req, res) => {
     }
 
     res.json(results);
+  });
+});
+
+// member skills in a chat (for Skills sidebar - needed + members' skills)
+app.get('/chats/:chatId/skillsWithMembers', (req, res) => {
+  const chatId = req.params.chatId;
+  const neededSql = `
+    SELECT s.SkillID, s.Skill, 'needed' AS source
+    FROM neededskills ns
+    JOIN skills s ON s.SkillID = ns.SkillID
+    WHERE ns.ChatID = ?
+  `;
+  const memberSql = `
+    SELECT u.UserID, u.Username, s.SkillID, s.Skill
+    FROM uac
+    JOIN users u ON u.UserID = uac.UserID
+    LEFT JOIN uas ON uas.UserID = u.UserID
+    LEFT JOIN skills s ON s.SkillID = uas.SkillID
+    WHERE uac.ChatID = ? AND s.SkillID IS NOT NULL
+  `;
+  db.query(neededSql, [chatId], (err, needed) => {
+    if (err) return res.status(500).json({ error: 'Internal server error' });
+    db.query(memberSql, [chatId], (err2, members) => {
+      if (err2) return res.status(500).json({ error: 'Internal server error' });
+      const memberSkillsMap = {};
+      members.forEach((row) => {
+        if (!memberSkillsMap[row.UserID]) memberSkillsMap[row.UserID] = { Username: row.Username, Skills: [] };
+        if (row.Skill && !memberSkillsMap[row.UserID].Skills.includes(row.Skill))
+          memberSkillsMap[row.UserID].Skills.push(row.Skill);
+      });
+      res.json({
+        needed: needed.map((r) => ({ SkillID: r.SkillID, Skill: r.Skill })),
+        memberSkills: Object.entries(memberSkillsMap).map(([uid, v]) => ({ UserID: +uid, Username: v.Username, Skills: v.Skills })),
+      });
+    });
+  });
+});
+
+// find or create private chat (1-1) between current user and otherUserId
+app.post('/chats/private', authMiddleware, (req, res) => {
+  const myId = req.userId;
+  const otherId = parseInt(req.body.otherUserId || req.body.otherUserID, 10);
+  if (!otherId || otherId === myId) return res.status(400).json({ error: 'Invalid other user' });
+
+  const getOtherUsername = (cb) => {
+    db.query('SELECT Username FROM users WHERE UserID = ?', [otherId], (e, u) => {
+      if (e || !u.length) return cb(null);
+      return cb(u[0].Username);
+    });
+  };
+
+  const findExisting = `
+    SELECT c.ChatID FROM chats c
+    INNER JOIN uac u1 ON u1.ChatID = c.ChatID AND u1.UserID = ?
+    INNER JOIN uac u2 ON u2.ChatID = c.ChatID AND u2.UserID = ?
+    WHERE (SELECT COUNT(*) FROM uac WHERE ChatID = c.ChatID) = 2
+    LIMIT 1
+  `;
+  db.query(findExisting, [myId, otherId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Internal server error' });
+    if (rows.length > 0) {
+      getOtherUsername((otherUsername) =>
+        res.json({ ChatID: rows[0].ChatID, created: false, otherUsername: otherUsername || 'Private' })
+      );
+      return;
+    }
+
+    const genCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    };
+
+    const tryInsertChat = (retriesLeft) => {
+      const publicId = genCode();
+      // chats table: PublicID, ChatName, ChatPic (PublicID first in schema)
+      db.query('INSERT INTO chats (PublicID, ChatName, ChatPic) VALUES (?, ?, NULL)', [publicId, 'Private'], (err2, ins) => {
+        if (err2) {
+          const isDup = err2.code === 'ER_DUP_ENTRY';
+          if (isDup && retriesLeft > 0) return tryInsertChat(retriesLeft - 1);
+          console.error('Private chat INSERT error:', err2.code, err2.message);
+          return res.status(500).json({ error: isDup ? 'Could not create chat (try again)' : 'Could not create chat' });
+        }
+        const chatId = ins.insertId;
+        db.query('INSERT INTO uac (UserID, ChatID) VALUES (?, ?), (?, ?)', [myId, chatId, otherId, chatId], (err3) => {
+          if (err3) {
+            console.error('Private chat uac INSERT error:', err3.code, err3.message);
+            return res.status(500).json({ error: 'Could not add members' });
+          }
+          getOtherUsername((otherUsername) =>
+            res.status(201).json({ ChatID: chatId, created: true, otherUsername: otherUsername || 'Private' })
+          );
+        });
+      });
+    };
+    tryInsertChat(5);
   });
 });
 //edit chat info
@@ -898,10 +1045,11 @@ app.post('/messages/create', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+    const msgId = results.insertId;
     const message = {
       type: "NEW_MESSAGE",
       msg: {
-        MsgID: results.insertId,
+        MsgID: msgId,
         ChatID: req.body.ChatID,
         UserID: req.body.UserID,
         Content: req.body.Content,
@@ -911,7 +1059,7 @@ app.post('/messages/create', (req, res) => {
 
     broadcastToChat(req.body.ChatID, message);
 
-    res.status(201).json({ message: 'Message created successfully' });
+    res.status(201).json({ message: 'Message created successfully', MsgID: msgId });
   });
 });
 
