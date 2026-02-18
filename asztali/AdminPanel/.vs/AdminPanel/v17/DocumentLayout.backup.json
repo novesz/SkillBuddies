@@ -1,42 +1,46 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\",
+  "WorkspaceRootPath": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\models\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\models\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\models\\chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\models\\chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\loginwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\loginwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\models\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\models\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\loginwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\models\\chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\models\\chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\loginwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\loginwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\users\\szahub608\\desktop\\adminpanel\\adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|c:\\en\\programming\\.work\\sb\\skillbuddies\\asztali\\adminpanel\\adminpanel\\loginwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{54E40B4D-4E09-45C6-96E5-ED48587D84BE}|AdminPanel\\AdminPanel.csproj|solutionrelative:adminpanel\\loginwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -46,52 +50,58 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Message.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\Message.cs",
-              "RelativeDocumentMoniker": "AdminPanel\\Models\\Message.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\Message.cs",
-              "RelativeToolTip": "AdminPanel\\Models\\Message.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAFAAAAAAAAAA==",
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "AdminPanel\\AssemblyInfo.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\AssemblyInfo.cs",
+              "RelativeToolTip": "AdminPanel\\AssemblyInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-10T12:29:49.772Z",
+              "WhenOpened": "2026-02-12T10:10:30.347Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "AdminPanel\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\MainWindow.xaml.cs",
-              "RelativeToolTip": "AdminPanel\\MainWindow.xaml.cs",
-              "ViewState": "AgIAACIAAAAAAAAAAAAkwC4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-10T08:59:39.263Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "User.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\User.cs",
-              "RelativeDocumentMoniker": "AdminPanel\\Models\\User.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\User.cs",
-              "RelativeToolTip": "AdminPanel\\Models\\User.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-10T09:06:30.166Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "AdminPanel\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\MainWindow.xaml.cs",
+              "RelativeToolTip": "AdminPanel\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-10T08:59:39.263Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\User.cs",
+              "RelativeDocumentMoniker": "AdminPanel\\Models\\User.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\User.cs",
+              "RelativeToolTip": "AdminPanel\\Models\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-10T09:06:30.166Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "ApiService.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\ApiService.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\ApiService.cs",
               "RelativeDocumentMoniker": "AdminPanel\\ApiService.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\ApiService.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\ApiService.cs",
               "RelativeToolTip": "AdminPanel\\ApiService.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAcwCAAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -100,56 +110,73 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Chat.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\Chat.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\Chat.cs",
               "RelativeDocumentMoniker": "AdminPanel\\Models\\Chat.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\Models\\Chat.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\Chat.cs",
               "RelativeToolTip": "AdminPanel\\Models\\Chat.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-10T09:06:39.29Z"
+              "WhenOpened": "2026-02-10T09:06:39.29Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 7,
               "Title": "LoginWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\LoginWindow.xaml",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\LoginWindow.xaml",
               "RelativeDocumentMoniker": "AdminPanel\\LoginWindow.xaml",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\LoginWindow.xaml",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\LoginWindow.xaml",
               "RelativeToolTip": "AdminPanel\\LoginWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-10T09:05:51.338Z"
+              "WhenOpened": "2026-02-10T09:05:51.338Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 2,
               "Title": "App.xaml",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\App.xaml",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\App.xaml",
               "RelativeDocumentMoniker": "AdminPanel\\App.xaml",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\App.xaml",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\App.xaml",
               "RelativeToolTip": "AdminPanel\\App.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-10T09:26:14.931Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\MainWindow.xaml",
-              "RelativeDocumentMoniker": "AdminPanel\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\MainWindow.xaml",
-              "RelativeToolTip": "AdminPanel\\MainWindow.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-10T08:59:41.354Z"
+              "WhenOpened": "2026-02-10T09:26:14.931Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "AdminPanel\\MainWindow.xaml",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\MainWindow.xaml",
+              "RelativeToolTip": "AdminPanel\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-02-10T08:59:41.354Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Message.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\Message.cs",
+              "RelativeDocumentMoniker": "AdminPanel\\Models\\Message.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\Models\\Message.cs",
+              "RelativeToolTip": "AdminPanel\\Models\\Message.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-10T12:29:49.772Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "LoginWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\LoginWindow.xaml.cs",
+              "DocumentMoniker": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\LoginWindow.xaml.cs",
               "RelativeDocumentMoniker": "AdminPanel\\LoginWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\szahub608\\Desktop\\AdminPanel\\AdminPanel\\LoginWindow.xaml.cs",
+              "ToolTip": "C:\\En\\Programming\\.Work\\SB\\SkillBuddies\\asztali\\AdminPanel\\AdminPanel\\LoginWindow.xaml.cs",
               "RelativeToolTip": "AdminPanel\\LoginWindow.xaml.cs",
               "ViewState": "AgIAAAoAAAAAAAAAAAAYwCYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",

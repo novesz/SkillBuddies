@@ -10,7 +10,6 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-box">
         <ul>
-          <li><Link to="/">Home</Link></li>
           <li>
             <button type="button" className="navbar-btn-link" onClick={openGroupFinder}>
               Join by ID
