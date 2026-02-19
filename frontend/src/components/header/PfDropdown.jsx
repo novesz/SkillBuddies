@@ -82,6 +82,13 @@ export default function PfDropdown({ avatarUrl, isLoggedIn, setIsLoggedIn }) {
           {isLoggedIn ? (
             <>
               <Link
+                to="/usersettings"
+                className="link-item"
+                onClick={() => setOpen(false)}
+              >
+                <p>User settings</p>
+              </Link>
+              <Link
                 to="/profile"
                 className="link-item"
                 onClick={() => setOpen(false)}

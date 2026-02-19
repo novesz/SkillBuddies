@@ -544,8 +544,29 @@
   transition: background 0.2s;
 }
 
+.profile-module-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .profile-module-message-btn:hover:not(:disabled) {
   background: #5b6eae;
+}
+
+.profile-module-view-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 8px;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.profile-module-view-btn:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .profile-module-message-btn:disabled {

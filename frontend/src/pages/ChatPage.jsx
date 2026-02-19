@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/ChatPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
 
 export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId = 0 }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState(propUserId && Number(propUserId) ? Number(propUserId) : null);
   const [currentUsername, setCurrentUsername] = useState("");
   const [chats, setChats] = useState([]);
@@ -624,14 +625,27 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                 className="profile-module-avatar"
               />
               <h4>{selectedUserProfile.Username}</h4>
-              <button
-                type="button"
-                className="profile-module-message-btn"
-                disabled={privateChatLoading}
-                onClick={(e) => handleOpenPrivateChat(e, selectedUserProfile.UserID, selectedUserProfile.Username)}
-              >
-                {privateChatLoading ? "Opening…" : "Message"}
-              </button>
+              <div className="profile-module-actions">
+                <button
+                  type="button"
+                  className="profile-module-message-btn"
+                  disabled={privateChatLoading}
+                  onClick={(e) => handleOpenPrivateChat(e, selectedUserProfile.UserID, selectedUserProfile.Username)}
+                >
+                  {privateChatLoading ? "Opening…" : "Message"}
+                </button>
+                <button
+                  type="button"
+                  className="profile-module-view-btn"
+                  onClick={() => {
+                    const uid = selectedUserProfile.UserID;
+                    setSelectedUserProfile(null);
+                    navigate(`/profile/${uid}`);
+                  }}
+                >
+                  View profile
+                </button>
+              </div>
             </div>
           )}
 

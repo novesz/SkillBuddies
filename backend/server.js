@@ -571,6 +571,55 @@ app.put('/users/change/:id', (req, res) => {
       res.json({ message: 'User updated successfully' });
     });
   });
+// Public profile (username, avatar, skills, reviews) – no auth
+app.get("/users/:id/public-profile", (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (!userId) return res.status(400).json({ error: "Invalid user ID" });
+
+  const sqlUser = `
+    SELECT u.UserID, u.Username, p.URL AS avatarUrl
+    FROM users u
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
+    WHERE u.UserID = ?
+  `;
+  const sqlSkills = `
+    SELECT s.Skill FROM skills s
+    JOIN uas ON uas.SkillID = s.SkillID
+    WHERE uas.UserID = ?
+    ORDER BY s.Skill
+  `;
+  const sqlReviews = `
+    SELECT r.Rating, r.Content, r.Reviewer
+    FROM reviews r
+    WHERE r.Reviewee = ?
+  `;
+
+  db.query(sqlUser, [userId], (err, userRows) => {
+    if (err) return res.status(500).json({ error: "Internal server error" });
+    if (!userRows.length) return res.status(404).json({ error: "User not found" });
+
+    const user = userRows[0];
+    db.query(sqlSkills, [userId], (err, skillRows) => {
+      if (err) return res.status(500).json({ error: "Internal server error" });
+      db.query(sqlReviews, [userId], (err, reviewRows) => {
+        if (err) return res.status(500).json({ error: "Internal server error" });
+        const reviews = reviewRows || [];
+        const avgRating = reviews.length
+          ? reviews.reduce((s, r) => s + (r.Rating || 0), 0) / reviews.length
+          : 0;
+        res.json({
+          userId: user.UserID,
+          username: user.Username,
+          avatarUrl: user.avatarUrl ? (user.avatarUrl.startsWith("/") ? user.avatarUrl : "/" + user.avatarUrl) : "/images/default.png",
+          skills: (skillRows || []).map((r) => r.Skill),
+          reviews,
+          avgRating: Math.round(avgRating * 10) / 10,
+        });
+      });
+    });
+  });
+});
+
 //users end
 //reviews
 app.get('/reviews/:id', (req, res) => {
@@ -583,29 +632,56 @@ app.get('/reviews/:id', (req, res) => {
         res.json(results);
     });
 });
-//write review
-app.post('/reviews/create', (req, res) => {
-    const sql = "INSERT INTO reviews (Rating, Tartalom, Reviewer, Reviewee) VALUES (?, ?, ?, ?)";
-    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
-    db.query(sql, values, (err, results) => {
+//write review (auth: Reviewer = current user)
+app.post('/reviews/create', authMiddleware, (req, res) => {
+    const reviewerId = req.userId;
+    const revieweeId = parseInt(req.body.Reviewee || req.body.revieweeId, 10);
+    const rating = parseInt(req.body.Rating || req.body.rating, 10);
+    const content = (req.body.Tartalom || req.body.Content || req.body.content || "").trim().slice(0, 200);
+
+    if (!revieweeId || revieweeId === reviewerId) {
+        return res.status(400).json({ error: "Invalid user to review." });
+    }
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: "Rating must be 1–5." });
+    }
+
+    const sql = "INSERT INTO reviews (Rating, Content, Reviewer, Reviewee) VALUES (?, ?, ?, ?)";
+    db.query(sql, [rating, content || null, reviewerId, revieweeId], (err, results) => {
         if (err) {
-            console.error('Error creating review:', err);
-            return res.status(500).json({ error: 'Internal server error' });
+            if (err.code === "ER_DUP_ENTRY") {
+                return res.status(400).json({ error: "You have already reviewed this user. Edit your existing review." });
+            }
+            console.error("Error creating review:", err);
+            return res.status(500).json({ error: "Internal server error" });
         }
-        
-        res.status(201).json({ message: 'Review created and linked to user successfully'});
+        res.status(201).json({ message: "Review created successfully" });
     });
 });
-//edit review
-app.put('/reviews/edit/', (req, res) => {
-    const sql = "UPDATE reviews SET Rating = ?, Tartalom = ? WHERE Reviewer = ? AND Reviewee = ?";
-    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
-    db.query(sql, values, (err, results) => {
+//edit review (auth: only your own review)
+app.put('/reviews/edit', authMiddleware, (req, res) => {
+    const reviewerId = req.userId;
+    const revieweeId = parseInt(req.body.Reviewee || req.body.revieweeId, 10);
+    const rating = parseInt(req.body.Rating || req.body.rating, 10);
+    const content = (req.body.Content || req.body.Tartalom || req.body.content || "").trim().slice(0, 200);
+
+    if (!revieweeId || revieweeId === reviewerId) {
+        return res.status(400).json({ error: "Invalid user." });
+    }
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: "Rating must be 1–5." });
+    }
+
+    const sql = "UPDATE reviews SET Rating = ?, Content = ? WHERE Reviewer = ? AND Reviewee = ?";
+    db.query(sql, [rating, content || null, reviewerId, revieweeId], (err, results) => {
         if (err) {
-            console.error('Error updating review:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json({ message: 'Review updated successfully' });
+            console.error("Error updating review:", err);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: "You have not reviewed this user yet." });
+        }
+        res.json({ message: "Review updated successfully" });
     });
 });
 //delete review
@@ -764,19 +840,28 @@ app.get('/chats/all', (req, res) => {
 });
 //get chats userenkent (PublicID, MemberCount)
 app.get('/chats/users/:userId', (req, res) => {
+    const myId = parseInt(req.params.userId, 10);
     const sql = `
       SELECT c.ChatID, c.ChatName, c.ChatPic, c.PublicID,
-             (SELECT COUNT(*) FROM uac WHERE uac.ChatID = c.ChatID) AS MemberCount
+             (SELECT COUNT(*) FROM uac WHERE uac.ChatID = c.ChatID) AS MemberCount,
+             (SELECT u.Username FROM uac uac2
+              JOIN users u ON u.UserID = uac2.UserID
+              WHERE uac2.ChatID = c.ChatID AND uac2.UserID != ?
+              ORDER BY uac2.UserID LIMIT 1) AS OtherUserName
       FROM chats c
       JOIN uac ON uac.ChatID = c.ChatID
       WHERE uac.UserID = ?
     `;
-    db.query(sql, [req.params.userId], (err, results) => {
+    db.query(sql, [myId, myId], (err, results) => {
         if (err) {
             console.error('Error fetching chats:', err);
             return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json(results);
+        }
+        const rows = results.map((r) => ({
+            ...r,
+            ChatName: r.MemberCount === 2 && r.OtherUserName ? r.OtherUserName : r.ChatName
+        }));
+        res.json(rows);
     });
 });
 

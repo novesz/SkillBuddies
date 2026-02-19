@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
 import RegistPage from "./pages/RegistPage";
 import Profile from "./pages/Profile";
+import UserSettings from "./pages/UserSettings";
 import AboutPage from "./pages/AboutPage";
 import SupportPage from "./pages/SupportPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -97,7 +98,23 @@ function App() {
           path="/profile"
           element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
-              <Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+              <Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:userId"
+          element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/usersettings"
+          element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <UserSettings isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
             </PrivateRoute>
           }
         />
