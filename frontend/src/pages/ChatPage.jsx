@@ -100,16 +100,30 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
           const next = replaceTemp
             ? list.map((m) => (m.MsgID < 0 && m.text === data.msg.Content ? msg : m))
             : [...list, msg];
-          return { ...prev, [data.msg.ChatID]: next };
+          const updatedList = ensureUniqueMessages(next);
+          return { ...prev, [data.msg.ChatID]: updatedList };
         });
       }
     };
 
     ws.current.onclose = () => console.log("WS disconnected");
-    ws.current.onerror = (err) => console.error("WS error:", err);
+    
 
     return () => ws.current?.close();
   }, [currentUserId, currentUsername]);
+
+  // Ensure unique keys for messages in the chat.
+  const ensureUniqueMessages = (messages) => {
+    const seen = new Set();
+    return messages.filter((msg) => {
+      if (seen.has(msg.MsgID)) {
+        console.warn(`Duplicate MsgID detected: ${msg.MsgID}`);
+        return false;
+      }
+      seen.add(msg.MsgID);
+      return true;
+    });
+  };
 
   // --- Üzenetek betöltése ---
   useEffect(() => {
