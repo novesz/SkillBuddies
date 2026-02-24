@@ -1,0 +1,132 @@
+﻿<Window x:Class="AdminPanel.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Admin Panel"
+        Height="700"
+        Width="1000"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= USERS ================= -->
+        <GroupBox Header="Felhasználók"
+                  Grid.Row="0"
+                  Grid.Column="0"
+                  Margin="5">
+
+            <DataGrid x:Name="UsersGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding UserID}"
+                                        IsReadOnly="True"
+                                        Width="50"/>
+
+                    <DataGridTextColumn Header="Név"
+                                        Binding="{Binding Username}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Email"
+                                        Binding="{Binding Email}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Rank"
+                                        Binding="{Binding RankID}"
+                                        Width="80"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- ================= CHATS ================= -->
+        <GroupBox Header="Chatek"
+                  Grid.Row="0"
+                  Grid.Column="1"
+                  Margin="5">
+
+            <DataGrid x:Name="ChatsGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      SelectionChanged="ChatsGrid_SelectionChanged">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding ChatID}"
+                                        Width="50"
+                                        IsReadOnly="True"/>
+
+                    <DataGridTextColumn Header="Név"
+                                        Binding="{Binding ChatName}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Kód"
+                                        Binding="{Binding PublicID}"
+                                        Width="120"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- ================= CHAT TAGOK ================= -->
+        <GroupBox Header="Chat Tagok"
+                  Grid.Row="1"
+                  Grid.Column="0"
+                  Margin="5">
+
+            <DataGrid x:Name="ChatUsersGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding UserID}"
+                                        Width="50"/>
+
+                    <DataGridTextColumn Header="Név"
+                                        Binding="{Binding Username}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Rank"
+                                        Binding="{Binding RankID}"
+                                        Width="80"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- ================= ÜZENETEK ================= -->
+        <GroupBox Header="Üzenetek"
+                  Grid.Row="1"
+                  Grid.Column="1"
+                  Margin="5">
+
+            <DataGrid x:Name="MessagesGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Felhasználó"
+                                        Binding="{Binding Username}"
+                                        Width="150"/>
+
+                    <DataGridTextColumn Header="Üzenet"
+                                        Binding="{Binding Content}"
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Dátum"
+                                        Binding="{Binding CreatedAt}"
+                                        Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+    </Grid>
+</Window>

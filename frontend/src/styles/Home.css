@@ -25,6 +25,25 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   margin-top: 8px;
 }
 
+.sb-loading,
+.sb-end {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin: 6px 0 0;
+  color: rgba(15, 23, 42, 0.85);
+  font-weight: 700;
+}
+
+.sb-loading-more {
+  margin-top: 14px;
+}
+
+.sb-sentinel {
+  height: 1px;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
 
 /* tartalom: full width + kényelmes belső margó */
 .sb-content{
@@ -48,7 +67,7 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   width:22px;height:22px;color:#667085;
 }
 
-/* filter row: [‹] 5 chips [›] in one row */
+/* filter row: [‹] chips [›] – lapozás nyilakkal, nincs csúszka; chip ne menjen a gomb alá */
 .sb-chips-row {
   display: flex;
   align-items: center;
@@ -56,6 +75,9 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   gap: 12px;
   margin-top: 14px;
   flex-wrap: nowrap;
+  width: 100%;
+  max-width: min(760px, 100%);
+  min-width: 0;
 }
 
 .sb-chip-arrow {
@@ -81,23 +103,34 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   cursor: default;
 }
 
+/* Chip lista: nyilak között, nincs görgetés – lapozás nyilakkal; ne csússzon a gomb alá */
 .sb-chips-row .sb-chips {
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
+  align-items: center;
   gap: 10px;
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.sb-chips{
-  display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
-  list-style:none; padding:0; margin:10px 0 0;
-}
-.sb-chips li{
-  background:var(--chip); padding:8px 12px; border-radius:10px;
-  box-shadow:5px 5px 10px rgba(0,0,0,.15); font-weight:600; user-select:none;
+.sb-chips li {
+  background: var(--chip);
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 5px 5px 10px rgba(0,0,0,.15);
+  font-weight: 600;
+  user-select: none;
+  /* Egy sor, hosszú szöveg levágva "..." -tal, ne legyen óriás doboz */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  flex-shrink: 0;
 }
 
 /* kártyarács: auto-fit -> kitölti a szélességet */
@@ -116,7 +149,6 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
 }
 .sb-card:hover{ transform:translateY(-3px); box-shadow:12px 12px 24px rgba(0,0,0,.25) }
 
-.sb-card-badge{ width:64px;height:64px;border-radius:50%; background:#ffe57a; margin-bottom:8px }
 .sb-card h3{ margin:0 0 10px; letter-spacing:1px; font-weight:700 }
 .sb-list{ margin:8px 0 22px 17px; padding:0; line-height:1.6; font-weight:600 }
 
@@ -172,18 +204,7 @@ body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,s
   line-height: 1;
 }
 
-/* (Opcionális) a sárga badge legyen kisebb / kevésbé zavaró */
-.sb-card-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #ffe57a;
-  margin-bottom: 8px;
-}
-
-
 /* reszponzív finomítások */
-@media (max-width:960px){ .sb-card-badge{width:56px;height:56px} }
 @media (max-width:640px){
   .sb-card{border-radius:18px; padding:18px 16px}
   .sb-search-wrap{margin-top:10px}

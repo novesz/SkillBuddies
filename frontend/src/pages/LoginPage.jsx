@@ -29,8 +29,7 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
         return resp.json ? resp.json() : null;
       })
       .then((data) => {
-        if (!data) return;
-        if (data?.avatarUrl) setAvatarUrl(data.avatarUrl);
+        setAvatarUrl(data?.avatarUrl || "/avatars/BB.png");
         alert("Login successful!");
         navigate("/");
       })

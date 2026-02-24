@@ -10,7 +10,7 @@ const AVATARS = [
 const MAX_WORDS = 250;
 const MAX_CHARS = 10000000;
 const VISIBLE_AVATARS = 3;
-const SKILLS_PER_PAGE = 5;
+const SKILLS_PER_PAGE = 8;
 
 export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
   const [groupName, setGroupName] = useState("");
@@ -31,12 +31,12 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
     const fetchSkills = async () => {
       try {
         const resp = await fetch("http://localhost:3001/skills");
-        if (!resp.ok) throw new Error("Nem sikerült lekérni a skilleket.");
+        if (!resp.ok) throw new Error("Failed to load skills.");
         const data = await resp.json();
         setAllSkills(data || []);
       } catch (err) {
         console.error(err);
-        setError("Nem sikerült betölteni a skilleket.");
+        setError("Failed to load skills.");
       }
     };
     fetchSkills();
@@ -58,10 +58,12 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
   };
 
   const handlePrevAvatar = () => {
+    setAvatarIndex((prev) => (prev === 0 ? AVATARS.length - 1 : prev - 1));
     setAvatarOffset((prev) => (prev === 0 ? maxOffset : prev - 1));
   };
 
   const handleNextAvatar = () => {
+    setAvatarIndex((prev) => (prev === AVATARS.length - 1 ? 0 : prev + 1));
     setAvatarOffset((prev) => (prev === maxOffset ? 0 : prev + 1));
   };
 
@@ -71,7 +73,9 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
 
   const filteredSkills = allSkills
     .filter((s) =>
-      s.Skill.toLowerCase().startsWith(searchTerm.toLowerCase())
+      searchTerm.trim() === ""
+        ? true
+        : s.Skill.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter((s) => !selectedSkillIds.includes(s.SkillID));
 
@@ -130,12 +134,17 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
     }
 
     if (!groupName.trim()) {
-      setError("Adj meg egy csoportnevet!");
+      setError("Please enter a group name.");
       return;
     }
 
     if (selectedSkillIds.length === 0) {
-      setError("Válassz legalább egy skillt!");
+      setError("Please select at least one skill.");
+      return;
+    }
+
+    if (!userId || userId === 0) {
+      setError("You must be logged in to create a group.");
       return;
     }
 
@@ -156,9 +165,9 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
 
       const data = await resp.json().catch(() => ({}));
 
-      if (!resp.ok) throw new Error(data.error || data.message || "Ismeretlen hiba történt.");
+      if (!resp.ok) throw new Error(data.error || "An error occurred.");
 
-      setSuccess("Csoport sikeresen létrehozva! 🎉");
+      setSuccess("Group created successfully! 🎉");
       setShowModal(true);
     } catch (err) {
       setError(err.message);
@@ -177,6 +186,11 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
               <p>
                 Set up a new group and add the skills you want to share or learn.
               </p>
+              {(!userId || userId === 0) && (
+                <p className="form-error" style={{ marginTop: 12 }}>
+                  You must be logged in to create a group.
+                </p>
+              )}
             </div>
 
             <div className="profile-grid">
@@ -274,49 +288,55 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
                     </span>
                   ))}
                   {selectedSkills.length === 0 && (
-                    <p className="skills-empty">No skills yet. Start typing…</p>
+                    <p className="skills-empty">No skills yet. Pick from the row below.</p>
                   )}
                 </div>
 
-                <div className="skills-input-row">
-                  <input
-                    className="text-input"
-                    placeholder="Search skills…"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setSkillSuggestionsOffset(0);
-                    }}
-                    onKeyDown={handleSearchKeyDown}
-                  />
-                </div>
+                <div className="skills-search-wrap">
+                  <div className="skills-search">
+                    <input
+                      type="text"
+                      placeholder="Search skills…"
+                      aria-label="Search skills"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setSkillSuggestionsOffset(0);
+                      }}
+                      onKeyDown={handleSearchKeyDown}
+                    />
+                    <svg className="skills-search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <line x1="16.5" y1="16.5" x2="22" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
 
-                {searchTerm && filteredSkills.length > 0 && (
                   <div className="skills-filter-row">
                     <button
                       type="button"
-                      className="avatar-nav-btn skills-filter-arrow"
+                      className="skills-filter-arrow"
                       aria-label="Previous skills"
                       onClick={handlePrevSkillsPage}
                       disabled={skillSuggestionsOffset === 0}
                     >
                       ‹
                     </button>
-                    <div className="skills-filter-strip">
+                    <ul className="skills-filter-strip">
                       {visibleSkills.map((skill) => (
-                        <button
-                          key={skill.SkillID}
-                          type="button"
-                          className="skills-suggestion-item"
-                          onClick={() => handleAddSkill(skill.SkillID)}
-                        >
-                          {skill.Skill}
-                        </button>
+                        <li key={skill.SkillID}>
+                          <button
+                            type="button"
+                            className="skills-suggestion-item"
+                            onClick={() => handleAddSkill(skill.SkillID)}
+                          >
+                            {skill.Skill}
+                          </button>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                     <button
                       type="button"
-                      className="avatar-nav-btn skills-filter-arrow"
+                      className="skills-filter-arrow"
                       aria-label="Next skills"
                       onClick={handleNextSkillsPage}
                       disabled={skillSuggestionsOffset >= maxSkillOffset}
@@ -324,9 +344,9 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
                       ›
                     </button>
                   </div>
-                )}
+                </div>
 
-                {searchTerm && filteredSkills.length === 0 && (
+                {filteredSkills.length === 0 && searchTerm.trim() !== "" && (
                   <p className="skills-empty">
                     No results for “{searchTerm}”.
                   </p>

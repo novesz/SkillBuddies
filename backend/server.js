@@ -408,9 +408,33 @@ app.put("/users/me/profile", authMiddleware, (req, res) => {
 
 
 
-//user change password (encrypted with bcrypt, max once per 24 hours if LastPasswordChange column exists)
+// user change password (encrypted with bcrypt, max once per 24 hours if LastPasswordChange column exists)
 
 const PASSWORD_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// GET cooldown status (can the user change password now, and how many hours left if not)
+app.get("/users/me/password-cooldown", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  db.query("SELECT LastPasswordChange FROM users WHERE UserID = ?", [userId], (err, rows) => {
+    if (err) {
+      console.error("Password cooldown query error:", err);
+      return res.status(500).json({ error: "Adatbázis hiba." });
+    }
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Nincs ilyen felhasználó." });
+    }
+    const lastChange = rows[0].LastPasswordChange;
+    if (!lastChange) {
+      return res.json({ canChange: true });
+    }
+    const elapsed = Date.now() - new Date(lastChange).getTime();
+    if (elapsed >= PASSWORD_CHANGE_COOLDOWN_MS) {
+      return res.json({ canChange: true });
+    }
+    const hoursLeft = Math.ceil((PASSWORD_CHANGE_COOLDOWN_MS - elapsed) / (60 * 60 * 1000));
+    return res.json({ canChange: false, hoursLeft });
+  });
+});
 
 app.post("/users/me/change-password", authMiddleware, async (req, res) => {
   const userId = req.userId;
@@ -547,6 +571,55 @@ app.put('/users/change/:id', (req, res) => {
       res.json({ message: 'User updated successfully' });
     });
   });
+// Public profile (username, avatar, skills, reviews) – no auth
+app.get("/users/:id/public-profile", (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (!userId) return res.status(400).json({ error: "Invalid user ID" });
+
+  const sqlUser = `
+    SELECT u.UserID, u.Username, p.URL AS avatarUrl
+    FROM users u
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
+    WHERE u.UserID = ?
+  `;
+  const sqlSkills = `
+    SELECT s.Skill FROM skills s
+    JOIN uas ON uas.SkillID = s.SkillID
+    WHERE uas.UserID = ?
+    ORDER BY s.Skill
+  `;
+  const sqlReviews = `
+    SELECT r.Rating, r.Content, r.Reviewer
+    FROM reviews r
+    WHERE r.Reviewee = ?
+  `;
+
+  db.query(sqlUser, [userId], (err, userRows) => {
+    if (err) return res.status(500).json({ error: "Internal server error" });
+    if (!userRows.length) return res.status(404).json({ error: "User not found" });
+
+    const user = userRows[0];
+    db.query(sqlSkills, [userId], (err, skillRows) => {
+      if (err) return res.status(500).json({ error: "Internal server error" });
+      db.query(sqlReviews, [userId], (err, reviewRows) => {
+        if (err) return res.status(500).json({ error: "Internal server error" });
+        const reviews = reviewRows || [];
+        const avgRating = reviews.length
+          ? reviews.reduce((s, r) => s + (r.Rating || 0), 0) / reviews.length
+          : 0;
+        res.json({
+          userId: user.UserID,
+          username: user.Username,
+          avatarUrl: user.avatarUrl ? (user.avatarUrl.startsWith("/") ? user.avatarUrl : "/" + user.avatarUrl) : "/images/default.png",
+          skills: (skillRows || []).map((r) => r.Skill),
+          reviews,
+          avgRating: Math.round(avgRating * 10) / 10,
+        });
+      });
+    });
+  });
+});
+
 //users end
 //reviews
 app.get('/reviews/:id', (req, res) => {
@@ -559,29 +632,56 @@ app.get('/reviews/:id', (req, res) => {
         res.json(results);
     });
 });
-//write review
-app.post('/reviews/create', (req, res) => {
-    const sql = "INSERT INTO reviews (Rating, Tartalom, Reviewer, Reviewee) VALUES (?, ?, ?, ?)";
-    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
-    db.query(sql, values, (err, results) => {
+//write review (auth: Reviewer = current user)
+app.post('/reviews/create', authMiddleware, (req, res) => {
+    const reviewerId = req.userId;
+    const revieweeId = parseInt(req.body.Reviewee || req.body.revieweeId, 10);
+    const rating = parseInt(req.body.Rating || req.body.rating, 10);
+    const content = (req.body.Tartalom || req.body.Content || req.body.content || "").trim().slice(0, 200);
+
+    if (!revieweeId || revieweeId === reviewerId) {
+        return res.status(400).json({ error: "Invalid user to review." });
+    }
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: "Rating must be 1–5." });
+    }
+
+    const sql = "INSERT INTO reviews (Rating, Content, Reviewer, Reviewee) VALUES (?, ?, ?, ?)";
+    db.query(sql, [rating, content || null, reviewerId, revieweeId], (err, results) => {
         if (err) {
-            console.error('Error creating review:', err);
-            return res.status(500).json({ error: 'Internal server error' });
+            if (err.code === "ER_DUP_ENTRY") {
+                return res.status(400).json({ error: "You have already reviewed this user. Edit your existing review." });
+            }
+            console.error("Error creating review:", err);
+            return res.status(500).json({ error: "Internal server error" });
         }
-        
-        res.status(201).json({ message: 'Review created and linked to user successfully'});
+        res.status(201).json({ message: "Review created successfully" });
     });
 });
-//edit review
-app.put('/reviews/edit/', (req, res) => {
-    const sql = "UPDATE reviews SET Rating = ?, Tartalom = ? WHERE Reviewer = ? AND Reviewee = ?";
-    const values = [req.body.Rating, req.body.Tartalom, req.body.Reviewer, req.body.Reviewee];
-    db.query(sql, values, (err, results) => {
+//edit review (auth: only your own review)
+app.put('/reviews/edit', authMiddleware, (req, res) => {
+    const reviewerId = req.userId;
+    const revieweeId = parseInt(req.body.Reviewee || req.body.revieweeId, 10);
+    const rating = parseInt(req.body.Rating || req.body.rating, 10);
+    const content = (req.body.Content || req.body.Tartalom || req.body.content || "").trim().slice(0, 200);
+
+    if (!revieweeId || revieweeId === reviewerId) {
+        return res.status(400).json({ error: "Invalid user." });
+    }
+    if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: "Rating must be 1–5." });
+    }
+
+    const sql = "UPDATE reviews SET Rating = ?, Content = ? WHERE Reviewer = ? AND Reviewee = ?";
+    db.query(sql, [rating, content || null, reviewerId, revieweeId], (err, results) => {
         if (err) {
-            console.error('Error updating review:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json({ message: 'Review updated successfully' });
+            console.error("Error updating review:", err);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: "You have not reviewed this user yet." });
+        }
+        res.json({ message: "Review updated successfully" });
     });
 });
 //delete review
@@ -738,17 +838,75 @@ app.get('/chats/all', (req, res) => {
         res.json(results);
     });
 });
-//get chats userenkent
+//get chats userenkent (PublicID, MemberCount)
 app.get('/chats/users/:userId', (req, res) => {
-    const sql = "SELECT chats.ChatID, chats.ChatName, chats.ChatPic FROM chats JOIN uac ON uac.ChatID = chats.ChatID WHERE uac.UserID = ?";
-    db.query(sql, [req.params.userId], (err, results) => {
+    const myId = parseInt(req.params.userId, 10);
+    const sql = `
+      SELECT c.ChatID, c.ChatName, c.ChatPic, c.PublicID,
+             (SELECT COUNT(*) FROM uac WHERE uac.ChatID = c.ChatID) AS MemberCount,
+             (SELECT u.Username FROM uac uac2
+              JOIN users u ON u.UserID = uac2.UserID
+              WHERE uac2.ChatID = c.ChatID AND uac2.UserID != ?
+              ORDER BY uac2.UserID LIMIT 1) AS OtherUserName
+      FROM chats c
+      JOIN uac ON uac.ChatID = c.ChatID
+      WHERE uac.UserID = ?
+    `;
+    db.query(sql, [myId, myId], (err, results) => {
         if (err) {
             console.error('Error fetching chats:', err);
             return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json(results);
+        }
+        const rows = results.map((r) => ({
+            ...r,
+            ChatName: r.MemberCount === 2 && r.OtherUserName ? r.OtherUserName : r.ChatName
+        }));
+        res.json(rows);
     });
 });
+
+// get chat by public join code (for GroupFinder)
+app.get('/chats/byCode/:publicId', (req, res) => {
+    const publicId = (req.params.publicId || '').trim().toUpperCase();
+    if (!publicId) return res.status(400).json({ error: 'Code is required' });
+    const sql = "SELECT ChatID, ChatName, ChatPic, PublicID FROM chats WHERE PublicID = ?";
+    db.query(sql, [publicId], (err, results) => {
+        if (err) {
+            console.error('Error fetching chat by code:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (results.length === 0) return res.status(404).json({ error: 'No group found with this code' });
+        res.json(results[0]);
+    });
+});
+
+// join chat by public code (auth required)
+app.post('/chats/joinByCode', authMiddleware, (req, res) => {
+    const userId = req.userId;
+    const publicId = (req.body.publicId || req.body.code || '').trim().toUpperCase();
+    if (!publicId) return res.status(400).json({ error: 'Code is required' });
+
+    const findSql = "SELECT ChatID FROM chats WHERE PublicID = ?";
+    db.query(findSql, [publicId], (err, rows) => {
+        if (err) {
+            console.error('Error finding chat by code:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (rows.length === 0) return res.status(404).json({ error: 'No group found with this code' });
+
+        const chatId = rows[0].ChatID;
+        const insertSql = "INSERT INTO uac (UserID, ChatID) VALUES (?, ?)";
+        db.query(insertSql, [userId, chatId], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'You are already in this group' });
+                console.error('Error joining chat:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            res.status(201).json({ message: 'Joined successfully', ChatID: chatId });
+        });
+    });
+});
+
 //chat by ID
 app.get('/chats/:chatId', (req, res) => {
     const sql = "SELECT * FROM chats WHERE ChatID = ?";
@@ -786,15 +944,24 @@ app.post('/chats/join', (req, res) => {
     });
 });
 //leave chat
-app.delete('/chats/leave/:id', (req, res) => {
-    const sql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
-    db.query(sql, [req.params.UserID, req.body.ChatID], (err, results) => {
-        if (err) {
-            console.error('Error leaving chat:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.json({ message: 'Left chat successfully' });
-    });
+app.delete("/chats/leave/:chatId", authMiddleware, (req, res) => {
+  const userId = req.userId;           
+  const chatId = req.params.chatId;    
+
+  const sql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
+
+  db.query(sql, [userId, chatId], (err, result) => {
+    if (err) {
+      console.error("Error leaving chat:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not in chat" });
+    }
+
+    res.json({ message: "Left chat successfully" });
+  });
 });
 //make chat admin
 app.put('/chats/makeAdmin', (req, res) => {
@@ -808,20 +975,120 @@ app.put('/chats/makeAdmin', (req, res) => {
         res.status(201).json({ message: 'User made chat admin successfully' });
     });
 });
-//users by chat 
-app.get('/chats/users/:chatId', (req, res) => {
+//users by chat (avatar URL for profile module)
+app.get('/chats/chatUsers/:chatId', (req, res) => {
   const sql = `
-    SELECT u.UserID, u.Username, uac.IsChatAdmin
+    SELECT u.UserID, u.Username, uac.IsChatAdmin, p.URL AS Avatar
     FROM uac
     JOIN users u ON u.UserID = uac.UserID
+    LEFT JOIN pictures p ON p.PicID = u.PfpID
     WHERE uac.ChatID = ?
   `;
+
   db.query(sql, [req.params.chatId], (err, results) => {
     if (err) {
       console.error('Error fetching users by chat:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
+
     res.json(results);
+  });
+});
+
+// member skills in a chat (for Skills sidebar - needed + members' skills)
+app.get('/chats/:chatId/skillsWithMembers', (req, res) => {
+  const chatId = req.params.chatId;
+  const neededSql = `
+    SELECT s.SkillID, s.Skill, 'needed' AS source
+    FROM neededskills ns
+    JOIN skills s ON s.SkillID = ns.SkillID
+    WHERE ns.ChatID = ?
+  `;
+  const memberSql = `
+    SELECT u.UserID, u.Username, s.SkillID, s.Skill
+    FROM uac
+    JOIN users u ON u.UserID = uac.UserID
+    LEFT JOIN uas ON uas.UserID = u.UserID
+    LEFT JOIN skills s ON s.SkillID = uas.SkillID
+    WHERE uac.ChatID = ? AND s.SkillID IS NOT NULL
+  `;
+  db.query(neededSql, [chatId], (err, needed) => {
+    if (err) return res.status(500).json({ error: 'Internal server error' });
+    db.query(memberSql, [chatId], (err2, members) => {
+      if (err2) return res.status(500).json({ error: 'Internal server error' });
+      const memberSkillsMap = {};
+      members.forEach((row) => {
+        if (!memberSkillsMap[row.UserID]) memberSkillsMap[row.UserID] = { Username: row.Username, Skills: [] };
+        if (row.Skill && !memberSkillsMap[row.UserID].Skills.includes(row.Skill))
+          memberSkillsMap[row.UserID].Skills.push(row.Skill);
+      });
+      res.json({
+        needed: needed.map((r) => ({ SkillID: r.SkillID, Skill: r.Skill })),
+        memberSkills: Object.entries(memberSkillsMap).map(([uid, v]) => ({ UserID: +uid, Username: v.Username, Skills: v.Skills })),
+      });
+    });
+  });
+});
+
+// find or create private chat (1-1) between current user and otherUserId
+app.post('/chats/private', authMiddleware, (req, res) => {
+  const myId = req.userId;
+  const otherId = parseInt(req.body.otherUserId || req.body.otherUserID, 10);
+  if (!otherId || otherId === myId) return res.status(400).json({ error: 'Invalid other user' });
+
+  const getOtherUsername = (cb) => {
+    db.query('SELECT Username FROM users WHERE UserID = ?', [otherId], (e, u) => {
+      if (e || !u.length) return cb(null);
+      return cb(u[0].Username);
+    });
+  };
+
+  const findExisting = `
+    SELECT c.ChatID FROM chats c
+    INNER JOIN uac u1 ON u1.ChatID = c.ChatID AND u1.UserID = ?
+    INNER JOIN uac u2 ON u2.ChatID = c.ChatID AND u2.UserID = ?
+    WHERE (SELECT COUNT(*) FROM uac WHERE ChatID = c.ChatID) = 2
+    LIMIT 1
+  `;
+  db.query(findExisting, [myId, otherId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Internal server error' });
+    if (rows.length > 0) {
+      getOtherUsername((otherUsername) =>
+        res.json({ ChatID: rows[0].ChatID, created: false, otherUsername: otherUsername || 'Private' })
+      );
+      return;
+    }
+
+    const genCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    };
+
+    const tryInsertChat = (retriesLeft) => {
+      const publicId = genCode();
+      // chats table: PublicID, ChatName, ChatPic (PublicID first in schema)
+      db.query('INSERT INTO chats (PublicID, ChatName, ChatPic) VALUES (?, ?, NULL)', [publicId, 'Private'], (err2, ins) => {
+        if (err2) {
+          const isDup = err2.code === 'ER_DUP_ENTRY';
+          if (isDup && retriesLeft > 0) return tryInsertChat(retriesLeft - 1);
+          console.error('Private chat INSERT error:', err2.code, err2.message);
+          return res.status(500).json({ error: isDup ? 'Could not create chat (try again)' : 'Could not create chat' });
+        }
+        const chatId = ins.insertId;
+        db.query('INSERT INTO uac (UserID, ChatID) VALUES (?, ?), (?, ?)', [myId, chatId, otherId, chatId], (err3) => {
+          if (err3) {
+            console.error('Private chat uac INSERT error:', err3.code, err3.message);
+            return res.status(500).json({ error: 'Could not add members' });
+          }
+          getOtherUsername((otherUsername) =>
+            res.status(201).json({ ChatID: chatId, created: true, otherUsername: otherUsername || 'Private' })
+          );
+        });
+      });
+    };
+    tryInsertChat(5);
   });
 });
 //edit chat info
@@ -863,10 +1130,11 @@ app.post('/messages/create', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
+    const msgId = results.insertId;
     const message = {
       type: "NEW_MESSAGE",
       msg: {
-        MsgID: results.insertId,
+        MsgID: msgId,
         ChatID: req.body.ChatID,
         UserID: req.body.UserID,
         Content: req.body.Content,
@@ -876,7 +1144,7 @@ app.post('/messages/create', (req, res) => {
 
     broadcastToChat(req.body.ChatID, message);
 
-    res.status(201).json({ message: 'Message created successfully' });
+    res.status(201).json({ message: 'Message created successfully', MsgID: msgId });
   });
 });
 
@@ -962,9 +1230,11 @@ app.post("/groups", (req, res) => {
   let skillIds = body.skillIds ?? body.skills ?? body.skillIDs;
   let userId = body.userId ?? body.id ?? body.userID;
 
-  if (typeof userId === "string") userId = parseInt(userId, 10);
-  if (Array.isArray(skillIds) && skillIds.length > 0) {
-    skillIds = skillIds.map((s) => (typeof s === "number" ? s : parseInt(s, 10))).filter((n) => !isNaN(n) && n > 0);
+  if (!chatName || !Array.isArray(skillIds) || skillIds.length === 0) {
+    return res.status(400).json({ error: "Hiányzó adatok (chatName, skillIds)." });
+  }
+  if (!userId || userId === 0) {
+    return res.status(400).json({ error: "Bejelentkezés szükséges a csoport létrehozásához." });
   }
 
   if (!chatName || (typeof chatName === "string" && !chatName.trim())) {
@@ -989,88 +1259,183 @@ app.post("/groups", (req, res) => {
       return res.status(500).json({ error: "Tranzakció indítási hiba." });
     }
 
-    // 1. chats insert (ChatPic must be PicID number or null; frontend may send URL string -> use null)
-    const chatPicId = typeof chatPic === "number" && chatPic > 0 ? chatPic : null;
-    const insertChatSql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
-    db.query(insertChatSql, [String(chatName).trim(), chatPicId], (err, chatResult) => {
-      if (err) {
-        console.error("Chat insert hiba:", err);
-        return db.rollback(() => {
-          res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
-        });
-      }
-
-      const newChatId = chatResult.insertId;
-
-      // 2. neededskills insert (több sor egyszerre)
-      const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
-      const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
-
-      db.query(insertNeededSql, [neededValues], (err) => {
+    // chatPic a frontendről URL string (pl. /groupavatars/Ant.png); a chats.ChatPic pedig pictures.PicID (int)
+    // chats.PublicID NOT NULL, egyedi 6 karakteres kód
+    const doInsertChat = (picId, retriesLeft = 3) => {
+      const publicId = generateJoinCode(6);
+      const insertChatSql = "INSERT INTO chats (ChatName, ChatPic, PublicID) VALUES (?, ?, ?)";
+      db.query(insertChatSql, [chatName, picId, publicId], (err, chatResult) => {
         if (err) {
-          console.error("neededskills insert hiba:", err);
+          if (err.code === "ER_DUP_ENTRY" && retriesLeft > 0) {
+            return doInsertChat(picId, retriesLeft - 1);
+          }
+          console.error("Chat insert hiba:", err);
           return db.rollback(() => {
-            res.status(500).json({ error: "Hiba a skillek mentésekor." });
+            res.status(500).json({ error: "Hiba a csoport létrehozásakor." });
           });
         }
 
-        // 3. uac – a létrehozó legyen admin
-        const insertUacSql = `
-          INSERT INTO uac (UserID, ChatID, IsChatAdmin)
-          VALUES (?, ?, 1)
-        `;
+        const newChatId = chatResult.insertId;
 
-        db.query(insertUacSql, [userId, newChatId], (err) => {
+        // 2. neededskills insert (több sor egyszerre)
+        const neededValues = skillIds.map((skillId) => [newChatId, skillId]);
+        const insertNeededSql = "INSERT INTO neededskills (ChatID, SkillID) VALUES ?";
+
+        db.query(insertNeededSql, [neededValues], (err) => {
           if (err) {
-            console.error("uac insert hiba:", err);
+            console.error("neededskills insert hiba:", err);
             return db.rollback(() => {
-              res.status(500).json({ error: "Hiba a tag mentésekor." });
+              res.status(500).json({ error: "Hiba a skillek mentésekor." });
             });
           }
 
-          db.commit((err) => {
+          // 3. uac – a létrehozó legyen admin
+          const insertUacSql = `
+            INSERT INTO uac (UserID, ChatID, IsChatAdmin)
+            VALUES (?, ?, 1)
+          `;
+
+          db.query(insertUacSql, [userId, newChatId], (err) => {
             if (err) {
-              console.error("Commit hiba:", err);
+              console.error("uac insert hiba:", err);
               return db.rollback(() => {
-                res.status(500).json({ error: "Commit hiba." });
+                res.status(500).json({ error: "Hiba a tag mentésekor." });
               });
             }
 
-            res.status(201).json({
-              message: "Csoport sikeresen létrehozva!",
-              chatId: newChatId,
+            db.commit((err) => {
+              if (err) {
+                console.error("Commit hiba:", err);
+                return db.rollback(() => {
+                  res.status(500).json({ error: "Commit hiba." });
+                });
+              }
+
+              res.status(201).json({
+                message: "Csoport sikeresen létrehozva!",
+                chatId: newChatId,
+              });
             });
           });
         });
       });
-    });
+    };
+
+    if (chatPic && typeof chatPic === "string" && chatPic.trim() !== "") {
+      // Először beszúrjuk a képet a pictures táblába, a kapott PicID-t használjuk
+      db.query("INSERT INTO pictures (URL) VALUES (?)", [chatPic.trim()], (err, picResult) => {
+        if (err) {
+          console.error("Picture insert hiba:", err);
+          return db.rollback(() => {
+            res.status(500).json({ error: "Hiba a csoport kép mentésekor." });
+          });
+        }
+        doInsertChat(picResult.insertId);
+      });
+    } else {
+      doInsertChat(null);
+    }
   });
 });
 
 // Összes csoport lekérése a főoldalhoz
 app.get("/groups", (req, res) => {
-  const sql = `
+  // Backward compatible behavior:
+  // - If no pagination params are provided, return the full array (old behavior).
+  // - If `limit` (or `offset`) is provided, return a paged response:
+  //   { items: [...], nextOffset: number, hasMore: boolean }
+
+  const rawLimit = req.query.limit;
+  const rawOffset = req.query.offset;
+  const wantsPaging = rawLimit !== undefined || rawOffset !== undefined;
+
+  const limit = Math.min(Math.max(parseInt(rawLimit ?? "0", 10) || 0, 0), 50);
+  const offset = Math.max(parseInt(rawOffset ?? "0", 10) || 0, 0);
+
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const skillsParam = typeof req.query.skills === "string" ? req.query.skills.trim() : "";
+  const skills = skillsParam
+    ? skillsParam
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  // Base select (ChatPic = PicID; a megjelenítéshez p.URL-t adjuk vissza ChatPicként)
+  let sql = `
     SELECT 
       c.ChatID,
       c.ChatName,
-      c.ChatPic,
+      p.URL AS ChatPic,
       c.CreatedAt,
       GROUP_CONCAT(DISTINCT s.Skill ORDER BY s.Skill SEPARATOR ', ') AS Skills,
       COUNT(DISTINCT u.UserID) AS MemberCount
     FROM chats c
+    LEFT JOIN pictures p ON p.PicID = c.ChatPic
     LEFT JOIN neededskills ns ON ns.ChatID = c.ChatID
     LEFT JOIN skills s ON ns.SkillID = s.SkillID
     LEFT JOIN uac u ON u.ChatID = c.ChatID
-    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt
-    ORDER BY c.CreatedAt DESC;
   `;
 
-  db.query(sql, (err, rows) => {
+  const where = [];
+  const params = [];
+
+  if (search) {
+    where.push("c.ChatName LIKE ?");
+    params.push(`%${search}%`);
+  }
+
+  // Match ANY selected skill (same behavior as frontend chip filtering)
+  if (skills.length > 0) {
+    const skillPlaceholders = skills.map(() => "?").join(", ");
+    where.push(`
+      EXISTS (
+        SELECT 1
+        FROM neededskills ns2
+        JOIN skills s2 ON s2.SkillID = ns2.SkillID
+        WHERE ns2.ChatID = c.ChatID
+          AND s2.Skill IN (${skillPlaceholders})
+      )
+    `);
+    params.push(...skills);
+  }
+
+  if (where.length > 0) {
+    sql += ` WHERE ${where.join(" AND ")} `;
+  }
+
+  sql += `
+    GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt, p.URL
+    HAVING COUNT(DISTINCT ns.SkillID) > 0
+    ORDER BY c.CreatedAt DESC
+  `;
+
+  // Old behavior: no paging requested -> return everything (but still allow filters if provided).
+  if (!wantsPaging || limit === 0) {
+    db.query(sql + ";", params, (err, rows) => {
+      if (err) {
+        console.error("Groups list hiba:", err);
+        return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
+      }
+      res.json(rows);
+    });
+    return;
+  }
+
+  // Paged behavior
+  const pagedSql = sql + " LIMIT ? OFFSET ?;";
+  const pagedParams = [...params, limit, offset];
+
+  db.query(pagedSql, pagedParams, (err, rows) => {
     if (err) {
       console.error("Groups list hiba:", err);
       return res.status(500).json({ error: "Adatbázis hiba (groups list)." });
     }
-    res.json(rows);
+
+    const nextOffset = offset + rows.length;
+    const hasMore = rows.length === limit;
+
+    res.json({ items: rows, nextOffset, hasMore });
   });
 });
 
@@ -1120,4 +1485,3 @@ app.get('/users/:id', (req, res) => {
 server.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });
-

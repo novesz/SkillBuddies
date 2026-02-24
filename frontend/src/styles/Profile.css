@@ -78,12 +78,8 @@
   padding: 0 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
-<<<<<<< Updated upstream
   background: #fff;
   color: var(--text);
-=======
-  background: #491a1a;
->>>>>>> Stashed changes
   cursor: pointer;
   transition: filter .2s, transform .05s, box-shadow .2s, background-color .2s, color .2s, border-color .2s;
 }
@@ -288,6 +284,22 @@
   transition: transform .35s;
 }
 .password-section.open .chev{ transform: rotate(-135deg); }
+
+.pw-info {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.pw-cooldown {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.pw-cooldown strong {
+  color: #dc2626;
+}
 
 .pw-panel{
   margin-top: -8px;

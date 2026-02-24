@@ -2,18 +2,17 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 const UserContext = createContext(null);
 const STORAGE_KEY = "sb.avatarUrl";
-const DEFAULT_AVATAR = "/avatars/BB.png"; // tetszőleges alapértelmezett
+const DEFAULT_AVATAR = "/avatars/BB.png";
 
 export function UserProvider({ children }) {
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
 
-  // betöltés localStorage-ból
+  // load from localStorage on init
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) setAvatarUrl(saved);
   }, []);
 
-  // mentés localStorage-ba
   useEffect(() => {
     if (avatarUrl) localStorage.setItem(STORAGE_KEY, avatarUrl);
   }, [avatarUrl]);
