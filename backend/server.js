@@ -956,11 +956,32 @@ app.get('/cards', (req, res) => {
 });
 
 app.post("/groups", (req, res) => {
-  const { chatName, chatPic, skillIds, userId } = req.body;
+  const body = req.body || {};
+  const chatName = body.chatName ?? body.name ?? body.ChatName;
+  const chatPic = body.chatPic ?? body.ChatPic;
+  let skillIds = body.skillIds ?? body.skills ?? body.skillIDs;
+  let userId = body.userId ?? body.id ?? body.userID;
 
-  if (!chatName || !userId || !Array.isArray(skillIds) || skillIds.length === 0) {
-    return res.status(400).json({ error: "Hiányzó adatok (chatName, userId, skillIds)." });
+  if (typeof userId === "string") userId = parseInt(userId, 10);
+  if (Array.isArray(skillIds) && skillIds.length > 0) {
+    skillIds = skillIds.map((s) => (typeof s === "number" ? s : parseInt(s, 10))).filter((n) => !isNaN(n) && n > 0);
   }
+
+  if (!chatName || (typeof chatName === "string" && !chatName.trim())) {
+    return res.status(400).json({ error: "Hiányzó adatok.", message: "Add meg a csoport nevét (chatName)." });
+  }
+  if (userId == null || userId === "" || Number(userId) < 1) {
+    return res.status(401).json({ error: "Be kell jelentkezned.", message: "You must be logged in to create a group." });
+  }
+  if (!Array.isArray(skillIds) || skillIds.length === 0) {
+    return res.status(400).json({ error: "Hiányzó adatok.", message: "Válassz legalább egy skillt (skillIds)." });
+  }
+
+  const uid = Number(userId);
+  if (isNaN(uid) || uid < 1) {
+    return res.status(401).json({ error: "Be kell jelentkezned.", message: "You must be logged in to create a group." });
+  }
+  userId = uid;
 
   db.beginTransaction((err) => {
     if (err) {
@@ -968,9 +989,10 @@ app.post("/groups", (req, res) => {
       return res.status(500).json({ error: "Tranzakció indítási hiba." });
     }
 
-    // 1. chats insert
+    // 1. chats insert (ChatPic must be PicID number or null; frontend may send URL string -> use null)
+    const chatPicId = typeof chatPic === "number" && chatPic > 0 ? chatPic : null;
     const insertChatSql = "INSERT INTO chats (ChatName, ChatPic) VALUES (?, ?)";
-    db.query(insertChatSql, [chatName, chatPic || null], (err, chatResult) => {
+    db.query(insertChatSql, [String(chatName).trim(), chatPicId], (err, chatResult) => {
       if (err) {
         console.error("Chat insert hiba:", err);
         return db.rollback(() => {

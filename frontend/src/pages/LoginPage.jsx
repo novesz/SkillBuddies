@@ -17,12 +17,19 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
     axios
       .post("http://localhost:3001/login", { Email: email, Password: password }, { withCredentials: true })
       .then((response) => {
-        if (!response.data.loggedIn) return;
+        if (!response.data.loggedIn) {
+          alert(response.data?.message || "Invalid email or password.");
+          return;
+        }
         setIsLoggedIn(true);
         return fetch("http://localhost:3001/users/me/profile", { credentials: "include" });
       })
-      .then((resp) => (resp ? resp.json() : null))
+      .then((resp) => {
+        if (resp === undefined) return null;
+        return resp.json ? resp.json() : null;
+      })
       .then((data) => {
+        if (!data) return;
         if (data?.avatarUrl) setAvatarUrl(data.avatarUrl);
         alert("Login successful!");
         navigate("/");

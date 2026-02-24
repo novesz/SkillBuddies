@@ -40,7 +40,7 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
 
         {open && (
           <div className="hamburger-panel">
-            <Navbar />
+                   <Navbar isLoggedIn={isLoggedIn} />
           </div>
         )}
       </div>

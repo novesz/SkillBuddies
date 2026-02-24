@@ -124,6 +124,11 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
     setError("");
     setSuccess("");
 
+    if (!userId || userId < 1) {
+      setError("Be kell jelentkezned a csoport létrehozásához.");
+      return;
+    }
+
     if (!groupName.trim()) {
       setError("Adj meg egy csoportnevet!");
       return;
@@ -135,22 +140,23 @@ export default function GroupEditor({ isLoggedIn, setIsLoggedIn, userId = 0 }) {
     }
 
     const payload = {
-      chatName: groupName,
+      chatName: groupName.trim(),
       chatPic: AVATARS[avatarIndex],
       skillIds: selectedSkillIds,
-      userId,
+      userId: Number(userId),
     };
 
     try {
       const resp = await fetch("http://localhost:3001/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
-      const data = await resp.json();
+      const data = await resp.json().catch(() => ({}));
 
-      if (!resp.ok) throw new Error(data.error || "Ismeretlen hiba történt.");
+      if (!resp.ok) throw new Error(data.error || data.message || "Ismeretlen hiba történt.");
 
       setSuccess("Csoport sikeresen létrehozva! 🎉");
       setShowModal(true);
