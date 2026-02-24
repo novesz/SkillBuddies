@@ -73,13 +73,16 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   useEffect(() => {
     if (!currentUserId) return;
 
-    ws.current = new WebSocket("ws://localhost:3001");
+    let isMounted = true;
+    const socket = new WebSocket("ws://localhost:3001");
+    ws.current = socket;
 
-    ws.current.onopen = () => {
-      console.log("Connected to WS server");
+    socket.onopen = () => {
+      if (isMounted) console.log("Connected to WS server");
     };
 
-    ws.current.onmessage = (event) => {
+    socket.onmessage = (event) => {
+      if (!isMounted) return;
       const data = JSON.parse(event.data);
       if (data.type === "NEW_MESSAGE") {
         const msg = {
@@ -96,6 +99,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
         setMessagesMap((prev) => {
           const list = prev[data.msg.ChatID] || [];
           const isOwn = data.msg.UserID === currentUserId;
+          const alreadyExists = list.some((m) => m.MsgID === data.msg.MsgID);
+          if (alreadyExists) return prev;
           const replaceTemp = isOwn && list.some((m) => m.MsgID < 0 && m.text === data.msg.Content);
           const next = replaceTemp
             ? list.map((m) => (m.MsgID < 0 && m.text === data.msg.Content ? msg : m))
@@ -105,10 +110,15 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       }
     };
 
-    ws.current.onclose = () => console.log("WS disconnected");
-    ws.current.onerror = (err) => console.error("WS error:", err);
+    socket.onclose = () => {
+      if (isMounted) console.log("WS disconnected");
+    };
+    socket.onerror = () => {};
 
-    return () => ws.current?.close();
+    return () => {
+      isMounted = false;
+      socket.close();
+    };
   }, [currentUserId, currentUsername]);
 
   // --- Üzenetek betöltése ---
@@ -118,16 +128,23 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     axios
       .get(`http://localhost:3001/messages/${selectedChat}`)
       .then((res) => {
-        const msgs = res.data.map((msg) => ({
-          MsgID: msg.MsgID,
-          text: msg.Content,
-          type: msg.UserID === Number(currentUserId) ? "outgoing" : "incoming",
-          username:
-            msg.UserID === Number(currentUserId)
-              ? currentUsername
-              : msg.Username || `User ${msg.UserID}`,
-          UserID: msg.UserID,
-        }));
+        const seen = new Set();
+        const msgs = res.data
+          .filter((msg) => {
+            if (seen.has(msg.MsgID)) return false;
+            seen.add(msg.MsgID);
+            return true;
+          })
+          .map((msg) => ({
+            MsgID: msg.MsgID,
+            text: msg.Content,
+            type: msg.UserID === Number(currentUserId) ? "outgoing" : "incoming",
+            username:
+              msg.UserID === Number(currentUserId)
+                ? currentUsername
+                : msg.Username || `User ${msg.UserID}`,
+            UserID: msg.UserID,
+          }));
         setMessagesMap((prev) => ({ ...prev, [selectedChat]: msgs }));
       })
       .catch(console.error);

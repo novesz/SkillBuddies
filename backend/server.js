@@ -1386,6 +1386,7 @@ app.get("/groups", (req, res) => {
 
   sql += `
     GROUP BY c.ChatID, c.ChatName, c.ChatPic, c.CreatedAt, p.URL
+    HAVING COUNT(DISTINCT ns.SkillID) > 0
     ORDER BY c.CreatedAt DESC
   `;
 
