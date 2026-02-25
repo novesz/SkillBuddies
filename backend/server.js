@@ -86,24 +86,31 @@ wss.on("connection", (ws, req) => {
           if (err) return console.error("DB error (chat check):", err);
           if (rows.length === 0) return console.warn("User not in chat:", ws.userId, ChatID);
 
-          // --- Insert message into DB ---
-          const insertSql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
-          db.query(insertSql, [ChatID, ws.userId, Content], (err, result) => {
-            if (err) return console.error("DB error (insert message):", err);
+          // --- Get username for the message ---
+          db.query("SELECT Username FROM users WHERE UserID = ?", [ws.userId], (err, userRows) => {
+            if (err) return console.error("DB error (get username):", err);
+            const username = userRows.length > 0 ? userRows[0].Username : `User ${ws.userId}`;
 
-            const messagePayload = {
-              type: "NEW_MESSAGE",
-              msg: {
-                MsgID: result.insertId,
-                ChatID,
-                UserID: ws.userId,
-                Content,
-                SentAt: new Date().toISOString(),
-              },
-            };
+            // --- Insert message into DB ---
+            const insertSql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
+            db.query(insertSql, [ChatID, ws.userId, Content], (err, result) => {
+              if (err) return console.error("DB error (insert message):", err);
 
-            // --- Broadcast to all users in this chat ---
-            broadcastToChat(ChatID, messagePayload);
+              const messagePayload = {
+                type: "NEW_MESSAGE",
+                msg: {
+                  MsgID: result.insertId,
+                  ChatID,
+                  UserID: ws.userId,
+                  Username: username,
+                  Content,
+                  SentAt: new Date().toISOString(),
+                },
+              };
+
+              // --- Broadcast to all users in this chat ---
+              broadcastToChat(ChatID, messagePayload);
+            });
           });
         });
       }
@@ -154,6 +161,27 @@ app.get('/users/all', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Error fetching users:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.json(results);
+    });
+});
+
+app.get('/users/search', (req, res) => {
+    const query = (req.query.q || '').trim();
+    if (query.length < 2) {
+        return res.json([]);
+    }
+    const sql = `
+        SELECT u.UserID, u.Username, p.URL AS AvatarUrl 
+        FROM users u
+        LEFT JOIN pictures p ON p.PicID = u.PfpID
+        WHERE u.Username LIKE ? 
+        LIMIT 10
+    `;
+    db.query(sql, [`%${query}%`], (err, results) => {
+        if (err) {
+            console.error('Error searching users:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
         res.json(results);
@@ -847,7 +875,8 @@ app.get('/chats/users/:userId', (req, res) => {
              (SELECT u.Username FROM uac uac2
               JOIN users u ON u.UserID = uac2.UserID
               WHERE uac2.ChatID = c.ChatID AND uac2.UserID != ?
-              ORDER BY uac2.UserID LIMIT 1) AS OtherUserName
+              ORDER BY uac2.UserID LIMIT 1) AS OtherUserName,
+             0 AS UnreadCount
       FROM chats c
       JOIN uac ON uac.ChatID = c.ChatID
       WHERE uac.UserID = ?
@@ -863,6 +892,11 @@ app.get('/chats/users/:userId', (req, res) => {
         }));
         res.json(rows);
     });
+});
+
+// mark chat as read (placeholder - needs LastReadAt column in uac table)
+app.post('/chats/:chatId/markRead', authMiddleware, (req, res) => {
+    res.json({ message: 'Chat marked as read' });
 });
 
 // get chat by public join code (for GroupFinder)
@@ -932,15 +966,32 @@ app.get('/chats/random/:nr', (req, res) => {
     });
 });
 //join chat
-app.post('/chats/join', (req, res) => {
-    const sql = "INSERT INTO uac (UserID, ChatID) VALUES (?, ?)";
-    const values = [req.body.UserID, req.body.ChatID];
-    db.query(sql, values, (err, results) => {
+app.post('/chats/join', authMiddleware, (req, res) => {
+    const userId = req.userId;
+    const chatId = req.body.ChatID;
+    
+    if (!chatId) {
+        return res.status(400).json({ error: 'ChatID is required' });
+    }
+    
+    const checkSql = "SELECT * FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(checkSql, [userId, chatId], (err, existing) => {
         if (err) {
-            console.error('Error joining chat:', err);
+            console.error('Error checking membership:', err);
             return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.status(201).json({ message: 'Joined chat successfully' });
+        }
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'Already a member of this chat' });
+        }
+        
+        const sql = "INSERT INTO uac (UserID, ChatID) VALUES (?, ?)";
+        db.query(sql, [userId, chatId], (err, results) => {
+            if (err) {
+                console.error('Error joining chat:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }   
+            res.status(201).json({ message: 'Joined chat successfully' });
+        });
     });
 });
 //leave chat
@@ -964,15 +1015,62 @@ app.delete("/chats/leave/:chatId", authMiddleware, (req, res) => {
   });
 });
 //make chat admin
-app.put('/chats/makeAdmin', (req, res) => {
-    const sql = "UPDATE uac SET IsChatAdmin = 1 WHERE UserID = ? AND ChatID = ?";
-    const values = [req.body.UserID, req.body.ChatID];
-    db.query(sql, values, (err, results) => {
+app.put('/chats/makeAdmin', authMiddleware, (req, res) => {
+    const requesterId = req.userId;
+    const { UserID, ChatID } = req.body;
+    
+    const checkAdminSql = "SELECT IsChatAdmin FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(checkAdminSql, [requesterId, ChatID], (err, adminCheck) => {
         if (err) {
-            console.error('Error making chat admin:', err);
+            console.error('Error checking admin status:', err);
             return res.status(500).json({ error: 'Internal server error' });
-        }   
-        res.status(201).json({ message: 'User made chat admin successfully' });
+        }
+        if (adminCheck.length === 0 || !adminCheck[0].IsChatAdmin) {
+            return res.status(403).json({ error: 'Only admins can promote users' });
+        }
+        
+        const sql = "UPDATE uac SET IsChatAdmin = 1 WHERE UserID = ? AND ChatID = ?";
+        db.query(sql, [UserID, ChatID], (err, results) => {
+            if (err) {
+                console.error('Error making chat admin:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }   
+            res.status(201).json({ message: 'User made chat admin successfully' });
+        });
+    });
+});
+
+// kick user from chat (admin only)
+app.delete('/chats/:chatId/kick/:userId', authMiddleware, (req, res) => {
+    const requesterId = req.userId;
+    const chatId = req.params.chatId;
+    const targetUserId = req.params.userId;
+    
+    const checkAdminSql = "SELECT IsChatAdmin FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(checkAdminSql, [requesterId, chatId], (err, adminCheck) => {
+        if (err) {
+            console.error('Error checking admin status:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (adminCheck.length === 0 || !adminCheck[0].IsChatAdmin) {
+            return res.status(403).json({ error: 'Only admins can kick users' });
+        }
+        
+        if (Number(targetUserId) === Number(requesterId)) {
+            return res.status(400).json({ error: 'Cannot kick yourself' });
+        }
+        
+        const deleteSql = "DELETE FROM uac WHERE UserID = ? AND ChatID = ?";
+        db.query(deleteSql, [targetUserId, chatId], (err, result) => {
+            if (err) {
+                console.error('Error kicking user:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not in chat' });
+            }
+            res.json({ message: 'User kicked successfully' });
+        });
     });
 });
 //users by chat (avatar URL for profile module)
@@ -1121,30 +1219,39 @@ app.delete('/chats/delete/:id', (req, res) => {
 });
 // write message
 app.post('/messages/create', (req, res) => {
-  const sql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
-  const values = [req.body.ChatID, req.body.UserID, req.body.Content];
+  const { ChatID, UserID, Content } = req.body;
 
-  db.query(sql, values, (err, results) => {
+  db.query("SELECT Username FROM users WHERE UserID = ?", [UserID], (err, userRows) => {
     if (err) {
-      console.error('Error creating message:', err);
+      console.error('Error fetching username:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
+    const username = userRows.length > 0 ? userRows[0].Username : `User ${UserID}`;
 
-    const msgId = results.insertId;
-    const message = {
-      type: "NEW_MESSAGE",
-      msg: {
-        MsgID: msgId,
-        ChatID: req.body.ChatID,
-        UserID: req.body.UserID,
-        Content: req.body.Content,
-        SentAt: new Date()
+    const sql = "INSERT INTO msgs (ChatID, UserID, Content) VALUES (?, ?, ?)";
+    db.query(sql, [ChatID, UserID, Content], (err, results) => {
+      if (err) {
+        console.error('Error creating message:', err);
+        return res.status(500).json({ error: 'Internal server error' });
       }
-    };
 
-    broadcastToChat(req.body.ChatID, message);
+      const msgId = results.insertId;
+      const message = {
+        type: "NEW_MESSAGE",
+        msg: {
+          MsgID: msgId,
+          ChatID,
+          UserID,
+          Username: username,
+          Content,
+          SentAt: new Date().toISOString()
+        }
+      };
 
-    res.status(201).json({ message: 'Message created successfully', MsgID: msgId });
+      broadcastToChat(ChatID, message);
+
+      res.status(201).json({ message: 'Message created successfully', MsgID: msgId });
+    });
   });
 });
 

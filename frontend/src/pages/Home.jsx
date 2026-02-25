@@ -1,14 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/header/Header";
 import "../styles/Home.css";
+import axios from "axios";
 
 export default function Home({isLoggedIn, setIsLoggedIn}) {
+  const navigate = useNavigate();
   
   const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
   const [selectedChips, setSelectedChips] = useState([]); // kiválasztott skillek
   const [searchText, setSearchText] = useState("");        // csoportnév kereső
   const [error, setError] = useState("");
   const [chipOffset, setChipOffset] = useState(0);       // chip carousel offset
+  const [joiningId, setJoiningId] = useState(null);      // which group is being joined
 
   // infinite scroll state
   const PAGE_SIZE = 18;
@@ -166,6 +170,31 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     );
   };
 
+  const handleJoinGroup = async (chatId) => {
+    if (!isLoggedIn) {
+      alert("Please log in to join a group.");
+      navigate("/login");
+      return;
+    }
+    setJoiningId(chatId);
+    try {
+      await axios.post(
+        "http://localhost:3001/chats/join",
+        { ChatID: chatId },
+        { withCredentials: true }
+      );
+      navigate("/chat", { state: { openChatId: chatId } });
+    } catch (err) {
+      if (err.response?.status === 409 || err.response?.data?.error?.includes("already")) {
+        navigate("/chat", { state: { openChatId: chatId } });
+      } else {
+        alert(err.response?.data?.error || "Failed to join group.");
+      }
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
   return (
     <div className="sb-page">
       <Header isLoggedIn = {isLoggedIn} setIsLoggedIn = {setIsLoggedIn}/>
@@ -242,10 +271,13 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
           {cards.map((card) => (
             <Card
               key={card.id}
+              id={card.id}
               title={card.title}
               skills={card.skills}
               users={card.users}
               pic={card.pic}
+              onJoin={handleJoinGroup}
+              joining={joiningId === card.id}
             />
           ))}
 
@@ -273,7 +305,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
   );
 }
 
-function Card({ title, skills, users, pic }) {
+function Card({ id, title, skills, users, pic, onJoin, joining }) {
   return (
     <article className="sb-card">
       <div className="sb-card-header">
@@ -301,7 +333,13 @@ function Card({ title, skills, users, pic }) {
           <span className="sb-av"></span>
         </div>
         <span className="sb-count">{users} users</span>
-        <button className="sb-join">Join</button>
+        <button 
+          className="sb-join" 
+          onClick={() => onJoin(id)}
+          disabled={joining}
+        >
+          {joining ? "Joining..." : "Join"}
+        </button>
       </div>
     </article>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/LoginPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
@@ -8,6 +8,7 @@ import { useUser } from "../context/UserContext";
 export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const { setAvatarUrl } = useUser();
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -47,14 +48,26 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
           <input type="text" placeholder="Email" required />
           <input type="password" placeholder="Password" required />
           <button type="submit" className="login-button">LOGIN</button>
-          
         </form>
         <div className="login-links">
-          <a href="/resetpass">Forgot password?</a>
-          <a href="/register">Don’t have an account? Register</a>
+          <a 
+            href="#" 
+            onClick={(e) => { e.preventDefault(); setShowComingSoon(true); }}
+          >
+            Forgot password?
+          </a>
+          <a href="/register">Don't have an account? Register</a>
         </div>
+        {showComingSoon && (
+          <div className="coming-soon-modal" onClick={() => setShowComingSoon(false)}>
+            <div className="coming-soon-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Coming Soon!</h3>
+              <p>A jelszó visszaállítás funkció hamarosan elérhető lesz.</p>
+              <button onClick={() => setShowComingSoon(false)}>OK</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

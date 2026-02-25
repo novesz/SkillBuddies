@@ -24,6 +24,11 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [skillsWithMembers, setSkillsWithMembers] = useState({ needed: [], memberSkills: [] });
   const [privateChatLoading, setPrivateChatLoading] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [editGroupName, setEditGroupName] = useState("");
+  const [editGroupPic, setEditGroupPic] = useState("");
+  
+  const isCurrentUserAdmin = chatUsers.find((u) => Number(u.UserID) === Number(currentUserId))?.IsChatAdmin === 1;
 
   const ws = useRef(null);
   const chatEndRef = useRef(null);
@@ -31,6 +36,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const lastSendAt = useRef(0);
   const [inputVisible, setInputVisible] = useState(true);
   const lastScrollTop = useRef(0);
+  const chatUsersRef = useRef([]);
 
   // --- Logged-in user: use userId from App when available, else fetch auth status ---
   useEffect(() => {
@@ -47,6 +53,9 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .catch(console.error);
   }, [propUserId]);
 
+  // --- Handle incoming openChatId from navigation state (e.g., Profile → Message) ---
+  const incomingChatId = location.state?.openChatId;
+
   // --- Saját chatek (refetch pl. Join után) ---
   const fetchChats = () => {
     if (!currentUserId) return;
@@ -54,7 +63,11 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .get(`http://localhost:3001/chats/users/${currentUserId}`)
       .then((res) => {
         setChats(res.data);
-        if (!selectedChat && res.data.length > 0) setSelectedChat(res.data[0].ChatID);
+        if (incomingChatId && res.data.some((c) => c.ChatID === incomingChatId)) {
+          setSelectedChat(incomingChatId);
+        } else if (!selectedChat && res.data.length > 0) {
+          setSelectedChat(res.data[0].ChatID);
+        }
       })
       .catch(console.error);
   };
@@ -62,6 +75,16 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   useEffect(() => {
     fetchChats();
   }, [currentUserId]);
+
+  // --- If navigated with openChatId, select that chat once chats are loaded ---
+  useEffect(() => {
+    if (incomingChatId && chats.length > 0) {
+      const exists = chats.some((c) => c.ChatID === incomingChatId);
+      if (exists && selectedChat !== incomingChatId) {
+        setSelectedChat(incomingChatId);
+      }
+    }
+  }, [incomingChatId, chats]);
 
   useEffect(() => {
     const onChatsUpdated = () => { if (currentUserId) fetchChats(); };
@@ -85,20 +108,28 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       if (!isMounted) return;
       const data = JSON.parse(event.data);
       if (data.type === "NEW_MESSAGE") {
+        const senderUserId = Number(data.msg.UserID);
+        let senderName = data.msg.Username;
+        if (!senderName && senderUserId !== currentUserId) {
+          const found = chatUsersRef.current.find((u) => Number(u.UserID) === senderUserId);
+          senderName = found?.Username || `User ${senderUserId}`;
+        }
+        if (senderUserId === currentUserId) {
+          senderName = currentUsername;
+        }
+
         const msg = {
           MsgID: data.msg.MsgID,
           text: data.msg.Content,
-          username:
-            data.msg.UserID === currentUserId
-              ? currentUsername
-              : `User ${data.msg.UserID}`,
-          type: data.msg.UserID === currentUserId ? "outgoing" : "incoming",
-          UserID: data.msg.UserID,
+          username: senderName,
+          type: senderUserId === currentUserId ? "outgoing" : "incoming",
+          UserID: senderUserId,
+          sentAt: data.msg.SentAt || new Date().toISOString(),
         };
 
         setMessagesMap((prev) => {
           const list = prev[data.msg.ChatID] || [];
-          const isOwn = data.msg.UserID === currentUserId;
+          const isOwn = senderUserId === currentUserId;
           const alreadyExists = list.some((m) => m.MsgID === data.msg.MsgID);
           if (alreadyExists) return prev;
           const replaceTemp = isOwn && list.some((m) => m.MsgID < 0 && m.text === data.msg.Content);
@@ -156,6 +187,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                 ? currentUsername
                 : msg.Username || `User ${msg.UserID}`,
             UserID: msg.UserID,
+            sentAt: msg.SentAt || null,
           }));
         setMessagesMap((prev) => ({ ...prev, [selectedChat]: msgs }));
       })
@@ -171,6 +203,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .then((res) => {
         console.log("CHAT USERS:", res.data);
         setChatUsers(res.data);
+        chatUsersRef.current = res.data;
       })
       .catch((err) => {
         console.error("loadChatUsers error:", err);
@@ -225,7 +258,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
         ...prev,
         [selectedChat]: [
           ...(prev[selectedChat] || []),
-          { MsgID: tempId, text, username: currentUsername, type: "outgoing", UserID: currentUserId },
+          { MsgID: tempId, text, username: currentUsername, type: "outgoing", UserID: currentUserId, sentAt: new Date().toISOString() },
         ],
       }));
       setMessageInput("");
@@ -330,6 +363,22 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     return u.startsWith("/") ? u : `/${u}`;
   };
 
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "";
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    if (isToday) {
+      return `${hours}:${minutes}`;
+    }
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${month}.${day}. ${hours}:${minutes}`;
+  };
+
   // --- Szűrt chat lista (privát = 2 tag, csoport = 3+) ---
   const filteredChats = chats.filter((chat) => {
     const count = chat.MemberCount ?? 0;
@@ -337,6 +386,18 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     if (chatFilter === "group") return count >= 3;
     return true;
   });
+
+  // --- Select chat and mark as read ---
+  const handleSelectChat = (chatId) => {
+    setSelectedChat(chatId);
+    axios.post(`http://localhost:3001/chats/${chatId}/markRead`, {}, { withCredentials: true })
+      .then(() => {
+        setChats((prev) => prev.map((c) => 
+          c.ChatID === chatId ? { ...c, UnreadCount: 0 } : c
+        ));
+      })
+      .catch(console.error);
+  };
 
   // --- Open private chat (Message button): create/find 1-1 chat, show it in list, switch to it ---
   const handleOpenPrivateChat = (e, otherUserId, otherUsername) => {
@@ -375,6 +436,80 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
         alert(msg);
       })
       .finally(() => setPrivateChatLoading(false));
+  };
+
+  // --- Kick user from chat ---
+  const handleKickUser = async (userId, username) => {
+    if (!window.confirm(`Are you sure you want to kick ${username} from this chat?`)) return;
+    
+    try {
+      await axios.delete(
+        `http://localhost:3001/chats/${selectedChat}/kick/${userId}`,
+        { withCredentials: true }
+      );
+      setChatUsers((prev) => prev.filter((u) => Number(u.UserID) !== Number(userId)));
+      chatUsersRef.current = chatUsersRef.current.filter((u) => Number(u.UserID) !== Number(userId));
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to kick user.");
+    }
+  };
+
+  // --- Make user admin ---
+  const handleMakeAdmin = async (userId, username) => {
+    if (!window.confirm(`Make ${username} an admin?`)) return;
+    
+    try {
+      await axios.put(
+        "http://localhost:3001/chats/makeAdmin",
+        { UserID: userId, ChatID: selectedChat },
+        { withCredentials: true }
+      );
+      setChatUsers((prev) =>
+        prev.map((u) =>
+          Number(u.UserID) === Number(userId) ? { ...u, IsChatAdmin: 1 } : u
+        )
+      );
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to make admin.");
+    }
+  };
+
+  // --- Open edit group modal ---
+  const openEditGroup = () => {
+    const currentChat = chats.find((c) => c.ChatID === selectedChat);
+    if (currentChat) {
+      setEditGroupName(currentChat.ChatName || "");
+      setEditGroupPic(currentChat.ChatPic || "");
+    }
+    setEditGroupOpen(true);
+    setMenuOpen(false);
+  };
+
+  // --- Save group edits ---
+  const handleSaveGroupEdit = async () => {
+    if (!selectedChat) return;
+    try {
+      const updates = {};
+      if (editGroupName.trim()) updates.ChatName = editGroupName.trim();
+      if (editGroupPic.trim()) updates.ChatPic = editGroupPic.trim();
+      
+      await axios.put(
+        `http://localhost:3001/chats/edit/${selectedChat}`,
+        updates,
+        { withCredentials: true }
+      );
+      
+      setChats((prev) =>
+        prev.map((c) =>
+          c.ChatID === selectedChat
+            ? { ...c, ChatName: editGroupName.trim() || c.ChatName, ChatPic: editGroupPic.trim() || c.ChatPic }
+            : c
+        )
+      );
+      setEditGroupOpen(false);
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to update group.");
+    }
   };
 
   // --- Leave chat ---
@@ -431,7 +566,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
       <div className="content">
         {/* Backdrop: click outside menus closes them, does not select another chat */}
-        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile) && (
+        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen) && (
           <div
             className="chat-menu-backdrop"
             onClick={closeAllMenus}
@@ -468,7 +603,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
             <div
               key={chat.ChatID}
               className={`user-row ${chat.ChatID === selectedChat ? "active" : ""}`}
-              onClick={() => setSelectedChat(chat.ChatID)}
+              onClick={() => handleSelectChat(chat.ChatID)}
             >
               <img
                 src={chat.ChatPic ? `/images/${chat.ChatPic}` : "/images/default.png"}
@@ -476,6 +611,9 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                 className="chat-pic"
               />
               <span className="chat-row-name">{chat.ChatName}</span>
+              {chat.UnreadCount > 0 && (
+                <span className="unread-badge">{chat.UnreadCount}</span>
+              )}
               <span className="chat-row-count" title="Member count">
                 {chat.MemberCount != null ? ` (${chat.MemberCount})` : ""}
               </span>
@@ -496,6 +634,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                   <span>{msg.text}</span>
                   <small style={{ display: "block", fontSize: "10px", color: "#555" }}>
                     {msg.username}
+                    {msg.sentAt && <span style={{ marginLeft: "8px", opacity: 0.7 }}>{formatTime(msg.sentAt)}</span>}
                   </small>
 
                   {msg.type === "outgoing" && (
@@ -574,6 +713,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                   Skills
                 </button>
 
+                <button onClick={openEditGroup}>Edit Group</button>
+
                 <button onClick={handleLeaveChat}>Leave</button>
               </div>
             )}
@@ -596,6 +737,40 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
               >
                 Copy
               </button>
+            </div>
+          )}
+
+          {/* --- EDIT GROUP MODAL --- */}
+          {editGroupOpen && (
+            <div className="edit-group-modal" onClick={() => setEditGroupOpen(false)}>
+              <div className="edit-group-content" onClick={(e) => e.stopPropagation()}>
+                <button className="close-edit-group" onClick={() => setEditGroupOpen(false)}>
+                  ✖
+                </button>
+                <h3>Edit Group</h3>
+                <label>
+                  Group Name:
+                  <input
+                    type="text"
+                    value={editGroupName}
+                    onChange={(e) => setEditGroupName(e.target.value)}
+                    placeholder="Enter group name"
+                  />
+                </label>
+                <label>
+                  Group Picture (filename):
+                  <input
+                    type="text"
+                    value={editGroupPic}
+                    onChange={(e) => setEditGroupPic(e.target.value)}
+                    placeholder="e.g. group.png"
+                  />
+                </label>
+                <div className="edit-group-buttons">
+                  <button onClick={() => setEditGroupOpen(false)}>Cancel</button>
+                  <button onClick={handleSaveGroupEdit} className="save-btn">Save</button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -626,12 +801,32 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                       alt={user.Username}
                       className="person-avatar"
                     />
-                    <span>
+                    <span className="person-name">
                       {Number(user.UserID) === Number(currentUserId)
                         ? `${currentUsername} (You)`
                         : user.Username}
-                      {user.IsChatAdmin === 1 && " (Admin)"}
+                      {user.IsChatAdmin === 1 && <span className="admin-badge">Admin</span>}
                     </span>
+                    {isCurrentUserAdmin && Number(user.UserID) !== Number(currentUserId) && (
+                      <div className="admin-actions" onClick={(e) => e.stopPropagation()}>
+                        {user.IsChatAdmin !== 1 && (
+                          <button
+                            className="make-admin-btn"
+                            title="Make Admin"
+                            onClick={() => handleMakeAdmin(user.UserID, user.Username)}
+                          >
+                            ⭐
+                          </button>
+                        )}
+                        <button
+                          className="kick-btn"
+                          title="Kick User"
+                          onClick={() => handleKickUser(user.UserID, user.Username)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
