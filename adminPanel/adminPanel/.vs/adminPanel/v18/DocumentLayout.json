@@ -3,7 +3,7 @@
   "WorkspaceRootPath": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -11,15 +11,15 @@
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\login.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\login.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\login.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -27,7 +27,7 @@
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
@@ -84,7 +84,7 @@
               "RelativeDocumentMoniker": "adminPanel\\MainWindow.xaml.cs",
               "ToolTip": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\MainWindow.xaml.cs",
               "RelativeToolTip": "adminPanel\\MainWindow.xaml.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAA1wCgAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAAwHwAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-28T18:55:18.486Z",
               "EditorCaption": ""
@@ -150,8 +150,7 @@
               "RelativeToolTip": "adminPanel\\Models\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T18:55:18.488Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T18:55:18.488Z"
             },
             {
               "$type": "Document",
@@ -163,8 +162,7 @@
               "RelativeToolTip": "adminPanel\\Models\\Ticket.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T18:55:18.489Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T18:55:18.489Z"
             }
           ]
         },

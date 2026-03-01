@@ -182,7 +182,7 @@
 
                     <Button x:Name="usersButton" Content="👥 Users" Style="{StaticResource NavButton}" Background="#22FFFFFF" Click="usersButton_Click" />
                     <Button x:Name="ticketsButton" Content="🎫 Tickets" Style="{StaticResource NavButton}" Margin="0,6,0,0" Click="ticketsButton_Click"/>
-                    <Button x:Name="dashBoardButton" Content="📊 Dashboard" Style="{StaticResource NavButton}" Margin="0,6,0,0"/>
+                    <Button x:Name="dashBoardButton" Content="📊 Dashboard" Style="{StaticResource NavButton}" Margin="0,6,0,0" Click="dashBoardButton_Click"/>
 
                     <Separator Margin="0,14,0,14" Opacity="0.35"/>
 
@@ -245,7 +245,7 @@
 
                         <!-- For ticket reply -->
                         <StackPanel Grid.Row="2" Margin="0,16,0,0">
-                            <TextBlock Text="Message / Reply" FontWeight="SemiBold" Foreground="#2B2B2B"/>
+                            <TextBlock Text="Reply to ticket" FontWeight="SemiBold" Foreground="#2B2B2B"/>
                             <Border Margin="0,8,0,0" Background="#10FFFFFF" CornerRadius="14" Padding="12">
                                 <TextBox AcceptsReturn="True"
                                          Height="220"
@@ -253,18 +253,18 @@
                                          Background="Transparent"
                                          BorderThickness="0"
                                          Foreground="#1D1D1F"
-                                         Text="Write reply here..." x:Name="replyBox"/>
+                                         Text="Write reply here..." x:Name="replyBox" TextChanged="replyBox_TextChanged" IsEnabled="False" GotFocus="replyBox_GotFocus"/>
                             </Border>
 
-                            <CheckBox x:Name="resolvedCheck" Content="Mark as resolved" Margin="0,10,0,0" Foreground="#1D1D1F"/>
+                            <CheckBox IsEnabled="False" x:Name="resolvedCheck" Content="Mark as resolved" Margin="0,10,0,0" Foreground="#1D1D1F" Checked="resolvedCheck_Checked" Unchecked="resolvedCheck_Unchecked"/>
                         </StackPanel>
 
                         <!-- Action buttons -->
                         <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,16,0,0">
-                            <Button x:Name="banButton" Content="Ban user" Style="{StaticResource DangerButton}" IsEnabled="False"/>
-                            <Button x:Name="unbanButton" Content="Unban user" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False"/>
-                            <Button x:Name="replyButton" Content="Send reply" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False"/>
-                            <Button x:Name="saveChanges" Content="SaveChanges" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False"/>
+                            <Button x:Name="banButton" Content="Ban user" Style="{StaticResource DangerButton}" IsEnabled="False" Click="banButton_Click"/>
+                            <Button x:Name="unbanButton" Content="Unban user" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False" Click="unbanButton_Click"/>
+                            <Button x:Name="MakeAdmin" Content="Make admin" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False" Click="MakeAdmin_Click"/>
+                            <Button x:Name="saveChanges" Content="SaveChanges" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" IsEnabled="False" Click="saveChanges_Click"/>
                         </StackPanel>
 
                     </Grid>
