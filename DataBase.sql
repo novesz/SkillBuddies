@@ -156,7 +156,8 @@ CREATE TABLE `tickets` (
   `Email` varchar(50) DEFAULT NULL,
   `Text` varchar(45) NOT NULL,
   `IsResolved` tinyint(1) DEFAULT 0,
-  `SentAt` date NOT NULL DEFAULT curdate(),
+  `SentAt` date NOT NULL DEFAULT current_timestamp(),
+  `Reply` text DEFAULT NULL,
   PRIMARY KEY (`TicketID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -226,6 +227,7 @@ CREATE TABLE `users` (
   `PfpID` int(11) DEFAULT NULL,
   `Tokens` int(11) NOT NULL DEFAULT 0,
   `rankID` int(11) NOT NULL DEFAULT 1,
+  `JoinedAt` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`UserID`),
   UNIQUE KEY `Username` (`Username`),
   UNIQUE KEY `Email` (`Email`),
@@ -308,4 +310,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-03 10:20:58
+-- Dump completed on 2026-03-02  9:06:56

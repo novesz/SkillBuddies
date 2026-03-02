@@ -12,6 +12,7 @@
 2026-01-21 képek táblába szedése
 2026-01-22 hashelt jelszavak miatt az eddigi adatok javítása
 2026-02-03 chatekhez nyílvános csatlakozási identifikáló mező felvétele
+2026-03-01 tickets táblába Reply mező hozzáadva
 
 2025-10-18, 2025-10-20 backend megírása:
 	-users táblából minden vagy ID alapján rekord lekérdezése
@@ -38,3 +39,4 @@
 2025-12-02 Navbar-ba lenyíló menü
 2026-01-07 Cookies megoldása (backend is)
 
+2026-02-30, 2026-02-01 Asztali alkalmazás funkcionalitásának implementálása

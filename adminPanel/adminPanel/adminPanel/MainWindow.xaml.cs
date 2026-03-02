@@ -12,11 +12,12 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace adminPanel
 {
     /// <summary>
-    /// Csak design – mint adatok, nincs adatbázis/bejelentkezés.
+    /// Reméljük kész, és működik
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -78,38 +79,49 @@ namespace adminPanel
 
         private void usersButton_Click(object sender, RoutedEventArgs e)
         {
-            isLoggedIn = true;
+            
             usersButton.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#22FFFFFF"));
             ticketsButton.Background = default;
             dashBoardButton.Background = default;
-            replyButton.IsEnabled = false;
             banButton.IsEnabled = true;
             unbanButton.IsEnabled = true;
             saveChanges.IsEnabled = true;
-
+            MakeAdmin.IsEnabled = true;
+            replyBox.IsEnabled = false;
+            resolvedCheck.IsEnabled = false;
             lastClicked = LoadUsers; // store the method
 
             if (isLoggedIn)
             {
                 LoadUsers();
             }
+            else
+            {
+                MessageBox.Show("Please log in to continue");
+            }
         }
 
         private void ticketsButton_Click(object sender, RoutedEventArgs e)
         {
-            isLoggedIn = true;
+            
             usersButton.Background = default;
             dashBoardButton.Background = default;
             ticketsButton.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#22FFFFFF"));
-            replyButton.IsEnabled = true;
             banButton.IsEnabled = false;
             unbanButton.IsEnabled = false;
             saveChanges.IsEnabled = true;
+            MakeAdmin.IsEnabled = false;
+            replyBox.IsEnabled = true;
+            resolvedCheck.IsEnabled = true;
             lastClicked = LoadTickets; // store the method
 
             if (isLoggedIn)
             {
                 LoadTickets();
+            }
+            else
+            {
+                MessageBox.Show("Please log in to continue");
             }
         }
         private void LoadUsers()
@@ -207,6 +219,203 @@ namespace adminPanel
                 changedIndexes.Add(rowIndex);
 
             
+        }
+
+        private void banButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView)
+            {
+                int selectedRank = Convert.ToInt32(rowView["RankID"]);
+
+                // Check permission
+                if (loginRank <= selectedRank)
+                {
+                    MessageBox.Show("You cannot ban a user with equal or higher rank.");
+                    return;
+                }
+
+                // Prevent banning already banned users
+                if (selectedRank == 0)
+                {
+                    MessageBox.Show("User is already banned.");
+                    return;
+                }
+
+                // Ban user
+                rowView["RankID"] = 0;
+
+                int rowIndex = dataGridData.Rows.IndexOf(rowView.Row);
+
+                if (!changedIndexes.Contains(rowIndex))
+                    changedIndexes.Add(rowIndex);
+            }
+            else
+            {
+                MessageBox.Show("Please select a user to ban.");
+            }
+        }
+
+        private void unbanButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView)
+            {
+                if(rowView["RankID"].Equals(0))
+                {
+                    rowView["RankID"] = 1;
+
+                    int rowIndex = dataGridData.Rows.IndexOf(rowView.Row);
+
+                    if (!changedIndexes.Contains(rowIndex))
+                        changedIndexes.Add(rowIndex);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a user to ban.");
+            }
+        }
+        
+        private void MakeAdmin_Click(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView)
+            {
+                if (loginRank == 3)
+                {
+                    rowView["RankID"] = 2;
+                    int rowIndex = dataGridData.Rows.IndexOf(rowView.Row);
+
+                    if (!changedIndexes.Contains(rowIndex))
+                        changedIndexes.Add(rowIndex);
+                }
+                else
+                {
+                    MessageBox.Show("You don't have permission to make an admin");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a user to ban.");
+            }
+        }
+
+        private void saveChanges_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                using (var conn = Database.GetConnection())
+                {
+                    conn.Open();
+                    if (lastClicked == LoadUsers)
+                    {
+                        foreach (int index in changedIndexes)
+                        {
+                            var row = dataGridData.Rows[index];
+                            int userId = Convert.ToInt32(row["UserID"]);
+                            int rankId = Convert.ToInt32(row["RankID"]);
+                            string username = row["Username"].ToString();
+                            string email = row["Email"].ToString();
+                            string updateSql = "UPDATE users SET RankID = @RankID, Username = @Username, Email = @Email WHERE UserID = @UserID;";
+                            using (var cmd = new MySqlCommand(updateSql, conn))
+                            {
+                                cmd.Parameters.AddWithValue("@RankID", rankId);
+                                cmd.Parameters.AddWithValue("@UserID", userId);
+                                cmd.Parameters.AddWithValue("@Username", username);
+                                cmd.Parameters.AddWithValue("@Email", email);
+                                cmd.ExecuteNonQuery();
+                            }
+                            MessageBox.Show($"Updated user {username} with RankID {rankId}");
+                        }
+                    }
+                    else if (lastClicked == LoadTickets)
+                    {
+                        foreach (int index in changedIndexes)
+                        {
+                            var row = dataGridData.Rows[index];
+                            int ticketId = Convert.ToInt32(row["TicketID"]);
+                            bool isResolved = (bool)row["IsResolved"];
+                            string reply = row["Reply"].ToString();
+                            string updateSql = "UPDATE tickets SET IsResolved = @IsResolved, Reply = @Reply WHERE TicketID = @TicketID;";
+                            using (var cmd = new MySqlCommand(updateSql, conn))
+                            {
+                                cmd.Parameters.AddWithValue("@IsResolved", isResolved);
+                                cmd.Parameters.AddWithValue("@TicketID", ticketId);
+                                cmd.Parameters.AddWithValue("@Reply", reply);
+                                cmd.ExecuteNonQuery();
+                            }
+                            MessageBox.Show($"Updated ticket {ticketId} with Status {isResolved}");
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("No changes to save.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading users: " + ex.Message);
+            }
+        }
+
+        private void replyBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if(dataGrid.SelectedItem is DataRowView rowView && lastClicked == LoadTickets)
+            {
+                rowView["Reply"] = replyBox.Text;
+                int rowIndex = dataGridData.Rows.IndexOf(rowView.Row);
+                if (!changedIndexes.Contains(rowIndex))
+                    changedIndexes.Add(rowIndex);
+            }
+        }
+
+        private void replyBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView && lastClicked == LoadTickets) replyBox.Text = rowView["Reply"].ToString();
+        }
+
+        private void resolvedCheck_Checked(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView && lastClicked == LoadTickets) rowView["Isresolved"] = true;
+        }
+
+        private void resolvedCheck_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedItem is DataRowView rowView && lastClicked == LoadTickets) rowView["Isresolved"] = false;
+        }
+
+        private void dashBoardButton_Click(object sender, RoutedEventArgs e)
+        {
+            
+            usersButton.Background = default;
+            dashBoardButton.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#22FFFFFF"));
+            ticketsButton.Background = default;
+            banButton.IsEnabled = false;
+            unbanButton.IsEnabled = false;
+            saveChanges.IsEnabled = false;
+            MakeAdmin.IsEnabled = false;
+            replyBox.IsEnabled = false;
+            resolvedCheck.IsEnabled = false;
+            string sql = "SELECT SUM(RankID = 1) AS 'Total users', SUM(RankID = 2) AS 'Total admins', SUM(RankID = 0) AS 'Banned users', (SELECT COUNT(*) FROM tickets WHERE IsResolved = 0) AS 'Unresolved tickets', (SELECT COUNT(*) FROM tickets WHERE IsResolved = 1) AS 'Resolved tickets' FROM users;";
+            try
+            {
+                using (var conn = Database.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(sql, conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        var dt = new DataTable();
+                        dt.Load(reader);
+                        dataGrid.AutoGenerateColumns = true;
+                        dataGridData = dt;
+                        dataGrid.ItemsSource = dataGridData.DefaultView;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading dashboard: " + ex.Message);
+            }
         }
     }
 }
