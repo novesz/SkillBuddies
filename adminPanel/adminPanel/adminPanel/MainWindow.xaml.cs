@@ -332,7 +332,7 @@ namespace adminPanel
                         {
                             var row = dataGridData.Rows[index];
                             int ticketId = Convert.ToInt32(row["TicketID"]);
-                            string isResolved = row["IsResolved"].ToString();
+                            bool isResolved = (bool)row["IsResolved"];
                             string reply = row["Reply"].ToString();
                             string updateSql = "UPDATE tickets SET IsResolved = @IsResolved, Reply = @Reply WHERE TicketID = @TicketID;";
                             using (var cmd = new MySqlCommand(updateSql, conn))

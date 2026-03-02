@@ -127,7 +127,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',NULL,0,1),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',NULL,0,1),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',NULL,0,1);
+INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',NULL,0,1, NULL),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',NULL,0,1, NULL),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',NULL,0,1, NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
