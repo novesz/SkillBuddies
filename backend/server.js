@@ -1129,7 +1129,7 @@ app.get('/chats/:chatId/skillsWithMembers', (req, res) => {
 });
 
 // find or create private chat (1-1) between current user and otherUserId
-app.post('/chats/private', authMiddleware, (req, res) => {
+app.post('/chats/private', authMiddleware, (req, res) => { 
   const myId = req.userId;
   const otherId = parseInt(req.body.otherUserId || req.body.otherUserID, 10);
   if (!otherId || otherId === myId) return res.status(400).json({ error: 'Invalid other user' });
@@ -1153,7 +1153,7 @@ app.post('/chats/private', authMiddleware, (req, res) => {
     if (rows.length > 0) {
       getOtherUsername((otherUsername) =>
         res.json({ ChatID: rows[0].ChatID, created: false, otherUsername: otherUsername || 'Private' })
-      );
+      );   
       return;
     }
 
@@ -1167,7 +1167,7 @@ app.post('/chats/private', authMiddleware, (req, res) => {
     const tryInsertChat = (retriesLeft) => {
       const publicId = genCode();
       // chats table: PublicID, ChatName, ChatPic (PublicID first in schema)
-      db.query('INSERT INTO chats (PublicID, ChatName, ChatPic) VALUES (?, ?, NULL)', [publicId, 'Private'], (err2, ins) => {
+      db.query('INSERT INTO chats (PublicID, ChatName, ChatPic, IsPrivate) VALUES (?, ?, NULL, 1)', [publicId, 'Private'], (err2, ins) => {
         if (err2) {
           const isDup = err2.code === 'ER_DUP_ENTRY';
           if (isDup && retriesLeft > 0) return tryInsertChat(retriesLeft - 1);
