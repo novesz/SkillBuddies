@@ -10,7 +10,7 @@ namespace adminPanel.Data
     public class Database
     {
         private static string connectionString =
-            "server=localhost;port=3307;database=skillmegoszt;user=root;password=;";
+            "server=localhost;port=3306;database=skillmegoszt;user=root;password=;";
 
         public static MySqlConnection GetConnection()
         {
