@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|f:\\suli\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -17,10 +21,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\data\\database.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -46,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -54,31 +54,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Login.xaml",
               "DocumentMoniker": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\Login.xaml",
               "RelativeDocumentMoniker": "adminPanel\\Login.xaml",
               "ToolTip": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\Login.xaml",
               "RelativeToolTip": "adminPanel\\Login.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-28T19:11:57.17Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T19:11:57.17Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\MainWindow.xaml",
               "RelativeDocumentMoniker": "adminPanel\\MainWindow.xaml",
               "ToolTip": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\MainWindow.xaml",
               "RelativeToolTip": "adminPanel\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-28T18:55:18.49Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T18:55:18.49Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "adminPanel\\MainWindow.xaml.cs",
@@ -91,7 +89,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Login.xaml.cs",
               "DocumentMoniker": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\Login.xaml.cs",
               "RelativeDocumentMoniker": "adminPanel\\Login.xaml.cs",
@@ -99,18 +97,17 @@
               "RelativeToolTip": "adminPanel\\Login.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAGgAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T19:17:11.203Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T19:17:11.203Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "Database.cs",
               "DocumentMoniker": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\Data\\Database.cs",
               "RelativeDocumentMoniker": "adminPanel\\Data\\Database.cs",
               "ToolTip": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\Data\\Database.cs",
               "RelativeToolTip": "adminPanel\\Data\\Database.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-28T19:33:45.316Z",
               "EditorCaption": ""
@@ -125,8 +122,7 @@
               "RelativeToolTip": "adminPanel\\App.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T18:55:18.487Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T18:55:18.487Z"
             },
             {
               "$type": "Document",
@@ -137,8 +133,7 @@
               "ToolTip": "F:\\Suli\\SkillBuddies\\adminPanel\\adminPanel\\adminPanel\\App.xaml",
               "RelativeToolTip": "adminPanel\\App.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-28T18:55:18.462Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-28T18:55:18.462Z"
             },
             {
               "$type": "Document",
