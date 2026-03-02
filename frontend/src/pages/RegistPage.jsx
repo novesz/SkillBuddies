@@ -41,7 +41,7 @@ export default function LoginPage({isLoggedIn, setIsLoggedIn}) {
             <input type="text" placeholder="Last name" required id="LName"/>
           </div>
           
-          <input type="text" placeholder="Email" required />
+          <input type="email" placeholder="Email" required autoComplete="email" />
           <input type="password" placeholder="Password" required />
           <input type="password" placeholder="Password again" required />
 

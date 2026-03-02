@@ -469,6 +469,15 @@
   background: #388e3c;
 }
 
+.remove-admin-btn {
+  background: #ff9800;
+  color: white;
+}
+
+.remove-admin-btn:hover {
+  background: #f57c00;
+}
+
 .kick-btn {
   background: #e53935;
   color: white;
@@ -476,6 +485,38 @@
 
 .kick-btn:hover {
   background: #c62828;
+}
+
+/* Edit group - avatar picker (reuse group avatars) */
+.edit-group-avatars {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 16px 0;
+}
+
+.edit-avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+}
+
+.edit-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-avatar-circle--active {
+  border-color: #7289da;
+  box-shadow: 0 0 0 2px rgba(114, 137, 218, 0.4);
 }
 
 .close-people,
@@ -591,6 +632,20 @@
 
 .edit-group-buttons .save-btn:hover {
   background: #5b6eae;
+}
+
+.kick-confirm-text {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.kick-confirm-content .kick-confirm-btn {
+  background: #e53935;
+}
+
+.kick-confirm-content .kick-confirm-btn:hover {
+  background: #c62828;
 }
 
 /* --- INVITE CODE PANEL --- */

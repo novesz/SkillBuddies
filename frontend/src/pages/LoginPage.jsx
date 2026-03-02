@@ -44,9 +44,9 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
       <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <div className="login-container">
         <h2 className="login-title">LOGIN</h2>
-        <form className="login-form" onSubmit={handleLogin}>
-          <input type="text" placeholder="Email" required />
-          <input type="password" placeholder="Password" required />
+        <form className="login-form" onSubmit={handleLogin} autoComplete="on">
+          <input type="email" name="email" placeholder="Email" required autoComplete="email" />
+          <input type="password" name="password" placeholder="Password" required autoComplete="current-password" />
           <button type="submit" className="login-button">LOGIN</button>
         </form>
         <div className="login-links">
@@ -62,7 +62,7 @@ export default function LoginPage({ isLoggedIn, setIsLoggedIn }) {
           <div className="coming-soon-modal" onClick={() => setShowComingSoon(false)}>
             <div className="coming-soon-content" onClick={(e) => e.stopPropagation()}>
               <h3>Coming Soon!</h3>
-              <p>A jelszó visszaállítás funkció hamarosan elérhető lesz.</p>
+              <p>Password reset will be available soon.</p>
               <button onClick={() => setShowComingSoon(false)}>OK</button>
             </div>
           </div>

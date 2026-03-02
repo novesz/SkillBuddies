@@ -4,6 +4,12 @@ import "../styles/ChatPage.css";
 import Header from "../components/header/Header";
 import axios from "axios";
 
+const GROUP_AVATARS = [
+  "/groupavatars/Ant.png",
+  "/groupavatars/Szarvi.png",
+  "/groupavatars/Bodi.png",
+];
+
 export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId = 0 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,6 +33,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const [editGroupOpen, setEditGroupOpen] = useState(false);
   const [editGroupName, setEditGroupName] = useState("");
   const [editGroupPic, setEditGroupPic] = useState("");
+  const [editAvatarIndex, setEditAvatarIndex] = useState(null);
+  const [pendingKick, setPendingKick] = useState(null); // { userId, username } | null
   
   const isCurrentUserAdmin = chatUsers.find((u) => Number(u.UserID) === Number(currentUserId))?.IsChatAdmin === 1;
 
@@ -363,6 +371,14 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     return u.startsWith("/") ? u : `/${u}`;
   };
 
+  const chatListAvatarUrl = (chat) => {
+    const url = (chat.IsPrivateChat && chat.OtherUserAvatarUrl)
+      ? chat.OtherUserAvatarUrl
+      : (chat.ChatPicUrl || null);
+    if (!url) return "/images/default.png";
+    return url.startsWith("/") ? url : `/${url}`;
+  };
+
   const formatTime = (dateStr) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
@@ -379,11 +395,12 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     return `${month}.${day}. ${hours}:${minutes}`;
   };
 
-  // --- Szűrt chat lista (privát = 2 tag, csoport = 3+) ---
+  // --- Filtered chat list ---
+  // Uses IsPrivateChat from backend, so 2‑person groups stay groups
   const filteredChats = chats.filter((chat) => {
-    const count = chat.MemberCount ?? 0;
-    if (chatFilter === "private") return count === 2;
-    if (chatFilter === "group") return count >= 3;
+    const isPrivate = !!chat.IsPrivateChat;
+    if (chatFilter === "private") return isPrivate;
+    if (chatFilter === "group") return !isPrivate;
     return true;
   });
 
@@ -438,10 +455,20 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .finally(() => setPrivateChatLoading(false));
   };
 
-  // --- Kick user from chat ---
-  const handleKickUser = async (userId, username) => {
-    if (!window.confirm(`Are you sure you want to kick ${username} from this chat?`)) return;
-    
+  // --- Kick: megnyitja a megerősítő modalt ---
+  const handleKickClick = (e, userId, username) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setPendingKick({ userId, username });
+  };
+
+  // --- Kick végrehajtása (modal "Igen" gombjáról) ---
+  const confirmKickUser = async () => {
+    if (!pendingKick || !selectedChat) return;
+    const { userId, username } = pendingKick;
+    setPendingKick(null);
     try {
       await axios.delete(
         `http://localhost:3001/chats/${selectedChat}/kick/${userId}`,
@@ -449,6 +476,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       );
       setChatUsers((prev) => prev.filter((u) => Number(u.UserID) !== Number(userId)));
       chatUsersRef.current = chatUsersRef.current.filter((u) => Number(u.UserID) !== Number(userId));
+      fetchChats();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to kick user.");
     }
@@ -457,7 +485,6 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   // --- Make user admin ---
   const handleMakeAdmin = async (userId, username) => {
     if (!window.confirm(`Make ${username} an admin?`)) return;
-    
     try {
       await axios.put(
         "http://localhost:3001/chats/makeAdmin",
@@ -474,24 +501,49 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     }
   };
 
-  // --- Open edit group modal ---
+  // --- Remove admin ---
+  const handleRemoveAdmin = async (userId, username) => {
+    if (!window.confirm(`Remove admin rights from ${username}?`)) return;
+    try {
+      await axios.put(
+        `http://localhost:3001/chats/${selectedChat}/removeAdmin/${userId}`,
+        {},
+        { withCredentials: true }
+      );
+      setChatUsers((prev) =>
+        prev.map((u) =>
+          Number(u.UserID) === Number(userId) ? { ...u, IsChatAdmin: 0 } : u
+        )
+      );
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to remove admin.");
+    }
+  };
+
+  // --- Open edit group modal (csak admin) ---
   const openEditGroup = () => {
     const currentChat = chats.find((c) => c.ChatID === selectedChat);
     if (currentChat) {
       setEditGroupName(currentChat.ChatName || "");
-      setEditGroupPic(currentChat.ChatPic || "");
+      const currentPic = currentChat.ChatPicUrl || "";
+      setEditGroupPic(currentPic);
+      const idx = GROUP_AVATARS.findIndex((src) => src === currentPic);
+      setEditAvatarIndex(idx >= 0 ? idx : null);
     }
     setEditGroupOpen(true);
     setMenuOpen(false);
   };
 
-  // --- Save group edits ---
+  // --- Save group edits (group picture: URL or filename, e.g. /images/group.png) ---
   const handleSaveGroupEdit = async () => {
     if (!selectedChat) return;
     try {
       const updates = {};
       if (editGroupName.trim()) updates.ChatName = editGroupName.trim();
-      if (editGroupPic.trim()) updates.ChatPic = editGroupPic.trim();
+      if (editGroupPic.trim()) {
+        const pic = editGroupPic.trim();
+        updates.ChatPic = pic.startsWith("/") ? pic : `/images/${pic}`;
+      }
       
       await axios.put(
         `http://localhost:3001/chats/edit/${selectedChat}`,
@@ -502,7 +554,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       setChats((prev) =>
         prev.map((c) =>
           c.ChatID === selectedChat
-            ? { ...c, ChatName: editGroupName.trim() || c.ChatName, ChatPic: editGroupPic.trim() || c.ChatPic }
+            ? { ...c, ChatName: editGroupName.trim() || c.ChatName, ChatPicUrl: updates.ChatPic || c.ChatPicUrl }
             : c
         )
       );
@@ -566,7 +618,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
       <div className="content">
         {/* Backdrop: click outside menus closes them, does not select another chat */}
-        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen) && (
+        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen || pendingKick) && (
           <div
             className="chat-menu-backdrop"
             onClick={closeAllMenus}
@@ -606,7 +658,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
               onClick={() => handleSelectChat(chat.ChatID)}
             >
               <img
-                src={chat.ChatPic ? `/images/${chat.ChatPic}` : "/images/default.png"}
+                src={chatListAvatarUrl(chat)}
                 alt={chat.ChatName}
                 className="chat-pic"
               />
@@ -713,7 +765,9 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                   Skills
                 </button>
 
-                <button onClick={openEditGroup}>Edit Group</button>
+                {isCurrentUserAdmin && (
+                  <button onClick={openEditGroup}>Edit Group</button>
+                )}
 
                 <button onClick={handleLeaveChat}>Leave</button>
               </div>
@@ -740,6 +794,24 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
             </div>
           )}
 
+          {/* --- KICK CONFIRM MODAL --- */}
+          {pendingKick && (
+            <div className="edit-group-modal kick-confirm-modal" onClick={() => setPendingKick(null)}>
+              <div className="edit-group-content kick-confirm-content" onClick={(e) => e.stopPropagation()}>
+                <h3>Confirm kick</h3>
+                <p className="kick-confirm-text">
+                  Are you sure you want to kick <strong>{pendingKick.username}</strong> from this group?
+                </p>
+                <div className="edit-group-buttons">
+                  <button onClick={() => setPendingKick(null)}>Cancel</button>
+                  <button className="save-btn kick-confirm-btn" onClick={confirmKickUser}>
+                    Yes, kick
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* --- EDIT GROUP MODAL --- */}
           {editGroupOpen && (
             <div className="edit-group-modal" onClick={() => setEditGroupOpen(false)}>
@@ -757,15 +829,24 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                     placeholder="Enter group name"
                   />
                 </label>
-                <label>
-                  Group Picture (filename):
-                  <input
-                    type="text"
-                    value={editGroupPic}
-                    onChange={(e) => setEditGroupPic(e.target.value)}
-                    placeholder="e.g. group.png"
-                  />
-                </label>
+                <div className="edit-group-avatars">
+                  {GROUP_AVATARS.map((src, i) => (
+                    <button
+                      key={src}
+                      type="button"
+                      className={
+                        "edit-avatar-circle" +
+                        (i === editAvatarIndex ? " edit-avatar-circle--active" : "")
+                      }
+                      onClick={() => {
+                        setEditAvatarIndex(i);
+                        setEditGroupPic(src);
+                      }}
+                    >
+                      <img src={src} alt={`Group avatar ${i + 1}`} />
+                    </button>
+                  ))}
+                </div>
                 <div className="edit-group-buttons">
                   <button onClick={() => setEditGroupOpen(false)}>Cancel</button>
                   <button onClick={handleSaveGroupEdit} className="save-btn">Save</button>
@@ -809,19 +890,30 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                     </span>
                     {isCurrentUserAdmin && Number(user.UserID) !== Number(currentUserId) && (
                       <div className="admin-actions" onClick={(e) => e.stopPropagation()}>
-                        {user.IsChatAdmin !== 1 && (
+                        {user.IsChatAdmin !== 1 ? (
                           <button
+                            type="button"
                             className="make-admin-btn"
                             title="Make Admin"
                             onClick={() => handleMakeAdmin(user.UserID, user.Username)}
                           >
                             ⭐
                           </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="remove-admin-btn"
+                            title="Remove Admin"
+                            onClick={() => handleRemoveAdmin(user.UserID, user.Username)}
+                          >
+                            ★
+                          </button>
                         )}
                         <button
+                          type="button"
                           className="kick-btn"
                           title="Kick User"
-                          onClick={() => handleKickUser(user.UserID, user.Username)}
+                          onClick={(e) => handleKickClick(e, user.UserID, user.Username)}
                         >
                           ✕
                         </button>

@@ -866,7 +866,7 @@ app.get('/chats/all', (req, res) => {
         res.json(results);
     });
 });
-//get chats userenkent (PublicID, MemberCount)
+//get chats userenkent (PublicID, MemberCount, group pic URL, private chat other user avatar)
 app.get('/chats/users/:userId', (req, res) => {
     const myId = parseInt(req.params.userId, 10);
     const sql = `
@@ -876,20 +876,31 @@ app.get('/chats/users/:userId', (req, res) => {
               JOIN users u ON u.UserID = uac2.UserID
               WHERE uac2.ChatID = c.ChatID AND uac2.UserID != ?
               ORDER BY uac2.UserID LIMIT 1) AS OtherUserName,
+             (SELECT p2.URL FROM uac uac2
+              JOIN users u2 ON u2.UserID = uac2.UserID
+              LEFT JOIN pictures p2 ON p2.PicID = u2.PfpID
+              WHERE uac2.ChatID = c.ChatID AND uac2.UserID != ?
+              LIMIT 1) AS OtherUserAvatarUrl,
+             p.URL AS ChatPicUrl,
              0 AS UnreadCount
       FROM chats c
       JOIN uac ON uac.ChatID = c.ChatID
+      LEFT JOIN pictures p ON p.PicID = c.ChatPic
       WHERE uac.UserID = ?
     `;
-    db.query(sql, [myId, myId], (err, results) => {
+    db.query(sql, [myId, myId, myId], (err, results) => {
         if (err) {
             console.error('Error fetching chats:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
-        const rows = results.map((r) => ({
-            ...r,
-            ChatName: r.MemberCount === 2 && r.OtherUserName ? r.OtherUserName : r.ChatName
-        }));
+        const rows = results.map((r) => {
+            const isPrivateChat = r.MemberCount === 2 && r.ChatName === 'Private';
+            return {
+                ...r,
+                IsPrivateChat: !!isPrivateChat,
+                ChatName: isPrivateChat && r.OtherUserName ? r.OtherUserName : r.ChatName
+            };
+        });
         res.json(rows);
     });
 });
@@ -1073,6 +1084,40 @@ app.delete('/chats/:chatId/kick/:userId', authMiddleware, (req, res) => {
         });
     });
 });
+
+// remove admin from user in chat (admin only; cannot remove yourself if you are the only admin)
+app.put('/chats/:chatId/removeAdmin/:userId', authMiddleware, (req, res) => {
+    const requesterId = req.userId;
+    const chatId = req.params.chatId;
+    const targetUserId = req.params.userId;
+
+    const checkAdminSql = "SELECT IsChatAdmin FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(checkAdminSql, [requesterId, chatId], (err, adminCheck) => {
+        if (err) {
+            console.error('Error checking admin status:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (adminCheck.length === 0 || !adminCheck[0].IsChatAdmin) {
+            return res.status(403).json({ error: 'Only admins can remove admin rights' });
+        }
+        if (Number(targetUserId) === Number(requesterId)) {
+            return res.status(400).json({ error: 'Cannot remove your own admin rights' });
+        }
+
+        const updateSql = "UPDATE uac SET IsChatAdmin = 0 WHERE UserID = ? AND ChatID = ?";
+        db.query(updateSql, [targetUserId, chatId], (err, result) => {
+            if (err) {
+                console.error('Error removing admin:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not in chat' });
+            }
+            res.json({ message: 'Admin rights removed' });
+        });
+    });
+});
+
 //users by chat (avatar URL for profile module)
 app.get('/chats/chatUsers/:chatId', (req, res) => {
   const sql = `
@@ -1189,21 +1234,65 @@ app.post('/chats/private', authMiddleware, (req, res) => {
     tryInsertChat(5);
   });
 });
-//edit chat info
-app.put('/chats/edit/:id', (req, res) => {
+//edit chat info (csak admin)
+app.put('/chats/edit/:id', authMiddleware, (req, res) => {
+    const userId = req.userId;
     const chatId = req.params.id;
-    const fields = req.body;
-    // Build dynamic SQL query
-    const updates = Object.keys(fields).map(field => `${field} = ?`).join(', ');
-    const values = Object.values(fields);
-    values.push(chatId); // add chatId to the end for WHERE clause
-    const sql = `UPDATE chats SET ${updates} WHERE ChatID = ?`;
-    db.query(sql, values, (err, results) => {
+    const fields = { ...req.body };
+
+    const checkAdminSql = "SELECT IsChatAdmin FROM uac WHERE UserID = ? AND ChatID = ?";
+    db.query(checkAdminSql, [userId, chatId], (err, rows) => {
       if (err) {
-        console.error('Error updating chat:', err);
+        console.error('Error checking admin:', err);
         return res.status(500).json({ error: 'Internal server error' });
       }
+      if (!rows.length || !rows[0].IsChatAdmin) {
+        return res.status(403).json({ error: 'Only group admins can edit the group' });
+      }
+
+      const updates = {};
+      if (fields.ChatName !== undefined && String(fields.ChatName).trim()) {
+        updates.ChatName = String(fields.ChatName).trim();
+      }
+
+      if (fields.ChatPic !== undefined) {
+        const picVal = fields.ChatPic;
+        if (typeof picVal === 'number' || /^\d+$/.test(String(picVal))) {
+          updates.ChatPic = parseInt(picVal, 10);
+        } else if (typeof picVal === 'string' && picVal.trim()) {
+          const url = picVal.trim();
+          db.query("INSERT INTO pictures (URL) VALUES (?)", [url], (errPic, ins) => {
+            if (errPic) {
+              console.error('Error inserting picture:', errPic);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
+            const picId = ins.insertId;
+            const setName = updates.ChatName != null ? "ChatName = ?, " : "";
+            const setVals = updates.ChatName != null ? [updates.ChatName, picId, chatId] : [picId, chatId];
+            db.query(`UPDATE chats SET ${setName}ChatPic = ? WHERE ChatID = ?`, setVals, (errUp, result) => {
+                if (errUp) {
+                  console.error('Error updating chat:', errUp);
+                  return res.status(500).json({ error: 'Internal server error' });
+                }
+                return res.json({ message: 'Chat updated successfully' });
+              });
+          });
+          return;
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.json({ message: 'Nothing to update' });
+      }
+      const setClause = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+      const values = [...Object.values(updates), chatId];
+      db.query(`UPDATE chats SET ${setClause} WHERE ChatID = ?`, values, (err, result) => {
+        if (err) {
+          console.error('Error updating chat:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
         res.json({ message: 'Chat updated successfully' });
+      });
     });
   });
 //delete chat
