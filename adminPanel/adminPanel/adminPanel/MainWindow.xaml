@@ -109,7 +109,7 @@
 
                 <!-- Logo / Title -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="38" Height="38" Fill="#FFEDC07A"/>
+                    <Image Width="45" Height="45" x:Name="SBImage" Source="/SBIcon.png"/>
                     <TextBlock Text="SkillBuddies Admin Panel"
                                Margin="12,0,0,0"
                                VerticalAlignment="Center"

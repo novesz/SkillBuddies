@@ -14,6 +14,8 @@ using System.Windows.Shapes;
 using MySql.Data.MySqlClient;
 using adminPanel.Data;
 using adminPanel.Models;
+using adminPanel.Helpers;
+using System.IO;
 
 namespace adminPanel
 {
@@ -102,8 +104,18 @@ namespace adminPanel
                             }
                             // Set logged in flag and close login window
                             MainWindow.isLoggedIn = true;
-                            MainWindow.loginRank = rankId; 
-                            MainWindow.profilePicture = Convert.ToString(reader["URL"]);
+                            MainWindow.loginRank = rankId;
+                            
+
+                            var fileName = Convert.ToString(reader["URL"]);
+                            var fullPath = PathHelper.GetAvatarFullPath(fileName);
+
+
+                            if (!File.Exists(fullPath))
+                            {
+                                MessageBox.Show("File does not exist!");
+                            }
+                            MainWindow.profilePicture = fullPath;
                             if (MainWindow.isLoggedIn == true)
                             {
                                 MessageBox.Show("Successful login",

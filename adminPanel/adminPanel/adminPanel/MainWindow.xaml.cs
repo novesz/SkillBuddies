@@ -12,7 +12,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
+using System.IO;
 
 namespace adminPanel
 {
@@ -21,6 +23,7 @@ namespace adminPanel
     /// </summary>
     public partial class MainWindow : Window
     {
+
         public static bool isLoggedIn { get; set; }
         public static int loginRank { get; set; }
         public static Action lastClicked { get; set; }
@@ -71,7 +74,16 @@ namespace adminPanel
                 {
                     LoginOut.Content = "Log out";
                 }
-                ProfilePicture.ImageSource = new ImageSourceConverter().ConvertFromString(profilePicture) as ImageSource;
+                if (File.Exists(MainWindow.profilePicture))
+                {
+                    ProfilePicture.ImageSource = new BitmapImage(
+                    new Uri(MainWindow.profilePicture, UriKind.Absolute));
+                }
+                else
+                {
+                    MessageBox.Show("Avatar not found.");
+                }
+
             }
             else
             {
