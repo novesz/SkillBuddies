@@ -27,6 +27,7 @@ namespace adminPanel
         public static List<int> changedIndexes = new List<int>();
         public static int selectedUserIndex { get; set; }
         public static DataTable dataGridData { get; set; }
+        public static string profilePicture { get; set; }
         private void searchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             DataTable dt = dataGridData;
@@ -68,12 +69,20 @@ namespace adminPanel
                 loginWindow.ShowDialog();
                 if (isLoggedIn)
                 {
-                    LoginOut.Content = "Logged In";
+                    LoginOut.Content = "Log out";
                 }
+                ProfilePicture.ImageSource = new ImageSourceConverter().ConvertFromString(profilePicture) as ImageSource;
             }
             else
             {
-                MessageBox.Show("Already logged in.");
+                isLoggedIn = false;
+                LoginOut.Content = "Login";
+                loginRank = 0;
+                if (!isLoggedIn)
+                {
+                    MessageBox.Show("Successfully logged out!");
+                }
+                ProfilePicture.ImageSource = null;
             }
         }
 

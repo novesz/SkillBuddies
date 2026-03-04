@@ -45,8 +45,8 @@ namespace adminPanel
                     conn.Open();
 
                     const string sql = @"
-                        SELECT UserID, Username, Email, RankID, Password
-                        FROM users
+                        SELECT UserID, Username, Email, RankID, Password, pictures.URL 
+                        FROM users JOIN pictures ON users.PfpID = pictures.PicID
                         WHERE Username = @username
                         LIMIT 1";
 
@@ -102,7 +102,8 @@ namespace adminPanel
                             }
                             // Set logged in flag and close login window
                             MainWindow.isLoggedIn = true;
-                            MainWindow.loginRank = rankId;
+                            MainWindow.loginRank = rankId; 
+                            MainWindow.profilePicture = Convert.ToString(reader["URL"]);
                             if (MainWindow.isLoggedIn == true)
                             {
                                 MessageBox.Show("Successful login",

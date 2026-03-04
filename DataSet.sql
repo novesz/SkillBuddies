@@ -21,6 +21,7 @@
 
 LOCK TABLES `changes` WRITE;
 /*!40000 ALTER TABLE `changes` DISABLE KEYS */;
+INSERT INTO `changes` VALUES (23,1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlEr','palpal828@hengersor.hu',1,'2026-03-04 08:16:25'),(24,2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts','novesz831@hengersor.hu',1,'2026-03-04 08:16:25'),(25,3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBf','szahub608@hengersor.hu',1,'2026-03-04 08:16:25');
 /*!40000 ALTER TABLE `changes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -30,7 +31,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `chats` WRITE;
 /*!40000 ALTER TABLE `chats` DISABLE KEYS */;
-INSERT INTO `chats` VALUES (1,'AAAAAA','Cuncik',NULL,'2025-01-01 00:00:00'),(2,'AAAAAB','NotPoopie',NULL,'2025-11-04 11:47:40'),(5,'BSF4WS','Cuncik2',NULL,'2026-02-03 10:17:03');
+INSERT INTO `chats` VALUES (1,'AAAAAA','Cuncik',NULL,'2025-01-01 00:00:00',0),(2,'AAAAAB','NotPoopie',NULL,'2025-11-04 11:47:40',0),(5,'BSF4WS','Cuncik2',NULL,'2026-02-03 10:17:03',0);
 /*!40000 ALTER TABLE `chats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -60,6 +61,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `pictures` WRITE;
 /*!40000 ALTER TABLE `pictures` DISABLE KEYS */;
+INSERT INTO `pictures` VALUES (1,'SkillBuddies/frontend/public/avatars/BB.png'),(2,'SkillBuddies/frontend/public/avatars/BCpng'),(3,'SkillBuddies/frontend/public/avatars/BD.png'),(4,'SkillBuddies/frontend/public/avatars/GS.png'),(5,'SkillBuddies/frontend/public/avatars/OD.png'),(6,'SkillBuddies/frontend/public/avatars/PB.png'),(7,'SkillBuddies/frontend/public/avatars/PC.png'),(8,'SkillBuddies/frontend/public/avatars/RB.png'),(9,'SkillBuddies/frontend/public/avatars/RD.png'),(10,'SkillBuddies/frontend/public/avatars/YC.png'),(11,'SkillBuddies/frontend/public/avatars/YS.png');
 /*!40000 ALTER TABLE `pictures` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -127,9 +129,72 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',NULL,0,1, NULL),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',NULL,0,1, NULL),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',NULL,0,1, NULL);
+INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',1,0,3,NULL),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',2,0,3,NULL),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',3,0,2,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER ChangeMade
+BEFORE UPDATE ON users
+FOR EACH ROW
+BEGIN
+    DECLARE last_nonrank_change DATETIME;
+
+    
+
+    IF OLD.rankID <> NEW.rankID THEN
+        INSERT INTO changes (UserID, Username, Password, Email, rankID)
+        VALUES (OLD.UserID, OLD.Username, OLD.Password, OLD.Email, OLD.rankID);
+    END IF;
+
+
+
+    IF OLD.Username <> NEW.Username
+       OR OLD.Password <> NEW.Password
+       OR OLD.Email <> NEW.Email THEN
+
+        -- Load last non-rank change timestamp
+        SELECT MAX(ChangedAt)
+        INTO last_nonrank_change
+        FROM changes
+        WHERE UserID = OLD.UserID
+          AND rankID = OLD.rankID;  
+        
+        IF last_nonrank_change IS NOT NULL
+           AND TIMESTAMPDIFF(HOUR, last_nonrank_change, NOW()) < 24 THEN
+
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'You must wait 24 hours before changing your profile information again.';
+
+        END IF;
+
+       
+        INSERT INTO changes (UserID, Username, Password, Email, rankID)
+        VALUES (OLD.UserID, OLD.Username, OLD.Password, OLD.Email, OLD.rankID);
+
+    END IF;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Dumping events for database 'skillmegoszt'
+--
+
+--
+-- Dumping routines for database 'skillmegoszt'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -140,4 +205,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-03 10:21:23
+-- Dump completed on 2026-03-04  8:43:34
