@@ -225,18 +225,16 @@ CREATE TABLE `users` (
   `Username` varchar(45) NOT NULL,
   `Password` varchar(255) NOT NULL,
   `Email` varchar(45) NOT NULL,
-  `PfpID` int(11) DEFAULT NULL,
+  `PfpID` int(11) NOT NULL DEFAULT 1,
   `Tokens` int(11) NOT NULL DEFAULT 0,
   `rankID` int(11) NOT NULL DEFAULT 1,
   `JoinedAt` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`UserID`),
-  UNIQUE KEY `Username` (`Username`),
   UNIQUE KEY `Email` (`Email`),
   KEY `fkRank_idx` (`rankID`),
   KEY `fkPic_idx` (`PfpID`),
-  CONSTRAINT `fkPic` FOREIGN KEY (`PfpID`) REFERENCES `pictures` (`PicID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fkRank` FOREIGN KEY (`rankID`) REFERENCES `user_rank` (`rankID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -311,4 +309,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-04 11:14:44
+-- Dump completed on 2026-03-05 10:56:05
