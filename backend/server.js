@@ -257,7 +257,22 @@ app.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.json({ loggedIn: false });
 });
+//admin check
+app.get("/checkAdmin", authMiddleware, (req, res) => {
+  const sql = "SELECT * FROM users WHERE UserID = ?;";
+  db.query(sql, [req.user.UserID], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.send(false);
+    }
 
+    const user = results[0];
+    if (!user) return res.send(false);
+
+    if (user.UserID > 1) res.send(true);
+    else res.send(false);
+  });
+});
 //users avatar skills profile
 app.get("/users/me/profile", authMiddleware, (req, res) => {
   const userId = req.userId;

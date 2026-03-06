@@ -247,3 +247,7 @@ C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPa
 C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\obj\Debug\adminPanel.csproj.Up2Date
 C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\obj\Debug\adminPanel.exe
 C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\obj\Debug\adminPanel.pdb
+C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\bin\Debug\adminPanel.exe.manifest
+C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\bin\Debug\adminPanel.application
+C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\obj\Debug\adminPanel.exe.manifest
+C:\Users\palpal828\Desktop\pallagapal\SkillBuddies\adminPanel\adminPanel\adminPanel\obj\Debug\adminPanel.application

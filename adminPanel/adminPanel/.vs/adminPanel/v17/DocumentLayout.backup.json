@@ -3,7 +3,7 @@
   "WorkspaceRootPath": "C:\\Users\\palpal828\\Desktop\\pallagapal\\SkillBuddies\\adminPanel\\adminPanel\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|C:\\Users\\palpal828\\Desktop\\pallagapal\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|c:\\users\\palpal828\\desktop\\pallagapal\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
@@ -11,7 +11,7 @@
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|c:\\users\\palpal828\\desktop\\pallagapal\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|C:\\Users\\palpal828\\Desktop\\pallagapal\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -23,7 +23,7 @@
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\login.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|c:\\users\\palpal828\\desktop\\pallagapal\\skillbuddies\\adminpanel\\adminpanel\\adminpanel\\helpers\\pathhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|C:\\Users\\palpal828\\Desktop\\pallagapal\\SkillBuddies\\adminPanel\\adminPanel\\adminpanel\\helpers\\pathhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{65997411-464C-48F0-BC7B-3ED90B00E104}|adminPanel\\adminPanel.csproj|solutionrelative:adminpanel\\helpers\\pathhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -58,8 +58,7 @@
               "RelativeToolTip": "adminPanel\\Helpers\\PathHelper.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-04T08:28:41.059Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-04T08:28:41.059Z"
             },
             {
               "$type": "Document",
@@ -71,8 +70,7 @@
               "RelativeToolTip": "adminPanel\\App.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-18T07:40:22.039Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T07:40:22.039Z"
             },
             {
               "$type": "Document",
@@ -132,8 +130,7 @@
               "RelativeToolTip": "adminPanel\\Login.xaml.cs",
               "ViewState": "AgIAAFoAAAAAAAAAAAAYwHsAAABNAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-04T07:18:14.989Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-04T07:18:14.989Z"
             },
             {
               "$type": "Document",
@@ -145,8 +142,7 @@
               "RelativeToolTip": "adminPanel\\MainWindow.xaml.cs",
               "ViewState": "AgIAAEEAAAAAAAAAAAAkwFYAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-18T07:40:26.636Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T07:40:26.636Z"
             },
             {
               "$type": "Document",

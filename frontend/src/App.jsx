@@ -19,6 +19,7 @@ import JoinByCodePage from "./pages/JoinByCodePage";
 import GroupFinderModal from "./pages/GroupFinder";
 
 import PrivateRoute from "./components/PrivateRoute";
+import AdminPanelDownload from "./pages/AdminPanelDownload";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -147,6 +148,14 @@ function App() {
           element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <JoinByCodePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/adminPanel"
+          element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <AdminPanelDownload />
             </PrivateRoute>
           }
         />

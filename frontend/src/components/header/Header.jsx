@@ -123,7 +123,11 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
           </div>
         )}
       </div>
-
+      {isLoggedIn && 
+        <div>
+          <Link to={"/adminPanel"} className="download-link"><button className="button sb-join">Download admin panel</button></Link>
+        </div>
+      }
       <div className="sb-profile">
         <PfDropdown
           avatarUrl={avatarUrl}
