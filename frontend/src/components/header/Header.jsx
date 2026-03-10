@@ -4,13 +4,13 @@ import "../../styles/Header.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import PfDropdown from "./PfDropdown";
-import axios from "axios";
+import api from "../../api/client";
 
 export default function Header({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const hambRef = useRef(null);
-  const { avatarUrl } = useUser();
+  const { avatarUrl, userRank } = useUser();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -54,7 +54,7 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
     }
     
     searchTimeoutRef.current = setTimeout(() => {
-      axios.get(`http://localhost:3001/users/search?q=${encodeURIComponent(query)}`, { withCredentials: true })
+      api.get(`/users/search?q=${encodeURIComponent(query)}`)
         .then((res) => {
           setSearchResults(res.data);
           setSearchOpen(res.data.length > 0);
@@ -85,7 +85,7 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
 
         {open && (
           <div className="hamburger-panel">
-                   <Navbar isLoggedIn={isLoggedIn} />
+            <Navbar isLoggedIn={isLoggedIn} userRank={userRank} />
           </div>
         )}
       </div>
@@ -123,11 +123,6 @@ export default function Header({ isLoggedIn, setIsLoggedIn }) {
           </div>
         )}
       </div>
-      {isLoggedIn && 
-        <div>
-          <Link to={"/adminPanel"} className="download-link"><button className="button sb-join">Download admin panel</button></Link>
-        </div>
-      }
       <div className="sb-profile">
         <PfDropdown
           avatarUrl={avatarUrl}

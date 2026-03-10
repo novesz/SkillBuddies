@@ -196,7 +196,14 @@ function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
-    next();
+    db.query("SELECT rankID FROM users WHERE UserID = ?", [req.userId], (err, rows) => {
+      if (err) return res.status(500).json({ loggedIn: false });
+      if (rows.length === 0 || rows[0].rankID === 0) {
+        res.clearCookie("token");
+        return res.status(403).json({ loggedIn: false, message: "Account is banned." });
+      }
+      next();
+    });
   } catch (err) {
     return res.status(401).json({ loggedIn: false });
   }
@@ -209,7 +216,16 @@ app.get("/auth/status", (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ loggedIn: true, userId: decoded.userId });
+    const userId = decoded.userId;
+    db.query("SELECT rankID FROM users WHERE UserID = ?", [userId], (err, rows) => {
+      if (err) return res.json({ loggedIn: true, userId, rankID: 1 });
+      const rankID = rows.length ? rows[0].rankID : 1;
+      if (rankID === 0) {
+        res.clearCookie("token");
+        return res.json({ loggedIn: false });
+      }
+      res.json({ loggedIn: true, userId, rankID });
+    });
   } catch {
     res.json({ loggedIn: false });
   }
@@ -230,6 +246,10 @@ app.post("/login", async (req, res) => {
           // 2. Compare password with bcrypt
           const match = await bcrypt.compare(Password, user.Password);
           if (!match) return res.status(401).json({ message: "Invalid email or password" });
+
+          if (user.rankID === 0) {
+            return res.status(403).json({ message: "Account is banned." });
+          }
 
           // 3. Password is correct → generate JWT
           const token = jwt.sign(
@@ -257,20 +277,17 @@ app.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.json({ loggedIn: false });
 });
-//admin check
+// Admin check: rankID >= 2 means admin or owner (2=admin, 3=owner)
 app.get("/checkAdmin", authMiddleware, (req, res) => {
-  const sql = "SELECT * FROM users WHERE UserID = ?;";
-  db.query(sql, [req.user.UserID], (err, results) => {
+  const sql = "SELECT rankID FROM users WHERE UserID = ?";
+  db.query(sql, [req.userId], (err, results) => {
     if (err) {
       console.error(err);
-      return res.send(false);
+      return res.json(false);
     }
-
     const user = results[0];
-    if (!user) return res.send(false);
-
-    if (user.UserID > 1) res.send(true);
-    else res.send(false);
+    if (!user) return res.json(false);
+    res.json(user.rankID >= 2);
   });
 });
 //users avatar skills profile

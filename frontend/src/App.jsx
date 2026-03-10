@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import axios from "axios";
+import api from "./api/client";
 import "./App.css";
 import { useUser } from "./context/UserContext";
 import { GroupFinderContext } from "./context/GroupFinderContext";
@@ -19,13 +19,14 @@ import JoinByCodePage from "./pages/JoinByCodePage";
 import GroupFinderModal from "./pages/GroupFinder";
 
 import PrivateRoute from "./components/PrivateRoute";
+import AdminRoute from "./components/AdminRoute";
 import AdminPanelDownload from "./pages/AdminPanelDownload";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState(0);
   const [groupFinderOpen, setGroupFinderOpen] = useState(false);
-  const { setAvatarUrl } = useUser();
+  const { setAvatarUrl, setUserRank, userRank } = useUser();
 
   const groupFinderValue = {
     isOpen: groupFinderOpen,
@@ -37,20 +38,20 @@ function App() {
 
   // Initial auth + profile; when not logged in, reset avatar to default
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/auth/status", { withCredentials: true })
+    api
+      .get("/auth/status")
       .then((response) => {
-        setIsLoggedIn(response.data.loggedIn);
-        if (response.data.loggedIn) {
-          setUserId(response.data.userId ?? 0);
-          fetch("http://localhost:3001/users/me/profile", { credentials: "include" })
-            .then((r) => r.json())
-            .then((data) => {
-              setAvatarUrl(data.avatarUrl || DEFAULT_AVATAR);
-            })
-            .catch((err) => console.error("Profile load on init:", err));
+        const { loggedIn, userId: uid, rankID } = response.data;
+        setIsLoggedIn(loggedIn);
+        if (loggedIn) {
+          setUserId(uid ?? 0);
+          setUserRank(rankID ?? 1);
+          api.get("/users/me/profile").then(({ data }) => {
+            setAvatarUrl(data?.avatarUrl || DEFAULT_AVATAR);
+          }).catch((err) => console.error("Profile load on init:", err));
         } else {
           setUserId(0);
+          setUserRank(1);
           setAvatarUrl(DEFAULT_AVATAR);
         }
       })
@@ -58,27 +59,38 @@ function App() {
         console.error("Auth status error:", error);
         setIsLoggedIn(false);
         setUserId(0);
+        setUserRank(1);
         setAvatarUrl(DEFAULT_AVATAR);
       });
-  }, [setAvatarUrl]);
+  }, [setAvatarUrl, setUserRank]);
 
   // On logout (isLoggedIn becomes false), reset avatar so it doesn’t stay visible
   useEffect(() => {
     if (!isLoggedIn) setAvatarUrl(DEFAULT_AVATAR);
   }, [isLoggedIn, setAvatarUrl]);
 
-  // Bejelentkezés után userId frissítése (LoginPage csak setIsLoggedIn-t hív, userId maradna 0)
+  // Bejelentkezés után userId és userRank frissítése
   useEffect(() => {
     if (!isLoggedIn) return;
-    axios
-      .get("http://localhost:3001/auth/status", { withCredentials: true })
-      .then((res) => {
-        if (res.data.loggedIn && res.data.userId != null) {
-          setUserId(res.data.userId);
-        }
-      })
-      .catch(() => {});
-  }, [isLoggedIn]);
+    api.get("/auth/status").then((res) => {
+      if (res.data.loggedIn) {
+        if (res.data.userId != null) setUserId(res.data.userId);
+        if (res.data.rankID != null) setUserRank(res.data.rankID);
+      }
+    }).catch(() => {});
+  }, [isLoggedIn, setUserRank]);
+
+  // 403 (banned / session invalid) → force logout
+  useEffect(() => {
+    const onAuthLogout = () => {
+      setIsLoggedIn(false);
+      setUserId(0);
+      setUserRank(1);
+      setAvatarUrl(DEFAULT_AVATAR);
+    };
+    window.addEventListener("auth:logout", onAuthLogout);
+    return () => window.removeEventListener("auth:logout", onAuthLogout);
+  }, [setAvatarUrl, setUserRank]);
 
   return (
     <GroupFinderContext.Provider value={groupFinderValue}>
@@ -154,9 +166,9 @@ function App() {
         <Route
           path="/adminPanel"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
-              <AdminPanelDownload />
-            </PrivateRoute>
+            <AdminRoute isLoggedIn={isLoggedIn} userRank={userRank}>
+              <AdminPanelDownload isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+            </AdminRoute>
           }
         />
       </Routes>

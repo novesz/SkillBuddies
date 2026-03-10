@@ -41,7 +41,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `msgs` WRITE;
 /*!40000 ALTER TABLE `msgs` DISABLE KEYS */;
-INSERT INTO `msgs` VALUES (1,1,1,'ASDASD','2026-01-22 10:34:23'),(2,1,2,'ASDASD2','2026-01-22 10:34:23'),(3,2,1,'Pali ne','2026-01-22 10:34:23');
+INSERT INTO `msgs` VALUES (1,1,1,'ASDASD','2026-01-22 10:34:23'),(2,1,2,'ASDASD2','2026-01-22 10:34:23'),(3,2,1,'Pali ne','2026-01-22 10:34:23'),(4,2,1,'Hi everyone!','2026-03-01 09:00:00'),(5,3,1,'Hello!','2026-03-01 09:05:00'),(6,1,2,'Welcome to NotPoopie','2026-03-02 10:00:00'),(7,2,2,'Thanks!','2026-03-02 10:01:00'),(8,3,2,'Cool group','2026-03-02 10:02:00'),(9,1,6,'C# practice starts here','2026-03-04 11:15:00'),(10,2,6,'Ready to learn','2026-03-04 11:20:00'),(11,4,6,'Joined too','2026-03-05 08:00:00'),(12,5,6,'Admin here – any questions?','2026-03-05 08:05:00');
 /*!40000 ALTER TABLE `msgs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -91,7 +91,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `tickets` WRITE;
 /*!40000 ALTER TABLE `tickets` DISABLE KEYS */;
-INSERT INTO `tickets` VALUES (2,'asd@asd.com','asdasd',0,'2026-03-04',NULL);
+INSERT INTO `tickets` VALUES (2,'asd@asd.com','asdasd',0,'2026-03-04',NULL),(3,'demo@skillbuddies.test','Cannot reset password',0,'2026-03-05',NULL),(4,'member@skillbuddies.test','How do I join a group?',1,'2026-03-05','Use the Join by ID button with the code from the group.'),(5,'admin@skillbuddies.test','Bug: chat sometimes does not load',0,'2026-03-06',NULL);
 /*!40000 ALTER TABLE `tickets` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -101,7 +101,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `uac` WRITE;
 /*!40000 ALTER TABLE `uac` DISABLE KEYS */;
-INSERT INTO `uac` VALUES (1,1,1,'2026-01-22 10:33:28'),(1,2,0,'2026-01-22 10:33:28'),(1,6,1,'2026-03-04 11:11:30'),(1,7,1,'2026-03-04 11:12:08'),(1,8,1,'2026-03-04 11:12:47'),(1,9,1,'2026-03-04 11:13:14'),(2,1,1,'2026-01-22 10:33:28'),(2,2,1,'2026-01-22 10:33:28'),(3,1,0,'2026-01-22 10:33:28'),(3,2,1,'2026-01-22 10:33:28');
+INSERT INTO `uac` VALUES (1,1,1,'2026-01-22 10:33:28'),(1,2,0,'2026-01-22 10:33:28'),(1,6,1,'2026-03-04 11:11:30'),(1,7,1,'2026-03-04 11:12:08'),(1,8,1,'2026-03-04 11:12:47'),(1,9,1,'2026-03-04 11:13:14'),(2,1,1,'2026-01-22 10:33:28'),(2,2,1,'2026-01-22 10:33:28'),(3,1,0,'2026-01-22 10:33:28'),(3,2,1,'2026-01-22 10:33:28'),(4,1,0,'2026-03-05 08:00:00'),(4,6,0,'2026-03-05 08:00:00'),(5,2,1,'2026-03-05 08:00:00'),(5,6,1,'2026-03-05 08:00:00'),(6,2,0,'2026-03-05 09:00:00'),(6,6,0,'2026-03-05 09:00:00');
 /*!40000 ALTER TABLE `uac` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -111,7 +111,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `uas` WRITE;
 /*!40000 ALTER TABLE `uas` DISABLE KEYS */;
-INSERT INTO `uas` VALUES (1,1),(1,2),(1,3),(1,4),(2,3),(2,4),(3,1),(3,2);
+INSERT INTO `uas` VALUES (1,1),(1,2),(1,3),(1,4),(2,3),(2,4),(3,1),(3,2),(4,11),(4,15),(5,4),(5,5),(5,11),(6,11),(6,12);
 /*!40000 ALTER TABLE `uas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -131,7 +131,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',1,0,3,NULL),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',2,0,3,NULL),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',3,0,2,NULL);
+INSERT INTO `users` VALUES (1,'Herr Paulus','$2b$10$Qv2DSY5zzxFvofoTamVKxO4jiEF8RPs/gBtlErwo.agFVXDURV24q','palpal828@hengersor.hu',1,0,3,NULL),(2,'Eszti Eszti','$2b$10$7XtZd6bDaORctPDsaNs9G.zl3Yz2GNcU/.LUts3jMwe9JmFERluTK','novesz831@hengersor.hu',2,0,3,NULL),(3,'Hubi Hubi','$2b$10$wLWTCxbt6hTKsYLj2OxPS.olO02GHilsul1aBfYC3qCgxoQDnslcm','szahub608@hengersor.hu',3,0,2,NULL),(4,'Demo User','$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','demo@skillbuddies.test',1,0,1,NULL),(5,'Team Admin','$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','admin@skillbuddies.test',1,0,2,NULL),(6,'Test Member','$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','member@skillbuddies.test',1,0,1,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

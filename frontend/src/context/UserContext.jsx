@@ -6,6 +6,7 @@ const DEFAULT_AVATAR = "/avatars/BB.png";
 
 export function UserProvider({ children }) {
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR);
+  const [userRank, setUserRank] = useState(1); // 1=user, 2=admin, 3=owner
 
   // load from localStorage on init
   useEffect(() => {
@@ -17,7 +18,7 @@ export function UserProvider({ children }) {
     if (avatarUrl) localStorage.setItem(STORAGE_KEY, avatarUrl);
   }, [avatarUrl]);
 
-  const value = { avatarUrl, setAvatarUrl };
+  const value = { avatarUrl, setAvatarUrl, userRank, setUserRank };
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 

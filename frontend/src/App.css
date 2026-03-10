@@ -22,3 +22,14 @@ body {
   min-height: 100vh;          /* mindig legalább a viewport magassága */
   box-sizing: border-box;     /* minden padding belül számolódjon */
 }
+
+/* Admin Panel download / installation page */
+.admin-panel-page { max-width: 640px; margin: 0 auto; padding: 24px; }
+.admin-panel-intro { margin-bottom: 24px; color: #333; }
+.admin-panel-section { margin-bottom: 24px; }
+.admin-panel-section h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.admin-panel-steps { padding-left: 20px; margin: 8px 0; }
+.admin-panel-steps li { margin-bottom: 6px; }
+.admin-panel-page code { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+.admin-panel-back { margin-top: 24px; }
+.admin-panel-back a { color: #1e88e5; }

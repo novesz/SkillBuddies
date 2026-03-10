@@ -35,32 +35,38 @@ namespace adminPanel
         {
             DataTable dt = dataGridData;
             if (dt == null) return;
-            else
+
+            string filter = searchBox.Text.Trim().Replace("'", "''");
+            bool hasUsername = dt.Columns.Contains("Username");
+            bool hasEmail = dt.Columns.Contains("Email");
+
+            if (string.IsNullOrEmpty(filter))
             {
-                string filter = searchBox.Text.Trim().Replace("'", "''");
-                if (string.IsNullOrEmpty(filter))
-                {
-                    dataGrid.ItemsSource = dt.DefaultView;
-                }
+                dt.DefaultView.RowFilter = "";
+                dataGrid.ItemsSource = dt.DefaultView;
+                return;
+            }
+
+            if (!hasUsername && !hasEmail)
+            {
+                dt.DefaultView.RowFilter = "";
+                dataGrid.ItemsSource = dt.DefaultView;
+                return;
+            }
+
+            try
+            {
+                if (hasUsername && hasEmail)
+                    dt.DefaultView.RowFilter = $"Username LIKE '%{filter}%' OR Email LIKE '%{filter}%'";
+                else if (hasUsername)
+                    dt.DefaultView.RowFilter = $"Username LIKE '%{filter}%'";
                 else
-                {
-                    try
-                    {
-                        try
-                        {
-                            dt.DefaultView.RowFilter = $"Username LIKE '%{filter}%' OR Email LIKE '%{filter}%'";
-                        }
-                        catch
-                        {
-                            dt.DefaultView.RowFilter = $"Email LIKE '%{filter}%' OR Email LIKE '%{filter}%'";
-                        }
-                        dataGrid.ItemsSource = dt.DefaultView;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error applying filter: " + ex.Message);
-                    }
-                }
+                    dt.DefaultView.RowFilter = $"Email LIKE '%{filter}%'";
+                dataGrid.ItemsSource = dt.DefaultView;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error applying filter: " + ex.Message);
             }
         }
 
@@ -74,14 +80,14 @@ namespace adminPanel
                 {
                     LoginOut.Content = "Log out";
                 }
-                if (File.Exists(MainWindow.profilePicture))
+                if (!string.IsNullOrEmpty(MainWindow.profilePicture) && File.Exists(MainWindow.profilePicture))
                 {
                     ProfilePicture.ImageSource = new BitmapImage(
                     new Uri(MainWindow.profilePicture, UriKind.Absolute));
                 }
                 else
                 {
-                    MessageBox.Show("Avatar not found.");
+                    ProfilePicture.ImageSource = null;
                 }
 
             }
@@ -354,7 +360,7 @@ namespace adminPanel
                             var row = dataGridData.Rows[index];
                             int ticketId = Convert.ToInt32(row["TicketID"]);
                             bool isResolved = (bool)row["IsResolved"];
-                            string reply = row["Reply"].ToString();
+                            string reply = row["Reply"]?.ToString() ?? "";
                             string updateSql = "UPDATE tickets SET IsResolved = @IsResolved, Reply = @Reply WHERE TicketID = @TicketID;";
                             using (var cmd = new MySqlCommand(updateSql, conn))
                             {
@@ -406,7 +412,6 @@ namespace adminPanel
 
         private void dashBoardButton_Click(object sender, RoutedEventArgs e)
         {
-            
             usersButton.Background = default;
             dashBoardButton.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#22FFFFFF"));
             ticketsButton.Background = default;
@@ -416,7 +421,7 @@ namespace adminPanel
             MakeAdmin.IsEnabled = false;
             replyBox.IsEnabled = false;
             resolvedCheck.IsEnabled = false;
-            string sql = "SELECT SUM(RankID = 1) AS 'Total users', SUM(RankID = 2) AS 'Total admins', SUM(RankID = 0) AS 'Banned users', (SELECT COUNT(*) FROM tickets WHERE IsResolved = 0) AS 'Unresolved tickets', (SELECT COUNT(*) FROM tickets WHERE IsResolved = 1) AS 'Resolved tickets' FROM users;";
+            string sql = "SELECT SUM(RankID = 1) AS TotalUsers, SUM(RankID = 2) AS TotalAdmins, SUM(RankID = 0) AS BannedUsers, (SELECT COUNT(*) FROM tickets WHERE IsResolved = 0) AS UnresolvedTickets, (SELECT COUNT(*) FROM tickets WHERE IsResolved = 1) AS ResolvedTickets FROM users;";
             try
             {
                 using (var conn = Database.GetConnection())
@@ -429,13 +434,14 @@ namespace adminPanel
                         dt.Load(reader);
                         dataGrid.AutoGenerateColumns = true;
                         dataGridData = dt;
-                        dataGrid.ItemsSource = dataGridData.DefaultView;
+                        dataGrid.ItemsSource = dataGridData?.DefaultView ?? null;
                     }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error loading dashboard: " + ex.Message);
+                dataGrid.ItemsSource = null;
             }
         }
     }
