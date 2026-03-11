@@ -8,14 +8,9 @@ const PRESETS = [
 ];
 
 export default function AvatarPicker({ value, onChange }) {
-  const [pending, setPending] = useState(value || "");
   const listRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
-
-  useEffect(() => {
-    setPending(value || "");
-  }, [value]);
 
   const updateArrows = () => {
     const el = listRef.current;
@@ -41,9 +36,6 @@ export default function AvatarPicker({ value, onChange }) {
     el.scrollBy({ left: dir * amount, behavior: "smooth" });
   };
 
-  const onSave = () => onChange?.(pending);
-  const onCancel = () => setPending(value || "");
-
   return (
     <section className="avatar-section card">
       <div className="avatar-title">Profile picture</div>
@@ -56,10 +48,10 @@ export default function AvatarPicker({ value, onChange }) {
             <button
               key={src}
               type="button"
-              className={`preset ${pending === src ? "active" : ""}`}
+              className={`preset ${value === src ? "active" : ""}`}
               style={{ backgroundImage: `url(${src})` }}
-              onClick={() => setPending(src)}
-              aria-pressed={pending === src}
+              onClick={() => onChange?.(src)}
+              aria-pressed={value === src}
               title="Use this avatar"
             />
           ))}
@@ -67,15 +59,6 @@ export default function AvatarPicker({ value, onChange }) {
 
         <button type="button" className="nav-btn" onClick={() => scrollByAmount(1)} disabled={!canRight}>›</button>
       </div>
-
-      <div className="row-right" style={{ marginTop: 10 }}>
-         <button className="btn" type="button" onClick={onCancel} disabled={pending === (value || "")}>
-          Cancel
-        </button>
-        <button className="btn btn-primary" type="button" onClick={onSave} disabled={pending === (value || "")}>
-          Save
-        </button>
-      </div> 
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 import api from "./api/client";
 import "./App.css";
@@ -25,8 +25,10 @@ import AdminPanelDownload from "./pages/AdminPanelDownload";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState(0);
+  const [authLoading, setAuthLoading] = useState(true);
   const [groupFinderOpen, setGroupFinderOpen] = useState(false);
   const { setAvatarUrl, setUserRank, userRank } = useUser();
+  const didMount = useRef(false); // <-- új: első render jelző
 
   const groupFinderValue = {
     isOpen: groupFinderOpen,
@@ -41,14 +43,18 @@ function App() {
     api
       .get("/auth/status")
       .then((response) => {
-        const { loggedIn, userId: uid, rankID } = response.data;
+        const { loggedIn, userId: uid, rankID, username, avatarUrl } = response.data;
         setIsLoggedIn(loggedIn);
         if (loggedIn) {
           setUserId(uid ?? 0);
           setUserRank(rankID ?? 1);
-          api.get("/users/me/profile").then(({ data }) => {
-            setAvatarUrl(data?.avatarUrl || DEFAULT_AVATAR);
-          }).catch((err) => console.error("Profile load on init:", err));
+          if (avatarUrl) {
+            setAvatarUrl(avatarUrl);
+          } else {
+            api.get("/users/me/profile").then(({ data }) => {
+              setAvatarUrl(data?.avatarUrl || DEFAULT_AVATAR);
+            }).catch((err) => console.error("Profile load on init:", err));
+          }
         } else {
           setUserId(0);
           setUserRank(1);
@@ -61,11 +67,16 @@ function App() {
         setUserId(0);
         setUserRank(1);
         setAvatarUrl(DEFAULT_AVATAR);
-      });
+      })
+      .finally(() => setAuthLoading(false));
   }, [setAvatarUrl, setUserRank]);
 
-  // On logout (isLoggedIn becomes false), reset avatar so it doesn’t stay visible
+  // On logout (isLoggedIn becomes false), reset avatar – de NE az első renderkor
   useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
     if (!isLoggedIn) setAvatarUrl(DEFAULT_AVATAR);
   }, [isLoggedIn, setAvatarUrl]);
 
@@ -110,7 +121,7 @@ function App() {
         <Route
           path="/profile"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
+            <PrivateRoute isLoggedIn={isLoggedIn} authLoading={authLoading}>
               <Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
             </PrivateRoute>
           }
@@ -118,7 +129,7 @@ function App() {
         <Route
           path="/profile/:userId"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
+            <PrivateRoute isLoggedIn={isLoggedIn} authLoading={authLoading}>
               <Profile isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
             </PrivateRoute>
           }
@@ -126,7 +137,7 @@ function App() {
         <Route
           path="/usersettings"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
+            <PrivateRoute isLoggedIn={isLoggedIn} authLoading={authLoading}>
               <UserSettings isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
             </PrivateRoute>
           }
@@ -150,7 +161,7 @@ function App() {
         <Route
           path="/chat"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
+            <PrivateRoute isLoggedIn={isLoggedIn} authLoading={authLoading}>
               <ChatPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} userId={userId} />
             </PrivateRoute>
           }
@@ -158,7 +169,7 @@ function App() {
         <Route
           path="/chat/join/:code"
           element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
+            <PrivateRoute isLoggedIn={isLoggedIn} authLoading={authLoading}>
               <JoinByCodePage />
             </PrivateRoute>
           }

@@ -217,14 +217,22 @@ app.get("/auth/status", (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.userId;
-    db.query("SELECT rankID FROM users WHERE UserID = ?", [userId], (err, rows) => {
+    db.query("SELECT rankID, Username, PfpID FROM users WHERE UserID = ?", [userId], (err, rows) => {
       if (err) return res.json({ loggedIn: true, userId, rankID: 1 });
       const rankID = rows.length ? rows[0].rankID : 1;
+      const username = rows.length ? rows[0].Username : "";
+      const pfpId = rows.length ? rows[0].PfpID : null;
       if (rankID === 0) {
         res.clearCookie("token");
         return res.json({ loggedIn: false });
       }
-      res.json({ loggedIn: true, userId, rankID });
+      if (!pfpId) {
+        return res.json({ loggedIn: true, userId, rankID, username, avatarUrl: "" });
+      }
+      db.query("SELECT URL FROM pictures WHERE PicID = ?", [pfpId], (err2, picRows) => {
+        const avatarUrl = picRows && picRows.length ? picRows[0].URL : "";
+        res.json({ loggedIn: true, userId, rankID, username, avatarUrl });
+      });
     });
   } catch {
     res.json({ loggedIn: false });
@@ -1378,25 +1386,47 @@ app.post('/messages/create', (req, res) => {
 
 //message edit
 app.put('/messages/edit/:id', (req, res) => {
+    const msgId = req.params.id;
+    const newContent = req.body.Content;
     const sql = "UPDATE msgs SET Content = ? WHERE MsgID = ?";
-    const values = [req.body.Content, req.params.id];
-    db.query(sql, values, (err, results) => {
+    db.query(sql, [newContent, msgId], (err, results) => {
         if (err) {
             console.error('Error updating message:', err);
             return res.status(500).json({ error: 'Internal server error' });
         }
+        // Broadcast EDIT_MESSAGE a chat tagjainak
+        db.query("SELECT ChatID FROM msgs WHERE MsgID = ?", [msgId], (err2, rows) => {
+            if (!err2 && rows.length > 0) {
+                broadcastToChat(rows[0].ChatID, {
+                    type: "EDIT_MESSAGE",
+                    msg: { MsgID: Number(msgId), Content: newContent, ChatID: rows[0].ChatID }
+                });
+            }
+        });
         res.json({ message: 'Message updated successfully' });
     });
 });
 //message delete
 app.delete('/messages/delete/:id', (req, res) => {
-    const sql = "DELETE FROM msgs WHERE MsgID = ?";
-    db.query(sql, [req.params.id], (err, results) => {
-        if (err) {
-            console.error('Error deleting message:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }       
-        res.json({ message: 'Message deleted successfully' });
+    const msgId = req.params.id;
+    // Előbb lekérjük a ChatID-t, aztán töröljük
+    db.query("SELECT ChatID FROM msgs WHERE MsgID = ?", [msgId], (err, rows) => {
+        const chatId = (!err && rows.length > 0) ? rows[0].ChatID : null;
+        const sql = "DELETE FROM msgs WHERE MsgID = ?";
+        db.query(sql, [msgId], (err2, results) => {
+            if (err2) {
+                console.error('Error deleting message:', err2);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+            // Broadcast DELETE_MESSAGE a chat tagjainak
+            if (chatId) {
+                broadcastToChat(chatId, {
+                    type: "DELETE_MESSAGE",
+                    msg: { MsgID: Number(msgId), ChatID: chatId }
+                });
+            }
+            res.json({ message: 'Message deleted successfully' });
+        });
     });
 });
 //get messages by chat

@@ -45,6 +45,12 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const [inputVisible, setInputVisible] = useState(true);
   const lastScrollTop = useRef(0);
   const chatUsersRef = useRef([]);
+  const selectedChatRef = useRef(null); // ← mindig a legfrissebb selectedChat értéke
+
+  // selectedChatRef mindig naprakész
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
   // --- Logged-in user: use userId from App when available, else fetch auth status ---
   useEffect(() => {
@@ -71,11 +77,13 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .get(`http://localhost:3001/chats/users/${currentUserId}`)
       .then((res) => {
         setChats(res.data);
+        // selectedChatRef.current = a VALÓDI aktuális chat, nem a closure-beli régi érték
         if (incomingChatId && res.data.some((c) => c.ChatID === incomingChatId)) {
           setSelectedChat(incomingChatId);
-        } else if (!selectedChat && res.data.length > 0) {
+        } else if (!selectedChatRef.current && res.data.length > 0) {
           setSelectedChat(res.data[0].ChatID);
         }
+        // ha már van kiválasztott chat → NEM nyúlunk hozzá!
       })
       .catch(console.error);
   };
@@ -115,6 +123,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     socket.onmessage = (event) => {
       if (!isMounted) return;
       const data = JSON.parse(event.data);
+
       if (data.type === "NEW_MESSAGE") {
         const senderUserId = Number(data.msg.UserID);
         let senderName = data.msg.Username;
@@ -146,6 +155,32 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
             : [...list, msg];
           const updatedList = ensureUniqueMessages(next);
           return { ...prev, [data.msg.ChatID]: updatedList };
+        });
+      }
+
+      if (data.type === "EDIT_MESSAGE") {
+        const { MsgID, Content, ChatID } = data.msg;
+        setMessagesMap((prev) => {
+          const list = prev[ChatID];
+          if (!list) return prev;
+          return {
+            ...prev,
+            [ChatID]: list.map((m) =>
+              m.MsgID === MsgID ? { ...m, text: Content } : m
+            ),
+          };
+        });
+      }
+
+      if (data.type === "DELETE_MESSAGE") {
+        const { MsgID, ChatID } = data.msg;
+        setMessagesMap((prev) => {
+          const list = prev[ChatID];
+          if (!list) return prev;
+          return {
+            ...prev,
+            [ChatID]: list.filter((m) => m.MsgID !== MsgID),
+          };
         });
       }
     };
@@ -381,10 +416,15 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
   const formatTime = (dateStr) => {
     if (!dateStr) return "";
-    const date = new Date(dateStr);
+    // MySQL "2026-03-11 12:30:00" -> "2026-03-11T12:30:00" hogy minden böngészőben működjön
+    const normalized = typeof dateStr === "string" ? dateStr.replace(" ", "T") : dateStr;
+    const date = new Date(normalized);
     if (isNaN(date.getTime())) return "";
     const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
     const hours = date.getHours().toString().padStart(2, "0");
     const minutes = date.getMinutes().toString().padStart(2, "0");
     if (isToday) {
@@ -406,10 +446,15 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
   // --- Select chat and mark as read ---
   const handleSelectChat = (chatId) => {
+    if (chatId === selectedChat) return;
+    // Menük bezárása + editingMessage törlése chat váltáskor
+    closeAllMenus();
+    setEditingMessage(null);
+    setMessageInput("");
     setSelectedChat(chatId);
     axios.post(`http://localhost:3001/chats/${chatId}/markRead`, {}, { withCredentials: true })
       .then(() => {
-        setChats((prev) => prev.map((c) => 
+        setChats((prev) => prev.map((c) =>
           c.ChatID === chatId ? { ...c, UnreadCount: 0 } : c
         ));
       })
