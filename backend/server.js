@@ -1790,6 +1790,7 @@ app.get("/groups", (req, res) => {
         .map((s) => s.trim())
         .filter(Boolean)
     : [];
+  const excludeUserId = parseInt(req.query.excludeUserId || req.query.userId || "0", 10);
 
   // Base select (ChatPic = PicID; a megjelenítéshez p.URL-t adjuk vissza ChatPicként)
   let sql = `
@@ -1813,6 +1814,11 @@ app.get("/groups", (req, res) => {
   if (search) {
     where.push("c.ChatName LIKE ?");
     params.push(`%${search}%`);
+  }
+
+  if (excludeUserId > 0) {
+    where.push("c.ChatID NOT IN (SELECT ChatID FROM uac WHERE UserID = ?)");
+    params.push(excludeUserId);
   }
 
   // Match ANY selected skill (same behavior as frontend chip filtering)

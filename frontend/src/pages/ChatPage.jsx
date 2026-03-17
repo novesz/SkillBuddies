@@ -35,6 +35,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const [editGroupPic, setEditGroupPic] = useState("");
   const [editAvatarIndex, setEditAvatarIndex] = useState(null);
   const [pendingKick, setPendingKick] = useState(null); // { userId, username } | null
+  const [listDrawerOpen, setListDrawerOpen] = useState(false); // mobile: chat list drawer
   
   const isCurrentUserAdmin = chatUsers.find((u) => Number(u.UserID) === Number(currentUserId))?.IsChatAdmin === 1;
 
@@ -661,6 +662,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     setSkillsOpen(false);
     setInviteCodeOpen(false);
     setSelectedUserProfile(null);
+    setListDrawerOpen(false);
   };
 
   useEffect(() => {
@@ -676,9 +678,9 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     <div className="chat-page">
       <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-      <div className="content">
+      <div className={`content ${listDrawerOpen ? "list-drawer-open" : ""}`}>
         {/* Backdrop: click outside menus closes them, does not select another chat */}
-        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen || pendingKick) && (
+        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen || pendingKick || listDrawerOpen) && (
           <div
             className="chat-menu-backdrop"
             onClick={closeAllMenus}
@@ -686,8 +688,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
           />
         )}
 
-        {/* --- CHAT LIST --- */}
-        <div className="user-list">
+        {/* --- CHAT LIST (on mobile: drawer, open via .list-drawer-open) --- */}
+        <div className={`user-list ${listDrawerOpen ? "drawer-open" : ""}`}>
           <div className="chat-list-filters">
             <button
               type="button"
@@ -735,6 +737,14 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
         {/* --- CHAT BOX (messages scrollable, input fixed at bottom, hides on scroll up) --- */}
         <div className="chat-container">
+          <button
+            type="button"
+            className="open-list-btn"
+            onClick={() => setListDrawerOpen(true)}
+            aria-label="Chat list"
+          >
+            Chats
+          </button>
           <div className="chat-box">
             <div
               ref={messagesContainerRef}

@@ -112,7 +112,7 @@ export default function PasswordPanel({ onSubmit }) {
             </label>
 
             <label className="field">
-              <span className="text">Új jelszó még egyszer</span>
+              <span className="text">New password again</span>
               <input
                 className="input"
                 type="password"
