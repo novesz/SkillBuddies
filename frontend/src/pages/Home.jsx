@@ -4,7 +4,7 @@ import Header from "../components/header/Header";
 import "../styles/Home.css";
 import axios from "axios";
 
-export default function Home({isLoggedIn, setIsLoggedIn}) {
+export default function Home({ isLoggedIn, setIsLoggedIn, userId }) {
   const navigate = useNavigate();
   
   const [chips, setChips] = useState([]);          // skill-nevek a chipekhez
@@ -91,6 +91,7 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
       qs.set("offset", String(offset));
       if (debouncedSearch.trim()) qs.set("search", debouncedSearch.trim());
       if (skillsQuery) qs.set("skills", skillsQuery);
+      if (userId) qs.set("excludeUserId", String(userId));
 
       const resp = await fetch(`http://localhost:3001/groups?${qs.toString()}`);
       if (!resp.ok) throw new Error("Failed to load groups.");
@@ -137,11 +138,11 @@ export default function Home({isLoggedIn, setIsLoggedIn}) {
     }
   };
 
-  // Load first page on mount + when filters change
+  // Load first page on mount + when filters or userId change
   useEffect(() => {
     loadGroupsPage({ reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, skillsQuery]);
+  }, [debouncedSearch, skillsQuery, userId]);
 
   // Infinite scroll: csak akkor töltünk többet, ha a sentinel látszik és nincs már betöltés
   useEffect(() => {

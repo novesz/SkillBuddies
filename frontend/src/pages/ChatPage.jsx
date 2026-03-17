@@ -35,6 +35,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const [editGroupPic, setEditGroupPic] = useState("");
   const [editAvatarIndex, setEditAvatarIndex] = useState(null);
   const [pendingKick, setPendingKick] = useState(null); // { userId, username } | null
+  const [listDrawerOpen, setListDrawerOpen] = useState(false); // mobile: chat list drawer
   
   const isCurrentUserAdmin = chatUsers.find((u) => Number(u.UserID) === Number(currentUserId))?.IsChatAdmin === 1;
 
@@ -46,6 +47,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
   const lastScrollTop = useRef(0);
   const chatUsersRef = useRef([]);
   const selectedChatRef = useRef(null); // ← mindig a legfrissebb selectedChat értéke
+  // incomingChatId ref-ben tárolva, hogy a fetchChats closure mindig a legfrissebb értéket lássa
+  const incomingChatIdRef = useRef(location.state?.openChatId ?? null);
 
   // selectedChatRef mindig naprakész
   useEffect(() => {
@@ -67,23 +70,28 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
       .catch(console.error);
   }, [propUserId]);
 
-  // --- Handle incoming openChatId from navigation state (e.g., Profile → Message) ---
-  const incomingChatId = location.state?.openChatId;
+  // Ha location.state változik (pl. új navigate("/chat", {state:{openChatId:X}})), frissítjük a ref-et
+  useEffect(() => {
+    if (location.state?.openChatId) {
+      incomingChatIdRef.current = location.state.openChatId;
+    }
+  }, [location.state]);
 
   // --- Saját chatek (refetch pl. Join után) ---
-  const fetchChats = () => {
+  const fetchChats = (overrideSelectId) => {
     if (!currentUserId) return;
     axios
       .get(`http://localhost:3001/chats/users/${currentUserId}`)
       .then((res) => {
         setChats(res.data);
-        // selectedChatRef.current = a VALÓDI aktuális chat, nem a closure-beli régi érték
-        if (incomingChatId && res.data.some((c) => c.ChatID === incomingChatId)) {
-          setSelectedChat(incomingChatId);
+        // Melyik chatID-t kell megnyitni?
+        const targetId = overrideSelectId ?? incomingChatIdRef.current ?? null;
+        if (targetId && res.data.some((c) => c.ChatID === targetId)) {
+          setSelectedChat(targetId);
+          incomingChatIdRef.current = null; // egyszer használjuk csak
         } else if (!selectedChatRef.current && res.data.length > 0) {
           setSelectedChat(res.data[0].ChatID);
         }
-        // ha már van kiválasztott chat → NEM nyúlunk hozzá!
       })
       .catch(console.error);
   };
@@ -92,15 +100,23 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     fetchChats();
   }, [currentUserId]);
 
-  // --- If navigated with openChatId, select that chat once chats are loaded ---
+  // Ha location.state-ből érkezik openChatId (pl. Profile Message gomb után)
   useEffect(() => {
-    if (incomingChatId && chats.length > 0) {
-      const exists = chats.some((c) => c.ChatID === incomingChatId);
-      if (exists && selectedChat !== incomingChatId) {
-        setSelectedChat(incomingChatId);
+    const openId = location.state?.openChatId;
+    if (!openId) return;
+    incomingChatIdRef.current = openId;
+    // Ha a chatek már be vannak töltve, azonnal váltsunk rá
+    if (chats.length > 0) {
+      const exists = chats.some((c) => c.ChatID === openId);
+      if (exists) {
+        setSelectedChat(openId);
+        incomingChatIdRef.current = null;
+      } else {
+        // Még nincs a listában (új privát chat) → töltsük újra
+        fetchChats(openId);
       }
     }
-  }, [incomingChatId, chats]);
+  }, [location.state, chats.length]);
 
   useEffect(() => {
     const onChatsUpdated = () => { if (currentUserId) fetchChats(); };
@@ -646,6 +662,7 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     setSkillsOpen(false);
     setInviteCodeOpen(false);
     setSelectedUserProfile(null);
+    setListDrawerOpen(false);
   };
 
   useEffect(() => {
@@ -661,9 +678,9 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
     <div className="chat-page">
       <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-      <div className="content">
+      <div className={`content ${listDrawerOpen ? "list-drawer-open" : ""}`}>
         {/* Backdrop: click outside menus closes them, does not select another chat */}
-        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen || pendingKick) && (
+        {(menuOpen || peopleOpen || skillsOpen || inviteCodeOpen || selectedUserProfile || editGroupOpen || pendingKick || listDrawerOpen) && (
           <div
             className="chat-menu-backdrop"
             onClick={closeAllMenus}
@@ -671,8 +688,8 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
           />
         )}
 
-        {/* --- CHAT LIST --- */}
-        <div className="user-list">
+        {/* --- CHAT LIST (on mobile: drawer, open via .list-drawer-open) --- */}
+        <div className={`user-list ${listDrawerOpen ? "drawer-open" : ""}`}>
           <div className="chat-list-filters">
             <button
               type="button"
@@ -720,6 +737,14 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
 
         {/* --- CHAT BOX (messages scrollable, input fixed at bottom, hides on scroll up) --- */}
         <div className="chat-container">
+          <button
+            type="button"
+            className="open-list-btn"
+            onClick={() => setListDrawerOpen(true)}
+            aria-label="Chat list"
+          >
+            Chats
+          </button>
           <div className="chat-box">
             <div
               ref={messagesContainerRef}
@@ -734,9 +759,12 @@ export default function ChatPage({ isLoggedIn, setIsLoggedIn, userId: propUserId
                     {msg.sentAt && <span style={{ marginLeft: "8px", opacity: 0.7 }}>{formatTime(msg.sentAt)}</span>}
                   </small>
 
-                  {msg.type === "outgoing" && (
+                  {/* Admin lehet mások üzenetét törölni, user csak a sajátját */}
+                  {(msg.type === "outgoing" || isCurrentUserAdmin) && (
                     <div className="message-actions">
-                      <button onClick={() => handleEdit(msg)}>✏️</button>
+                      {msg.type === "outgoing" && (
+                        <button onClick={() => handleEdit(msg)}>✏️</button>
+                      )}
                       <button onClick={() => handleDelete(msg)}>🗑️</button>
                     </div>
                   )}

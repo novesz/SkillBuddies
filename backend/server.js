@@ -599,7 +599,12 @@ app.post("/users/me/change-password", authMiddleware, async (req, res) => {
 
 //get user by ID
 app.get('/users/:id', (req, res) => {
-    const sql = "SELECT * FROM users where UserID = ?";
+    const sql = `
+      SELECT u.UserID, u.Username, u.Email, p.URL AS avatarUrl, u.rankID
+      FROM users u
+      LEFT JOIN pictures p ON p.PicID = u.PfpID
+      WHERE u.UserID = ?
+    `;
     db.query(sql, [req.params.id], (err, results) => {
         if (err) {
             console.error('Error fetching users:', err);
@@ -684,6 +689,143 @@ app.get("/users/:id/public-profile", (req, res) => {
           avgRating: Math.round(avgRating * 10) / 10,
         });
       });
+    });
+  });
+});
+
+// Ban user (admin only) - set rankID to 0
+app.put('/users/:id/ban', authMiddleware, (req, res) => {
+  const adminUserId = req.userId;
+  const targetUserId = req.params.id;
+  
+  // Ellenőrizzük, hogy az admin valóban admin-e
+  db.query("SELECT rankID FROM users WHERE UserID = ?", [adminUserId], (err, rows) => {
+    if (err) {
+      console.error('Error checking admin status:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    if (!rows.length || rows[0].rankID < 2) {
+      return res.status(403).json({ error: 'Only admins can ban users' });
+    }
+    
+    // Ban a felhasználót (rankID = 0)
+    db.query("UPDATE users SET rankID = 0 WHERE UserID = ?", [targetUserId], (err, result) => {
+      if (err) {
+        console.error('Error banning user:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      res.json({ message: 'User banned successfully' });
+    });
+  });
+});
+
+// Unban user (admin or owner only) - set rankID to 1 (default user)
+app.put('/users/:id/unban', authMiddleware, (req, res) => {
+  const adminUserId = req.userId;
+  const targetUserId = req.params.id;
+  
+  // Ellenőrizzük, hogy az admin/owner valóban admin vagy owner-e
+  db.query("SELECT rankID FROM users WHERE UserID = ?", [adminUserId], (err, rows) => {
+    if (err) {
+      console.error('Error checking admin status:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    console.log("🔍 Unban check - User rankID:", rows[0]?.rankID);
+    
+    if (!rows.length || rows[0].rankID < 2) {
+      return res.status(403).json({ error: 'Only admins can unban users' });
+    }
+    
+    // Unban a felhasználót (rankID = 1, normál user)
+    db.query("UPDATE users SET rankID = 1 WHERE UserID = ?", [targetUserId], (err, result) => {
+      if (err) {
+        console.error('Error unbanning user:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      console.log("✅ User unbanned successfully:", targetUserId);
+      res.json({ message: 'User unbanned successfully' });
+    });
+  });
+});
+
+// Promote user to admin (owner only) - set rankID to 2
+app.put('/users/:id/promote-admin', authMiddleware, (req, res) => {
+  const ownerUserId = req.userId;
+  const targetUserId = req.params.id;
+  
+  // Ellenőrizzük, hogy az owner valóban owner-e (rankID = 3)
+  db.query("SELECT rankID FROM users WHERE UserID = ?", [ownerUserId], (err, rows) => {
+    if (err) {
+      console.error('Error checking owner status:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    console.log("🔍 Promote-admin check - User rankID:", rows[0]?.rankID);
+    
+    if (!rows.length || rows[0].rankID !== 3) {
+      return res.status(403).json({ error: 'Only owners can promote users to admin' });
+    }
+    
+    // Promoteolj az usert adminná (rankID = 2)
+    db.query("UPDATE users SET rankID = 2 WHERE UserID = ?", [targetUserId], (err, result) => {
+      if (err) {
+        console.error('Error promoting user:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      console.log("✅ User promoted to admin successfully:", targetUserId);
+      res.json({ message: 'User promoted to admin successfully' });
+    });
+  });
+});
+
+// Demote user from admin (owner only) - set rankID to 1
+app.put('/users/:id/demote-admin', authMiddleware, (req, res) => {
+  const ownerUserId = req.userId;
+  const targetUserId = req.params.id;
+  
+  // Ellenőrizzük, hogy az owner valóban owner-e (rankID = 3)
+  db.query("SELECT rankID FROM users WHERE UserID = ?", [ownerUserId], (err, rows) => {
+    if (err) {
+      console.error('Error checking owner status:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    console.log("🔍 Demote-admin check - User rankID:", rows[0]?.rankID);
+    
+    if (!rows.length || rows[0].rankID !== 3) {
+      return res.status(403).json({ error: 'Only owners can demote admins' });
+    }
+    
+    // Demote az admint normál user-é (rankID = 1)
+    db.query("UPDATE users SET rankID = 1 WHERE UserID = ?", [targetUserId], (err, result) => {
+      if (err) {
+        console.error('Error demoting user:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      console.log("✅ User demoted successfully:", targetUserId);
+      res.json({ message: 'User demoted successfully' });
     });
   });
 });
@@ -1406,26 +1548,56 @@ app.put('/messages/edit/:id', (req, res) => {
         res.json({ message: 'Message updated successfully' });
     });
 });
-//message delete
-app.delete('/messages/delete/:id', (req, res) => {
+//message delete (admin can delete any message, user can only delete their own)
+app.delete('/messages/delete/:id', authMiddleware, (req, res) => {
     const msgId = req.params.id;
-    // Előbb lekérjük a ChatID-t, aztán töröljük
-    db.query("SELECT ChatID FROM msgs WHERE MsgID = ?", [msgId], (err, rows) => {
-        const chatId = (!err && rows.length > 0) ? rows[0].ChatID : null;
-        const sql = "DELETE FROM msgs WHERE MsgID = ?";
-        db.query(sql, [msgId], (err2, results) => {
-            if (err2) {
-                console.error('Error deleting message:', err2);
+    const userId = req.userId;
+    
+    // Előbb lekérjük az üzenetet és a chat-et
+    db.query("SELECT ChatID, UserID FROM msgs WHERE MsgID = ?", [msgId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching message:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+        
+        const chatId = rows[0].ChatID;
+        const msgUserId = rows[0].UserID;
+        
+        // Ellenőrizzük, hogy az aktuális user admin-e ebben a chatben
+        const checkAdminSql = "SELECT IsChatAdmin FROM uac WHERE UserID = ? AND ChatID = ?";
+        db.query(checkAdminSql, [userId, chatId], (err, adminRows) => {
+            if (err) {
+                console.error('Error checking admin status:', err);
                 return res.status(500).json({ error: 'Internal server error' });
             }
-            // Broadcast DELETE_MESSAGE a chat tagjainak
-            if (chatId) {
+            
+            const isAdmin = adminRows.length > 0 && adminRows[0].IsChatAdmin === 1;
+            const isOwnMessage = userId === msgUserId;
+            
+            // Admin vagy a saját üzenet szerzője törölhet
+            if (!isAdmin && !isOwnMessage) {
+                return res.status(403).json({ error: 'You can only delete your own messages' });
+            }
+            
+            // Üzenet törlése
+            const sql = "DELETE FROM msgs WHERE MsgID = ?";
+            db.query(sql, [msgId], (err2, results) => {
+                if (err2) {
+                    console.error('Error deleting message:', err2);
+                    return res.status(500).json({ error: 'Internal server error' });
+                }
+                
+                // Broadcast DELETE_MESSAGE a chat tagjainak
                 broadcastToChat(chatId, {
                     type: "DELETE_MESSAGE",
                     msg: { MsgID: Number(msgId), ChatID: chatId }
                 });
-            }
-            res.json({ message: 'Message deleted successfully' });
+                
+                res.json({ message: 'Message deleted successfully' });
+            });
         });
     });
 });
@@ -1618,6 +1790,7 @@ app.get("/groups", (req, res) => {
         .map((s) => s.trim())
         .filter(Boolean)
     : [];
+  const excludeUserId = parseInt(req.query.excludeUserId || req.query.userId || "0", 10);
 
   // Base select (ChatPic = PicID; a megjelenítéshez p.URL-t adjuk vissza ChatPicként)
   let sql = `
@@ -1641,6 +1814,11 @@ app.get("/groups", (req, res) => {
   if (search) {
     where.push("c.ChatName LIKE ?");
     params.push(`%${search}%`);
+  }
+
+  if (excludeUserId > 0) {
+    where.push("c.ChatID NOT IN (SELECT ChatID FROM uac WHERE UserID = ?)");
+    params.push(excludeUserId);
   }
 
   // Match ANY selected skill (same behavior as frontend chip filtering)
@@ -1723,23 +1901,8 @@ app.put('/users/:id/avatar', (req, res) => {
   });
 });
 
-// GET /users/:id – 1 felhasználó adatai
-app.get('/users/:id', (req, res) => {
-  const userId = req.params.id;
-  const sql = "SELECT UserID, Email, Avatar FROM users WHERE UserID = ?";
-
-  db.query(sql, [userId], (err, rows) => {
-    if (err) {
-      console.error("Hiba user lekérdezésnél:", err);
-      return res.status(500).json({ error: "Adatbázis hiba." });
-    }
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Nincs ilyen felhasználó." });
-    }
-    res.json(rows[0]);
-  });
-});
-
 server.listen(3001, () => {
     console.log(`Server is running on port 3001`);
 });
+
+module.exports = app;
