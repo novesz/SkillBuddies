@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const multer = require('multer');
+const { createRequestLogger } = require("./requestLogger");
 const saltRounds = 10;
 
 
@@ -14,13 +16,12 @@ const server = require('http').createServer(app);
 const WebSocket = require("ws");  
 const wss = new WebSocket.Server({ server });
 
-
-
 // Middleware
 
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(createRequestLogger());
 app.use(cors(
     {
       origin: 'http://localhost:5173',
